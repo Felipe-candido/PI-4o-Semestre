@@ -4,7 +4,7 @@ from django.db import models
 # Create your models here.
 
 class usuario(models.Model):
-    nome = models.CharField(max_length=255, null=False),
+    nome = models.CharField(max_length=255, null=False, default='')
     email = models.EmailField(max_length=255, null=False)
     senha = models.CharField(max_length=255, null=False)
 
