@@ -11,6 +11,13 @@ from .serializers import usuarioSerializer
 def home(request):
     return render(request, 'home/index.html', {'user': request.user})
 
-@api_view
-def apiCadastro(request):
-    return
+@api_view(['GET'])
+def get_usuarios(request):
+    
+    if request.method == 'GET':
+        
+        users = usuario.objects.all()
+        serializer = usuarioSerializer(users, many=True)
+        return Response(serializer.data)
+
+    return Response(status=status.HTTP_400_BAD_REQUEST)
