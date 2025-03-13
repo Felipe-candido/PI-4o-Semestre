@@ -18,6 +18,7 @@ def get_usuarios(request):
         
         users = usuario.objects.all()
         serializer = usuarioSerializer(users, many=True)
+        print(serializer.data[0]['nome'])
         return Response(serializer.data)
 
     return Response(status=status.HTTP_400_BAD_REQUEST)
