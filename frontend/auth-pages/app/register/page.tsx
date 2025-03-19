@@ -13,15 +13,15 @@ import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/use-toast"
 import { ArrowLeft } from "lucide-react"
 
-// Form validation schema
+// VALIDAÇÃO DO FORMULÁRIO
 const registerSchema = z
   .object({
-    username: z.string().min(3, "Username must be at least 3 characters"),
-    email: z.string().email("Please enter a valid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
+    nome: z.string().min(3, "O nome deve ter no mínimo 3 letras"),
+    email: z.string().email("Por favor digite um email válido"),
+    senha: z.string().min(6, "A senha deve ter no mínimo 6 dígitos"),
+    confirmaSenha: z.string().min(6, "A senha deve ter no mínimo 6 dígitos"),
   })
-  .refine((data) => data.password === data.confirmPassword, {
+  .refine((data) => data.senha === data.confirmaSenha, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
   })
@@ -36,10 +36,10 @@ export default function RegisterPage() {
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: "",
+      nome: "",
       email: "",
-      password: "",
-      confirmPassword: "",
+      senha: "",
+      confirmaSenha: "",
     },
   })
 
@@ -48,7 +48,7 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
-      const { confirmPassword, ...registerData } = data
+      const { confirmaSenha, ...registerData } = data
 
       // URL DO BACKEND DJANGO
       const response = await fetch("http://localhost:8000/api/registrar/", {
@@ -104,12 +104,12 @@ export default function RegisterPage() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="username"
+                  name="nome"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Username</FormLabel>
+                      <FormLabel>Nome</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter a username" {...field} />
+                        <Input placeholder="Digite seu nome" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -123,7 +123,7 @@ export default function RegisterPage() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="Enter your email" {...field} />
+                        <Input type="email" placeholder="Digite seu email" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -132,12 +132,12 @@ export default function RegisterPage() {
 
                 <FormField
                   control={form.control}
-                  name="password"
+                  name="senha"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>Senha</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Create a password" {...field} />
+                        <Input type="password" placeholder="Crie uma senha" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -146,12 +146,12 @@ export default function RegisterPage() {
 
                 <FormField
                   control={form.control}
-                  name="confirmPassword"
+                  name="confirmaSenha"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Confirm Password</FormLabel>
+                      <FormLabel>Confirme sua senha</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Confirm your password" {...field} />
+                        <Input type="password" placeholder="Confirme sua senha" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
