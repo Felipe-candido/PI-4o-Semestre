@@ -50,7 +50,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True 
 
 ROOT_URLCONF = 'projeto.urls'
 
@@ -131,5 +134,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 CORS_ALLOW_ORIGINS = [
-    'http://127.0.0.1:8080'
+    'http://127.0.0.1:8080',
+    "http://localhost:3000",
 ]
+
+AUTH_USER_MODEL = 'cadastro.usuario'

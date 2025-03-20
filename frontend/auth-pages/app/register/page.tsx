@@ -18,10 +18,10 @@ const registerSchema = z
   .object({
     nome: z.string().min(3, "O nome deve ter no mínimo 3 letras"),
     email: z.string().email("Por favor digite um email válido"),
-    senha: z.string().min(6, "A senha deve ter no mínimo 6 dígitos"),
-    confirmaSenha: z.string().min(6, "A senha deve ter no mínimo 6 dígitos"),
+    password: z.string().min(3, "A senha deve ter no mínimo 3 dígitos"),
+    confirmaSenha: z.string().min(3, "A senha deve ter no mínimo 3 dígitos"),
   })
-  .refine((data) => data.senha === data.confirmaSenha, {
+  .refine((data) => data.password === data.confirmaSenha, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
   })
@@ -38,7 +38,7 @@ export default function RegisterPage() {
     defaultValues: {
       nome: "",
       email: "",
-      senha: "",
+      password: "",
       confirmaSenha: "",
     },
   })
@@ -132,7 +132,7 @@ export default function RegisterPage() {
 
                 <FormField
                   control={form.control}
-                  name="senha"
+                  name="password"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Senha</FormLabel>
