@@ -1,8 +1,8 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status, viewsets
-from .serializers import registroSerializer
-from django.contrib.auth import get_user_model
+from .serializers import registroSerializer, loginSerializer
+from django.contrib.auth import get_user_model, authenticate
 
 user = get_user_model()
 
@@ -23,6 +23,18 @@ class view_registro(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
 
 
+class viewLogin(viewsets.ModelViewSet):
+    def post(self, request):
+        dados = request.data
+        serializer = loginSerializer(data=dados)
+        if not serializer.is_valid():
+            return Response({
+                "status": False,
+                "data": serializer.errors
+            })
+    
+        username = serializer.data['email']
+        password = serializer.data['password'] 
 
 
 
