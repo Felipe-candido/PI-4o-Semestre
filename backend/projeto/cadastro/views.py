@@ -1,8 +1,10 @@
+import token
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status, viewsets
 from .serializers import registroSerializer, loginSerializer
-from django.contrib.auth import get_user_model, authenticate
+from django.contrib.auth import get_user_model, login
+from rest_framework.authtoken.models import Token
 
 user = get_user_model()
 
@@ -23,18 +25,26 @@ class view_registro(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
 
 
-class viewLogin(viewsets.ModelViewSet):
-    def post(self, request):
-        dados = request.data
-        serializer = loginSerializer(data=dados)
-        if not serializer.is_valid():
+class viewLogin(viewsets.ViewSet):
+    def create(self, request):
+        
+        serializer = loginSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data["user"]
+            login(request, user)
+            toke, create = Token.objects.get_or_create(user=user)
+
             return Response({
-                "status": False,
-                "data": serializer.errors
+                "token": token.key, 
+                "user_id": user.id, 
+                "email": user.email
             })
-    
-        username = serializer.data['email']
-        password = serializer.data['password'] 
+
+        return Response(
+            serializer.errors,
+            status = status.HTTP_400_BAD_REQUEST
+        )
+
 
 
 
