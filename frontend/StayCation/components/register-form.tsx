@@ -4,8 +4,6 @@ import type React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useEffect, useState } from "react"
 import { toast } from "./ui/use-toast"
 import { z } from "zod"
@@ -37,11 +35,7 @@ interface RegisterFormProps {
 export function RegisterForm({ onLoginClick, isModal = false }: RegisterFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const [userType, setUserType] = useState<string | null>(null);
 
-  useEffect(() => {
-    setUserType("renter");
-  }, []);
 
   // INICIA O FORM
   const form = useForm<RegisterFormValues>({
