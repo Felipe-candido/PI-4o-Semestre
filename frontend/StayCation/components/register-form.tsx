@@ -6,7 +6,28 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { toast } from "./ui/use-toast"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useRouter } from "next/navigation"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form"
+import { useForm } from "react-hook-form"
+
+// VALIDACAO DO FROMULARIO
+const registerSchema = z
+  .object({
+    nome: z.string().min(3, "O nome deve ter no mínimo 3 letras"),
+    email: z.string().email("Por favor digite um email válido"),
+    password: z.string().min(3, "A senha deve ter no mínimo 3 dígitos"),
+    confirmaSenha: z.string().min(3, "A senha deve ter no mínimo 3 dígitos"),
+  })
+  .refine((data) => data.password === data.confirmaSenha, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  })
+
+type RegisterFormValues = z.infer<typeof registerSchema>
 
 interface RegisterFormProps {
   onLoginClick?: () => void
@@ -14,93 +35,156 @@ interface RegisterFormProps {
 }
 
 export function RegisterForm({ onLoginClick, isModal = false }: RegisterFormProps) {
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [userType, setUserType] = useState("renter")
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+  const [userType, setUserType] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Implementar lógica de registro
-    console.log("Registro com:", { name, email, password, userType })
+  useEffect(() => {
+    setUserType("renter");
+  }, []);
+
+  // INICIA O FORM
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      nome: "",
+      email: "",
+      password: "",
+      confirmaSenha: "",
+    },
+  })
+
+
+  async function onSubmit(data: RegisterFormValues) {
+    setIsLoading(true)
+
+    try {
+      const { confirmaSenha, ...registerData} = data
+
+      //URL DO BACKEND DJANGO
+      const response = await fetch("http://localhost:8000/api/registrar/", {
+        method: "post",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(registerData)
+      })
+
+      const result = await response.json()
+
+      if (!response.ok){
+        throw new Error (result.detail || "Falha no registro")
+      }
+
+      toast({
+        title: "Registrado com sucesso",
+        description: "Sua conta foi criada"
+      })
+
+      // REDIRECIONAR PARA O LOGIN
+      if (onLoginClick) onLoginClick();
+      
+    } catch (error) {
+        console.error("Erro no registro:", error)
+        toast({
+          title: "Falha no registro",
+          description: error instanceof Error ? error.message : "Algo deu errado",
+          variant: "destructive"
+        })
+    } finally{
+      setIsLoading(false)
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Nome completo</Label>
-        <Input id="name" placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} required />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="seu@email.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="password">Senha</Label>
-        <Input
-          id="password"
-          type="password"
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirmar senha</Label>
-        <Input
-          id="confirmPassword"
-          type="password"
-          placeholder="••••••••"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>Tipo de usuário</Label>
-        <RadioGroup value={userType} onValueChange={setUserType} className="flex gap-4">
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="renter" id="renter" />
-            <Label htmlFor="renter" className="cursor-pointer">
-              Locatário
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="owner" id="owner" />
-            <Label htmlFor="owner" className="cursor-pointer">
-              Proprietário
-            </Label>
-          </div>
-        </RadioGroup>
-      </div>
-      <Button type="submit" className="w-full">
-        Criar conta
-      </Button>
-      {isModal ? (
-        <div className="text-center text-sm">
-          Já tem uma conta?{" "}
-          <Button variant="link" className="p-0 h-auto" onClick={onLoginClick} type="button">
-            Faça login
-          </Button>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+
+        <div className="space-y-2">
+          <FormField
+            control={form.control}
+            name="nome"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nome</FormLabel>
+                <FormControl>
+                  <Input placeholder="Digite seu nome" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-      ) : (
-        <div className="text-center text-sm">
-          Já tem uma conta?{" "}
-          <a href="/login" className="text-primary hover:underline">
-            Faça login
-          </a>
+
+        <div className="space-y-2">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="Digite seu email" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+              )}
+          />
         </div>
-      )}
-    </form>
+
+        <div className="space-y-2">
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Senha</FormLabel>
+                <FormControl>
+                  <Input type="password" placeholder="Crie uma senha" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <FormField
+            control={form.control}
+            name="confirmaSenha"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Confirme sua senha</FormLabel>
+                <FormControl>
+                  <Input type="password" placeholder="Confirme sua senha" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? "Creating account..." : "Criar conta"}
+        </Button>
+        
+        {isModal ? (
+          <div className="text-center text-sm">
+            Já tem uma conta?{" "}
+            <Button variant="link" className="p-0 h-auto" onClick={onLoginClick} type="button">
+              Faça login
+            </Button>
+          </div>
+        ) : (
+          <div className="text-center text-sm">
+            Já tem uma conta?{" "}
+            <a href="/login" className="text-primary hover:underline">
+              Faça login
+            </a>
+          </div>
+        )}
+      </form>
+    </Form>
   )
 }
 

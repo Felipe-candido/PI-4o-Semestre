@@ -1,3 +1,5 @@
+"use client"
+
 import { PropertyCard } from "@/components/property-card"
 
 export function PropertyList() {
