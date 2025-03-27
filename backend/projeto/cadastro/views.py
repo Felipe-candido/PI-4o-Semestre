@@ -32,7 +32,7 @@ class viewLogin(viewsets.ViewSet):
         if serializer.is_valid():
             user = serializer.validated_data["user"]
             login(request, user)
-            toke, create = Token.objects.get_or_create(user=user)
+            token, create = Token.objects.get_or_create(user=user)
 
             return Response({
                 "token": token.key, 
@@ -51,29 +51,3 @@ class viewLogin(viewsets.ViewSet):
 
 
 
-# @api_view(['GET'])
-# def get_usuarios(request):
-    
-#     if request.method == 'GET':
-        
-#         users = usuario.objects.all()
-#         serializer = usuarioSerializer(users, many=True)
-#         print(serializer.data[0]['nome'])
-#         return Response(serializer.data)
-        
-
-#     return Response(status=status.HTTP_400_BAD_REQUEST)
-
-
-# @api_view(['POST'])
-# def post_usuarios(request):
-    
-#     if request.method == 'POST':
-        
-#         user = usuarioSerializer(data = request.data)
-#         user.is_valid(raise_exception=True)
-#         user.save
-#         print(user.data[0]['nome'])
-#         return Response(user.data, status=status.HTTP_201_CREATED)
-
-#     return Response(status=status.HTTP_400_BAD_REQUEST)

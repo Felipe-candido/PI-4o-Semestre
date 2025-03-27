@@ -28,6 +28,10 @@ export function AuthModals() {
     setIsLoginOpen(true)
   }
 
+  const closeLoginModal = () => {
+    setIsLoginOpen(false)
+  }
+
   return (
     <div className="flex items-center gap-2">
       <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
@@ -39,7 +43,7 @@ export function AuthModals() {
             <DialogTitle>Entrar no StayCation</DialogTitle>
             <DialogDescription>Acesse sua conta para gerenciar suas chácaras ou fazer reservas.</DialogDescription>
           </DialogHeader>
-          <LoginForm onRegisterClick={switchToRegister} isModal={true} />
+          <LoginForm onRegisterClick={switchToRegister} isModal={true} onCloseModal={closeLoginModal} />
         </DialogContent>
       </Dialog>
 
