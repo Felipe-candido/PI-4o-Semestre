@@ -1,3 +1,5 @@
+"use client"
+
 import { HomeHero } from "@/components/home-hero"
 import { PropertyList } from "@/components/property-list"
 import { RegionFilter } from "@/components/region-filter"

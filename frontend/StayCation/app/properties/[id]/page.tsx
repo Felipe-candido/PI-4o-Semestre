@@ -1,3 +1,5 @@
+"use client"
+
 import { PropertyDetail } from "@/components/property-detail"
 import { PropertyMap } from "@/components/property-map"
 import { PropertyReviews } from "@/components/property-reviews"

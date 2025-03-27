@@ -1,3 +1,5 @@
+"use client"
+
 import { DashboardStats } from "@/components/dashboard-stats"
 import { PropertyTable } from "@/components/property-table"
 import { Button } from "@/components/ui/button"
