@@ -23,8 +23,8 @@ const registerSchema = z
     confirmaSenha: z.string().min(3, "A senha deve ter no mínimo 3 dígitos"),
   })
   .refine((data) => data.password === data.confirmaSenha, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
+    message: "As senhas nao coincidem",
+    path: ["confirmaSenha"],
   })
 
 type RegisterFormValues = z.infer<typeof registerSchema>
