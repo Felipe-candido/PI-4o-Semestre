@@ -1,10 +1,10 @@
-"use client"
-
 import { PropertyDetail } from "@/components/property-detail"
 import { PropertyMap } from "@/components/property-map"
 import { PropertyReviews } from "@/components/property-reviews"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "lucide-react"
+import { use } from "react"
+import React from "react"
 
 export default function PropertyDetailPage({ params }: { params: { id: string } }) {
   return (
