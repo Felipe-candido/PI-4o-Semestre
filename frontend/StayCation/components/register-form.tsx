@@ -28,12 +28,12 @@ const registerSchema = z
 type RegisterFormValues = z.infer<typeof registerSchema>
 
 interface RegisterFormProps {
-  onLoginClick?: () => void
+  onLoginClick: () => void
   isModal?: boolean
+  onRegistrationSuccess?: () => void;
 }
 
-export function RegisterForm({ onLoginClick, isModal = false }: RegisterFormProps) {
-  const router = useRouter()
+export function RegisterForm({ onLoginClick, isModal = false, onRegistrationSuccess }: RegisterFormProps) {
   const [isLoading, setIsLoading] = useState(false)
 
 
@@ -75,6 +75,8 @@ export function RegisterForm({ onLoginClick, isModal = false }: RegisterFormProp
         description: "Sua conta foi criada"
       })
 
+      onRegistrationSuccess?.();
+      
       // REDIRECIONAR PARA O LOGIN
       if (onLoginClick) onLoginClick();
       
