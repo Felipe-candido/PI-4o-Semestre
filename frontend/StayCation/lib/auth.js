@@ -16,7 +16,7 @@ export const login = async (email, password) => {
       sameSite: 'strict'
     })
     Cookies.set('refresh_token', data.refresh, {
-      expires: 7, // 7 dias
+      expires: 1, 
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict'
     })

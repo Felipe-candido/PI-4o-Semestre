@@ -12,6 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "./ui/use-toast"
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form"
 
+
 const loginSchema = z.object({
   email: z.string().email("O campo email é obrigatório"),
   password: z.string().min(1, "A senha é obrigatória"),
@@ -19,13 +20,20 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>
 
+interface User {
+  id: number;
+  email: string;
+  nome: string;
+}
+
 interface LoginFormProps {
   onRegisterClick?: () => void
   isModal?: boolean
   onCloseModal?: () => void
+  onSuccess?: (userData: User) => void;
 }
 
-export function LoginForm({ onRegisterClick, isModal = false, onCloseModal }: LoginFormProps) {
+export function LoginForm({ onRegisterClick, isModal = false, onCloseModal, onSuccess}: LoginFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -47,15 +55,31 @@ export function LoginForm({ onRegisterClick, isModal = false, onCloseModal }: Lo
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
+        credentials: 'include',
       })
 
-      const result = await response.json()
-
       if (!response.ok) {
-        throw new Error(`Status: ${response.status}, Detalhes: ${JSON.stringify(result)}`)
+        const errorData = await response.json()
+        throw new Error(errorData.detail || "Credenciais inválidas")
       }
 
-      localStorage.setItem("token", result.token)
+      const userData = await response.json();
+
+      if (onSuccess) {
+        onSuccess(userData);
+      }
+
+      if (isModal && onCloseModal) {
+        onCloseModal();
+      }
+
+      
+      console.log("Headers da resposta:", {
+        'set-cookie': response.headers.get('set-cookie'),
+        'access-control-allow-credentials': response.headers.get('access-control-allow-credentials')
+      })
+
+
 
       toast({
         title: "Conta conectada",
