@@ -1,10 +1,9 @@
-import token
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status, viewsets
 from .serializers import registroSerializer, loginSerializer
-from django.contrib.auth import get_user_model, login
-from rest_framework.authtoken.models import Token
+from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import RefreshToken
 
 user = get_user_model()
 
@@ -31,13 +30,16 @@ class viewLogin(viewsets.ViewSet):
         serializer = loginSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data["user"]
-            login(request, user)
-            token, create = Token.objects.get_or_create(user=user)
+            
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            refresh_Token = str(refresh)
 
             return Response({
-                "token": token.key, 
                 "user_id": user.id, 
-                "email": user.email
+                "email": user.email,
+                "access": access_token,
+                "refresh": refresh_Token,
             })
 
         return Response(
