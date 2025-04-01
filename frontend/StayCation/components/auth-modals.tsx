@@ -29,6 +29,7 @@ interface User {
   nome: string;
 }
 
+
 export function AuthModals() {
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const [isRegisterOpen, setIsRegisterOpen] = useState(false)
@@ -39,15 +40,18 @@ export function AuthModals() {
 
   // Função para verificar autenticação
   const checkAuth = async () => {
+    setLoading(true);
     try {
-      const userData = await apiFetch('/api/me/')
-      setUser(userData)
+      const userData = await apiFetch('/api/me/');
+      setUser(userData); // será null se não autenticado
     } catch (error) {
-      setUser(null)
+      console.error('Erro ao verificar autenticação:', error);
+      setUser(null);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
+  
 
   // Efeito para verificar autenticação ao carregar
   useEffect(() => {
