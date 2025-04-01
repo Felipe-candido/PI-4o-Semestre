@@ -21,31 +21,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+import { apiFetch } from "@/lib/api"
+
 interface User {
   id: number;
   email: string;
   nome: string;
-}
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
-
-// Função genérica para chamadas API
-async function apiFetch(endpoint: string, options: RequestInit = {}) {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Erro na requisição');
-  }
-
-  return response.json();
 }
 
 export function AuthModals() {
