@@ -1,11 +1,101 @@
+"use client"
+
 import Link from "next/link"
 import MainLayout from "@/components/layout/MainLayout"
+import { z } from "zod"
+import {zodResolver } from "@hookform/resolvers/zod"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { useForm } from "react-hook-form"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { useEffect, useState } from "react"
+import { toast } from "@/components/ui/use-toast"
+import { useRouter } from "next/navigation"
 
-export default function Register() {
-  // In a real app, you would get the user data from your auth context
+const registerSchema = z
+  .object({
+    nome: z.string().min(3, "O nome deve ter no mínimo 3 letras"),
+    // sobrenome: z.string().min(3, "O sobrenome deve ter no mínimo 3 letras"),
+    email: z.string().email("Por favor digite um email válido"),
+    password: z.string().min(3, "A senha deve ter no mínimo 3 dígitos"),
+    confirmaSenha: z.string().min(3, "A senha deve ter no mínimo 3 dígitos"),
+  })
+  .refine((data) => data.password === data.confirmaSenha, {
+    message: "As senhas nao coincidem",
+    path: ["confirmaSenha"],
+  })
+
+type RegisterFormValues = z.infer<typeof registerSchema>
+
+interface RegisterFormProps {
+  onLoginClick: () => void
+  onRegistrationSuccess?: () => void;
+}
+
+
+export default function RegisterForm({ onLoginClick, onRegistrationSuccess }: RegisterFormProps) {
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+  
   const userRole = "visitor"
   const userName = "Guest"
   const userAvatar = "/placeholder.svg?height=32&width=32"
+
+  // INICIA O FORM
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      nome: "",
+      // sobrenome: "",
+      email: "",
+      password: "",
+      confirmaSenha: "",
+    },
+  })
+
+  async function onSubmit(data: RegisterFormValues) {
+    setIsLoading(true)
+
+    try {
+      const { confirmaSenha, ...registerData} = data
+
+      //URL DO BACKEND DJANGO
+      const response = await fetch("http://localhost:8000/api/registrar/", {
+        method: "post",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(registerData)
+      })
+
+      const result = await response.json()
+
+      if (!response.ok){
+        throw new Error (result.detail || "Falha no registro")
+      }
+
+      toast({
+        title: "Registrado com sucesso",
+        description: "Sua conta foi criada"
+      })
+      
+      // REDIRECIONAR PARA O LOGIN
+      router.push('/auth/login'); 
+      
+      onRegistrationSuccess?.();
+      if (onLoginClick) onLoginClick();
+      
+    } catch (error) {
+        console.error("Erro no registro:", error)
+        toast({
+          title: "Falha no registro",
+          description: error instanceof Error ? error.message : "Algo deu errado",
+          variant: "destructive"
+        })
+    } finally{
+      setIsLoading(false)
+    }
+  }
 
   return (
     <MainLayout userRole={userRole} userName={userName} userAvatar={userAvatar}>
@@ -16,115 +106,117 @@ export default function Register() {
               <h1 className="text-2xl font-bold text-gray-900 mb-2">Create your account</h1>
               <p className="text-gray-600">Join StayCation today</p>
             </div>
-
-            <form className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="first-name" className="block text-sm font-medium text-gray-700 mb-1">
-                    First name
-                  </label>
-                  <input
-                    id="first-name"
-                    name="first-name"
-                    type="text"
-                    autoComplete="given-name"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                    placeholder="First name"
+            
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="nome"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="block text-sm font-medium text-gray-700">Nome</FormLabel>
+                        <FormControl>
+                          <Input 
+                            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder:text-gray-400 placeholder:opacity-100 focus:ring-primary focus:border-primary"
+                            placeholder="Digite seu nome" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage className="text-xs text-red-500" />
+                      </FormItem>
+                    )}
                   />
+                  
+                  {/* <FormField
+                    control={form.control}
+                    name="sobrenome"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="block text-sm font-medium text-gray-700">Sobrenome</FormLabel>
+                        <FormControl>
+                          <Input
+                            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
+                            placeholder:text-gray-400 placeholder:opacity-100 focus:ring-primary focus:border-primary"
+                            placeholder="Digite seu sobrenome"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="text-xs text-red-500" />
+                      </FormItem>
+                    )}
+                  /> */}
                 </div>
-                <div>
-                  <label htmlFor="last-name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Last name
-                  </label>
-                  <input
-                    id="last-name"
-                    name="last-name"
-                    type="text"
-                    autoComplete="family-name"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                    placeholder="Last name"
-                  />
-                </div>
-              </div>
 
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  id="email"
+                <FormField
+                  control={form.control}
                   name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                  placeholder="Enter your email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="block text-sm font-medium text-gray-700">Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder:text-gray-400 placeholder:opacity-100 focus:ring-primary focus:border-primary"
+                          placeholder="exemplo@mail.com"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-xs text-red-500" />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
-                <input
-                  id="password"
+                <FormField
+                  control={form.control}
                   name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                  placeholder="Create a password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="block text-sm font-medium text-gray-700">Senha</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder:text-gray-400 placeholder:opacity-100 focus:ring-primary focus:border-primary"
+                          placeholder="Crie uma senha"
+                          {...field}
+                        />
+                      </FormControl>
+                      <p className="mt-1 text-xs text-gray-500">
+                        A senha precisa ter pelo menos 8 digitos
+                      </p>
+                      <FormMessage className="text-xs text-red-500" />
+                    </FormItem>
+                  )}
                 />
-                <p className="mt-1 text-xs text-gray-500">
-                  Password must be at least 8 characters long with a number and a special character.
-                </p>
-              </div>
-
-              <div>
-                <label htmlFor="account-type" className="block text-sm font-medium text-gray-700 mb-1">
-                  I want to
-                </label>
-                <select
-                  id="account-type"
-                  name="account-type"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                >
-                  <option value="tenant">Rent a property (Tenant)</option>
-                  <option value="owner">List my property (Owner)</option>
-                </select>
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  id="terms"
-                  name="terms"
-                  type="checkbox"
-                  required
-                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                
+                <FormField
+                  control={form.control}
+                  name="confirmaSenha"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="block text-sm font-medium text-gray-700">Confirme a senha</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder:text-gray-400 placeholder:opacity-100 focus:ring-primary focus:border-primary"
+                          placeholder="Crie uma senha"
+                          {...field}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
                 />
-                <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
-                  I agree to the{" "}
-                  <Link href="/terms" className="text-primary hover:text-primary/80">
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link href="/privacy" className="text-primary hover:text-primary/80">
-                    Privacy Policy
-                  </Link>
-                </label>
-              </div>
 
-              <div>
-                <button
-                  type="submit"
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                >
-                  Create account
-                </button>
-              </div>
-            </form>
+                <div>
+                  <button
+                    type="submit"
+                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                  >
+                    Create account
+                  </button>
+                </div>
+              </form>
+            </Form>
 
             <div className="mt-6">
               <div className="relative">
