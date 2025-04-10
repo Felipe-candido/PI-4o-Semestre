@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation"
 const registerSchema = z
   .object({
     nome: z.string().min(3, "O nome deve ter no mínimo 3 letras"),
-    // sobrenome: z.string().min(3, "O sobrenome deve ter no mínimo 3 letras"),
+    sobrenome: z.string().min(3, "O sobrenome deve ter no mínimo 3 letras"),
     email: z.string().email("Por favor digite um email válido"),
     password: z.string().min(3, "A senha deve ter no mínimo 3 dígitos"),
     confirmaSenha: z.string().min(3, "A senha deve ter no mínimo 3 dígitos"),
@@ -46,7 +46,7 @@ export default function RegisterForm({ onLoginClick, onRegistrationSuccess }: Re
     resolver: zodResolver(registerSchema),
     defaultValues: {
       nome: "",
-      // sobrenome: "",
+      sobrenome: "",
       email: "",
       password: "",
       confirmaSenha: "",
@@ -128,7 +128,7 @@ export default function RegisterForm({ onLoginClick, onRegistrationSuccess }: Re
                     )}
                   />
                   
-                  {/* <FormField
+                  <FormField
                     control={form.control}
                     name="sobrenome"
                     render={({ field }) => (
@@ -145,7 +145,7 @@ export default function RegisterForm({ onLoginClick, onRegistrationSuccess }: Re
                         <FormMessage className="text-xs text-red-500" />
                       </FormItem>
                     )}
-                  /> */}
+                  />
                 </div>
 
                 <FormField
