@@ -1,11 +1,106 @@
+"use client"
+
 import Link from "next/link"
 import MainLayout from "@/components/layout/MainLayout"
+import type React from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useState } from "react"
+import { z } from "zod"
+import { useRouter } from "next/navigation"
+import { useForm, FormProvider, Form } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { toast } from "@/components/ui/use-toast"
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 
-export default function Login() {
+
+const loginSchema = z.object({
+  email: z.string().email("O campo email é obrigatório"),
+  password: z.string().min(1, "A senha é obrigatória"),
+})
+
+type LoginFormValues = z.infer<typeof loginSchema>
+
+interface User {
+  id: number;
+  email: string;
+  nome: string;
+}
+
+interface LoginFormProps {
+  onRegisterClick?: () => void
+  onSuccess?: (userData: User) => void;
+}
+
+
+export default function LoginForm({ onRegisterClick, onSuccess}: LoginFormProps) {
   // In a real app, you would get the user data from your auth context
   const userRole = "visitor"
   const userName = "Guest"
   const userAvatar = "/placeholder.svg?height=32&width=32"
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+
+  
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  })
+
+
+  async function onSubmit(data: LoginFormValues) {
+    setIsLoading(true)
+
+    try {
+      const response = await fetch("http://localhost:8000/api/entrar/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || "Credenciais inválidas")
+      }
+
+      const userData = await response.json();
+
+      if (onSuccess) {
+        onSuccess(userData);
+      }
+      
+      console.log("Headers da resposta:", {
+        'set-cookie': response.headers.get('set-cookie'),
+        'access-control-allow-credentials': response.headers.get('access-control-allow-credentials')
+      })
+
+
+      toast({
+        title: "Conta conectada",
+        description: "Conta conectada com sucesso.",
+      })
+
+      
+      router.push("/")
+
+    } catch (error) {
+      console.error("Erro ao entrar:", error)
+      toast({
+        title: "Login failed",
+        description: error instanceof Error ? error.message : "Algo deu errado",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <MainLayout userRole={userRole} userName={userName} userAvatar={userAvatar}>
@@ -17,63 +112,65 @@ export default function Login() {
               <p className="text-gray-600">Sign in to your StayCation account</p>
             </div>
 
-            <form className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                  placeholder="Enter your email"
-                />
-              </div>
+            <FormProvider {...form}>
 
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                    Password
-                  </label>
-                  <Link href="/auth/forgot-password" className="text-sm text-primary hover:text-primary/80 font-medium">
-                    Forgot password?
-                  </Link>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Email</FormLabel>
+                        <FormControl>
+                          <Input className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" placeholder="Insira seu email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                  placeholder="Enter your password"
-                />
-              </div>
 
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                  Remember me
-                </label>
-              </div>
+                <div>
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center justify-between mb-1">
+                            <FormLabel className="block text-sm font-medium text-gray-700">Senha</FormLabel>
+                            <Link href="/auth/forgot-password" className="text-sm text-primary hover:text-primary/80 font-medium">
+                            Esqueceu seu senha?
+                            </Link>
+                          </div>
+                          <FormControl>
+                            <Input className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary placeholder-opacity-100 placeholder-gray-500 dark:placeholder:text-gray-300 light:placeholder:text-gray-500"  type="password" placeholder="Insira sua senha" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                </div>
 
-              <div>
-                <button
-                  type="submit"
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                >
-                  Sign in
-                </button>
-              </div>
-            </form>
+                <div className="flex items-center">
+                  <input
+                    id="remember-me"
+                    name="remember-me"
+                    type="checkbox"
+                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                  />
+                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                    Remember me
+                  </label>
+                </div>
+
+                <div>
+                  <Button type="submit" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" disabled={isLoading}>
+                    {isLoading ? "Entrando..." : "Entrar"}
+                  </Button>
+                </div>
+              </form>
+            </FormProvider>
 
             <div className="mt-6">
               <div className="relative">

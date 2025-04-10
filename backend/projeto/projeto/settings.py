@@ -158,7 +158,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_COOKIE': 'access_token',  
-    'AUTH_COOKIE_SECURE': False,    # True em produção com HTTPS
+    'AUTH_COOKIE_SECURE': False,    # True quando entrar em produção produção com HTTPS
     'AUTH_COOKIE_HTTP_ONLY': True,
     'AUTH_COOKIE_SAMESITE': 'Lax',  # Ou 'Strict'
 }
