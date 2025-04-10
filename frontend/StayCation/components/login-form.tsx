@@ -68,17 +68,11 @@ export function LoginForm({ onRegisterClick, isModal = false, onCloseModal, onSu
       if (onSuccess) {
         onSuccess(userData);
       }
-
-      if (isModal && onCloseModal) {
-        onCloseModal();
-      }
-
       
       console.log("Headers da resposta:", {
         'set-cookie': response.headers.get('set-cookie'),
         'access-control-allow-credentials': response.headers.get('access-control-allow-credentials')
       })
-
 
 
       toast({
@@ -88,9 +82,6 @@ export function LoginForm({ onRegisterClick, isModal = false, onCloseModal, onSu
 
       
       router.push("/dashboard")
-      if (onCloseModal) {
-        onCloseModal()
-      }
 
     } catch (error) {
       console.error("Erro ao entrar:", error)
