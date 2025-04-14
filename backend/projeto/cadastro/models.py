@@ -23,6 +23,13 @@ class customUserManager(BaseUserManager):
         
 
 class usuario(AbstractBaseUser, PermissionsMixin):
+    class TipoUsuario(models.TextChoices):
+        ADMIN = 'admin', 'Administrador'
+        VISITANTE = 'visitante', 'Visitante'
+        LOCATARIO = 'locatario', 'Locatario'
+        PROPRIETARIO = 'proprietario', 'proprietario'
+
+    
     id = models.AutoField(primary_key=True)
     email = models.EmailField(unique=True)
     nome = models.CharField(max_length=255)
@@ -30,6 +37,9 @@ class usuario(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=now)
+    tipo = models.CharField(max_length=13,
+                            choices=TipoUsuario.choices,
+                            default=TipoUsuario.VISITANTE)
 
     objects = customUserManager()
 

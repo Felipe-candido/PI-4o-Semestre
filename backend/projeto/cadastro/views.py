@@ -18,7 +18,9 @@ class view_registro(viewsets.ModelViewSet):
     http_method_names = ['post', 'options']
 
     def create(self, request, *args, **kwargs):   
-        serializer = self.get_serializer(data = request.data)
+        dados = request.data.copy()
+        dados['tipo'] = 'visitante'
+        serializer = self.get_serializer(data = dados)
         if serializer.is_valid():
             serializer.save()
             return Response({'mensagem': 'Usuario registrado com sucesso!'}, status=status.HTTP_201_CREATED)
