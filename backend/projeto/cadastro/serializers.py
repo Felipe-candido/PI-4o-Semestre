@@ -10,6 +10,11 @@ class registroSerializer(serializers.ModelSerializer):
         model = usuario
         fields = '__all__'
 
+    def validate_tipo(self, value):
+        if value not in usuario.TipoUsuario.values:
+            raise serializers.ValidationError("Tipo de usuário inválido.")
+        return value
+
     def create(self, validated_data):
         user = usuario.objects.create_user(**validated_data)
         return user
