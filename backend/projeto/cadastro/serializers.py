@@ -43,7 +43,7 @@ class loginSerializer(serializers.Serializer):
     
 
 
-class UserSerializer(serializers.Serializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = usuario
         fields = ['id', 'nome', 'sobrenome', 'email', 'tipo']

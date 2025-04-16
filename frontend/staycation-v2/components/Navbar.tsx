@@ -40,12 +40,13 @@ export default function Navbar() {
   useEffect(() => {
     async function fetchUser() {
       const user = await apiFetch("/api/me")
+      console.log("Usuário logado:", user)
       setUser(user)
     }
     fetchUser()
   }, [])
 
-  const userRole = user?.tipo || "visitor"
+  const userRole = user?.tipo || "visitante"
   const userName = user?.nome || "Visitante"
   const userAvatar = user?.avatar || "/placeholder.svg"
 
@@ -68,11 +69,11 @@ export default function Navbar() {
       { name: "Buscar Propriedades", path: "/search", icon: <Search size={20} /> },
     ]
 
-    if (userRole === "visitor") {
+    if (userRole === "visitante") {
       return commonItems
     }
 
-    if (userRole === "tenant") {
+    if (userRole === "locatario") {
       return [
         ...commonItems,
         { name: "Minhas Reservas", path: "/dashboard/bookings", icon: <Calendar size={20} /> },
@@ -80,7 +81,7 @@ export default function Navbar() {
       ]
     }
 
-    if (userRole === "owner") {
+    if (userRole === "priprietario") {
       return [
         { name: "Painel", path: "/dashboard", icon: <Settings size={20} /> },
         { name: "Meus Imóveis", path: "/dashboard/properties", icon: <Home size={20} /> },
@@ -138,7 +139,7 @@ export default function Navbar() {
 
           {/* User Profile or Login/Register */}
           <div className="hidden md:flex items-center">
-            {userRole !== "visitor" ? (
+            {userRole !== "visitante" ? (
               <div className="flex items-center space-x-4">
                 <div className="flex items-center">
                   <img src={userAvatar || "/placeholder.svg"} alt={userName} className="w-8 h-8 rounded-full mr-2" />
@@ -204,7 +205,7 @@ export default function Navbar() {
               ))}
 
               {/* Add login/register links for visitors on mobile */}
-              {userRole === "visitor" && (
+              {userRole === "visitante" && (
                 <>
                   <Link
                     href="/auth/login"
@@ -226,7 +227,7 @@ export default function Navbar() {
               )}
 
               {/* Add logout for logged in users on mobile */}
-              {userRole !== "visitor" && (
+              {userRole !== "visitante" && (
                 <button
                   onClick={() => {
                     // Handle logout logic here
