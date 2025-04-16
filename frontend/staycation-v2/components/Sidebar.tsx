@@ -22,7 +22,6 @@ import {
   FileText,
 } from "lucide-react"
 
-// This would come from your auth context in a real app
 type UserRole = "visitor" | "tenant" | "owner" | "admin" | null
 
 interface SidebarProps {

@@ -3,8 +3,11 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.utils.timezone import now
 from django.core.validators import RegexValidator
 
+
 # testando git
 # Create your models here.
+
+
 
 class customUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -21,6 +24,8 @@ class customUserManager(BaseUserManager):
         extra_fields.setdefault("is_superuser", True)
         return self.create_user(email, password, **extra_fields)
         
+
+
 
 class usuario(AbstractBaseUser, PermissionsMixin):
     class TipoUsuario(models.TextChoices):
@@ -55,6 +60,7 @@ cep_validation = RegexValidator(
     message="CEP inválido. Use o formato XXXXX-XXX ou XXXXXXXX."
 )
     
+   
 
 class chacara(models.Model):
     id = models.AutoField(primary_key=True)
