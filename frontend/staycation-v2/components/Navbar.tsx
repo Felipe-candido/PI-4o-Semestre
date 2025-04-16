@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 
 import { apiFetch } from '@/lib/api'
+import router from "next/router"
 
 
 interface UserData {
@@ -45,6 +46,18 @@ export default function Navbar() {
     }
     fetchUser()
   }, [])
+
+  const handleLogout = async () => {
+    try {
+      await apiFetch('/api/logout/', {
+        method: 'POST'
+      })
+      setUser(null)
+      router.push('/')
+    } catch (error) {
+      console.error('Erro no logout:', error)
+    }
+  }
 
   const userRole = user?.tipo || "visitante"
   const userName = user?.nome || "Visitante"
@@ -147,7 +160,7 @@ export default function Navbar() {
                 </div>
                 <button
                   onClick={() => {
-                    // Handle logout logic here
+                    handleLogout()
                   }}
                   className="text-gray-700 dark:text-gray-300 hover:text-secondary dark:hover:text-secondary"
                 >
@@ -230,7 +243,7 @@ export default function Navbar() {
               {userRole !== "visitante" && (
                 <button
                   onClick={() => {
-                    // Handle logout logic here
+                    handleLogout()
                     closeMenu()
                   }}
                   className="flex items-center p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
