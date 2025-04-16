@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status, viewsets
-from .serializers import registroSerializer, loginSerializer
+from .serializers import registroSerializer, loginSerializer, UserSerializer
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -133,16 +133,13 @@ class CookieJWTAuthentication(JWTAuthentication):
         validated_token = self.get_validated_token(token)
         return self.get_user(validated_token), validated_token
 
-class UserProfileView(viewsets.ViewSet):
+class UserAuthenticated(viewsets.ViewSet):
     authentication_classes = [CookieJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=['get'])
     def me(self, request):
         user = request.user
-        return Response({
-            'id': user.id,
-            'email': user.email,
-            'nome': user.nome,
-        })
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
 

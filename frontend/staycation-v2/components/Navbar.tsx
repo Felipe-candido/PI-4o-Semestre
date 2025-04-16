@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -20,22 +20,34 @@ import {
   FileText,
 } from "lucide-react"
 
-// This would come from your auth context in a real app
-type UserRole = "visitor" | "tenant" | "owner" | "admin" | null
+import { apiFetch } from '@/lib/api'
 
-interface NavbarProps {
-  userRole?: UserRole
-  userName?: string
-  userAvatar?: string
+
+interface UserData {
+  id: string
+  nome: string
+  email: string
+  tipo: string
+  avatar?: string
 }
 
-export default function Navbar({
-  userRole = "visitor",
-  userName = "Visitante",
-  userAvatar = "/placeholder.svg?height=32&width=32",
-}: NavbarProps) {
+
+export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const pathname = usePathname()
+  const [user, setUser] = useState<UserData | null>(null)
+
+  useEffect(() => {
+    async function fetchUser() {
+      const user = await apiFetch("/api/me")
+      setUser(user)
+    }
+    fetchUser()
+  }, [])
+
+  const userRole = user?.tipo || "visitor"
+  const userName = user?.nome || "Visitante"
+  const userAvatar = user?.avatar || "/placeholder.svg"
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)

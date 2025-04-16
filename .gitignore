@@ -1,3 +1,6 @@
 /backend/venv
 /backend/projeto/projeto/__pycache__
 /backend/projeto/cadastro/__pycache__
+*/__pycache__/
+*.py[cod]
+*$py.class
