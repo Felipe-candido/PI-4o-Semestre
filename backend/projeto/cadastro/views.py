@@ -19,7 +19,7 @@ class view_registro(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):   
         dados = request.data.copy()
-        dados['tipo'] = 'visitante'
+        dados['tipo'] = 'proprietario'
         serializer = self.get_serializer(data = dados)
         if serializer.is_valid():
             serializer.save()

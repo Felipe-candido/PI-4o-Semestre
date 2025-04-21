@@ -1,15 +1,48 @@
+'use client'
+
 import MainLayout from "@/components/layout/MainLayout"
 import Link from "next/link"
 import { Calendar, MapPin, Star, Edit, Shield, Bell, CreditCard, User } from "lucide-react"
+import { apiFetch } from "@/lib/api"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+
+interface UserData {
+  id: string
+  nome: string
+  email: string
+  tipo: string
+  avatar?: string
+  telefone: string
+  data: string
+  cpf: string
+  endereco: string
+}
 
 export default function TenantProfile() {
-  // Em uma aplicação real, você obteria os dados do usuário do seu contexto de autenticação
-  const userRole = "tenant"
-  const userName = "João Silva"
-  const userAvatar = "/images/tenant-avatar.jpg"
+  const [user, setUser] = useState<UserData | null>(null)
+  const router = useRouter()
+  
+  const userRole = user?.tipo || "visitante"
+  const userName = user?.nome || "Visitante"
+  const userAvatar = user?.avatar || "/placeholder.svg"
+  const userEmail = user?.email
+  const userTelefone = user?.telefone || ""
+  const userData = user?.data || ""
+  const userCpf = user?.cpf || ""
+  const userEndereco = user?.endereco || ""
+
+  useEffect(() => {
+      async function fetchUser() {
+        const user = await apiFetch("/api/me")
+        console.log("Usuário logado:", user)
+        setUser(user)
+      }
+      fetchUser()
+    }, [])
 
   return (
-    <MainLayout userRole={userRole} userName={userName} userAvatar={userAvatar}>
+    <MainLayout userName={userName} userAvatar={userAvatar}>
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar */}
@@ -130,27 +163,27 @@ export default function TenantProfile() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-sm text-gray-500 mb-1">Nome Completo</h3>
-                  <p className="font-medium">João Silva</p>
+                  <p className="font-medium">{userName}</p>
                 </div>
                 <div>
                   <h3 className="text-sm text-gray-500 mb-1">E-mail</h3>
-                  <p className="font-medium">joao.silva@email.com</p>
+                  <p className="font-medium">{userEmail}</p>
                 </div>
                 <div>
                   <h3 className="text-sm text-gray-500 mb-1">Telefone</h3>
-                  <p className="font-medium">(11) 98765-4321</p>
+                  <p className="font-medium">{userTelefone}</p>
                 </div>
                 <div>
                   <h3 className="text-sm text-gray-500 mb-1">Data de Nascimento</h3>
-                  <p className="font-medium">15/05/1985</p>
+                  <p className="font-medium">{userData}</p>
                 </div>
                 <div>
                   <h3 className="text-sm text-gray-500 mb-1">Endereço</h3>
-                  <p className="font-medium">Rua das Flores, 123 - São Paulo, SP</p>
+                  <p className="font-medium">{userEndereco}</p>
                 </div>
                 <div>
                   <h3 className="text-sm text-gray-500 mb-1">CPF</h3>
-                  <p className="font-medium">123.456.789-00</p>
+                  <p className="font-medium">{userCpf}</p>
                 </div>
               </div>
             </div>

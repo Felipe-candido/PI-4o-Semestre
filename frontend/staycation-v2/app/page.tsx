@@ -1,6 +1,15 @@
 import Link from "next/link"
 import { Search, MapPin, Calendar, Users } from "lucide-react"
 import MainLayout from "@/components/layout/MainLayout"
+import { apiFetch } from '@/lib/api'
+
+interface UserData {
+  id: string
+  nome: string
+  email: string
+  tipo: string
+  avatar?: string
+}
 
 export default function Home() {
   // In a real app, you would get the user data from your auth context

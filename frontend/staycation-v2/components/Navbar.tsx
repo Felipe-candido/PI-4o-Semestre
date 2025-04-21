@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   Home,
   Search,
@@ -21,7 +21,7 @@ import {
 } from "lucide-react"
 
 import { apiFetch } from '@/lib/api'
-import router from "next/router"
+
 
 
 interface UserData {
@@ -37,6 +37,7 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const pathname = usePathname()
   const [user, setUser] = useState<UserData | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     async function fetchUser() {
@@ -94,7 +95,7 @@ export default function Navbar() {
       ]
     }
 
-    if (userRole === "priprietario") {
+    if (userRole === "proprietario") {
       return [
         { name: "Painel", path: "/dashboard", icon: <Settings size={20} /> },
         { name: "Meus Imóveis", path: "/dashboard/properties", icon: <Home size={20} /> },
