@@ -155,10 +155,13 @@ export default function TenantProfile() {
             <div className="bg-white rounded-xl shadow-md p-6 mb-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-primary">Informações Pessoais</h2>
-                <button className="flex items-center text-secondary hover:text-secondary/80">
-                  <Edit className="w-4 h-4 mr-1" />
-                  Editar
-                </button>
+                <Link 
+                href={'/profile/complete_user'}>
+                  <button className="flex items-center text-secondary hover:text-secondary/80">
+                    <Edit className="w-4 h-4 mr-1" />
+                    Complete seu perfil para anunciar propriedades
+                  </button>
+                </Link>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
