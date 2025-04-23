@@ -17,8 +17,18 @@ class registroSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
+        groups = validated_data.pop('groups', None)
         user = usuario.objects.create_user(**validated_data)
+        user_permissions = validated_data.pop('user_permissions', None)
+        
+        if groups:
+            user.groups.set(groups)
+        
+        if user_permissions:
+            user.user_permissions.set(user_permissions)  
+        
         return user
+        
     
 
 class loginSerializer(serializers.Serializer):
