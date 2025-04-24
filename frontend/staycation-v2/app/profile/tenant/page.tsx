@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import MainLayout from "@/components/layout/MainLayout"
 import Link from "next/link"
@@ -6,23 +6,47 @@ import { Calendar, MapPin, Star, Edit, Shield, Bell, CreditCard, User } from "lu
 import { apiFetch } from "@/lib/api"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface UserData {
   id: string
   nome: string
+  sobrenome?: string
   email: string
   tipo: string
   avatar?: string
   telefone: string
   data: string
   cpf: string
+  cep?: string
+  rua?: string
+  numero?: string
+  cidade?: string
+  estado?: string
+  pais?: string
   endereco: string
 }
 
 export default function TenantProfile() {
   const [user, setUser] = useState<UserData | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editedUser, setEditedUser] = useState<UserData | null>(null)
+
+  // Extrair nome e sobrenome do nome completo
+  const nomeCompleto = user?.nome || ""
+  const [nome, sobrenome] = nomeCompleto.split(" ")[0]
+    ? [nomeCompleto.split(" ")[0], nomeCompleto.split(" ").slice(1).join(" ")]
+    : ["", ""]
+
+  // Extrair informações de endereço
+  const enderecoCompleto = user?.endereco || ""
+  const enderecoPartes = enderecoCompleto.split(", ")
+  const [cep, rua, numero, cidade, estado, pais] =
+    enderecoPartes.length >= 6 ? enderecoPartes : ["", "", "", "", "", ""]
   const router = useRouter()
-  
+
   const userRole = user?.tipo || "visitante"
   const userName = user?.nome || "Visitante"
   const userAvatar = user?.avatar || "/placeholder.svg"
@@ -33,13 +57,53 @@ export default function TenantProfile() {
   const userEndereco = user?.endereco || ""
 
   useEffect(() => {
-      async function fetchUser() {
-        const user = await apiFetch("/api/me")
-        console.log("Usuário logado:", user)
-        setUser(user)
-      }
-      fetchUser()
-    }, [])
+    async function fetchUser() {
+      const user = await apiFetch("/api/me")
+      console.log("Usuário logado:", user)
+      setUser(user)
+    }
+    fetchUser()
+  }, [])
+
+  const handleSave = async () => {
+    if (!editedUser) return
+
+    // Construir nome completo
+    const nomeCompleto = `${editedUser.nome} ${editedUser.sobrenome || ""}`.trim()
+
+    // Construir endereço completo
+    const enderecoCompleto =
+      `${editedUser.cep || ""}, ${editedUser.rua || ""}, ${editedUser.numero || ""}, ${editedUser.cidade || ""}, ${editedUser.estado || ""}, ${editedUser.pais || ""}`
+        .replace(/^, /, "")
+        .replace(/, $/, "")
+
+    const updatedUser = {
+      ...editedUser,
+      nome: nomeCompleto,
+      endereco: enderecoCompleto,
+    }
+
+    // Aqui você implementaria a chamada à API para salvar as alterações
+    // await apiFetch('/api/me', { method: 'PUT', body: JSON.stringify(updatedUser) })
+
+    setUser(updatedUser)
+    setIsModalOpen(false)
+  }
+
+  const handleEdit = () => {
+    setEditedUser({
+      ...user!,
+      nome: nome,
+      sobrenome: sobrenome,
+      cep: cep,
+      rua: rua,
+      numero: numero,
+      cidade: cidade,
+      estado: estado,
+      pais: pais,
+    })
+    setIsModalOpen(true)
+  }
 
   return (
     <MainLayout userName={userName} userAvatar={userAvatar}>
@@ -152,45 +216,158 @@ export default function TenantProfile() {
 
           {/* Main Content */}
           <div className="w-full md:w-3/4">
+            {/* Card 1 */}
             <div className="bg-white rounded-xl shadow-md p-6 mb-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-primary">Informações Pessoais</h2>
-                <Link 
-                href={'/profile/complete_user'}>
-                  <button className="flex items-center text-secondary hover:text-secondary/80">
+                {!isModalOpen && (
+                  <button onClick={handleEdit} className="flex items-center text-secondary hover:text-secondary/80">
                     <Edit className="w-4 h-4 mr-1" />
-                    Complete seu perfil para anunciar propriedades
+                    Editar
                   </button>
-                </Link>
+                )}
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-sm text-gray-500 mb-1">Nome Completo</h3>
-                  <p className="font-medium">{userName}</p>
+
+              {!isModalOpen ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-sm text-gray-500 mb-1">Nome Completo</h3>
+                    <p className="font-medium">{userName}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm text-gray-500 mb-1">E-mail</h3>
+                    <p className="font-medium">{userEmail}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm text-gray-500 mb-1">Telefone</h3>
+                    <p className="font-medium">{userTelefone}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm text-gray-500 mb-1">Data de Nascimento</h3>
+                    <p className="font-medium">{userData}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm text-gray-500 mb-1">Endereço</h3>
+                    <p className="font-medium">{userEndereco}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm text-gray-500 mb-1">CPF</h3>
+                    <p className="font-medium">{userCpf}</p>
+                  </div>
                 </div>
+              ) : (
                 <div>
-                  <h3 className="text-sm text-gray-500 mb-1">E-mail</h3>
-                  <p className="font-medium">{userEmail}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="nome">Nome</Label>
+                      <Input
+                        id="nome"
+                        value={editedUser?.nome || ""}
+                        onChange={(e) => setEditedUser({ ...editedUser!, nome: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="sobrenome">Sobrenome</Label>
+                      <Input
+                        id="sobrenome"
+                        value={editedUser?.sobrenome || ""}
+                        onChange={(e) => setEditedUser({ ...editedUser!, sobrenome: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">E-mail</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={editedUser?.email || ""}
+                        onChange={(e) => setEditedUser({ ...editedUser!, email: e.target.value })}
+                        disabled
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="telefone">Telefone</Label>
+                      <Input
+                        id="telefone"
+                        value={editedUser?.telefone || ""}
+                        onChange={(e) => setEditedUser({ ...editedUser!, telefone: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="data">Data de Nascimento</Label>
+                      <Input
+                        id="data"
+                        value={editedUser?.data || ""}
+                        onChange={(e) => setEditedUser({ ...editedUser!, data: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cpf">CPF</Label>
+                      <Input
+                        id="cpf"
+                        value={editedUser?.cpf || ""}
+                        onChange={(e) => setEditedUser({ ...editedUser!, cpf: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cep">CEP</Label>
+                      <Input
+                        id="cep"
+                        value={editedUser?.cep || ""}
+                        onChange={(e) => setEditedUser({ ...editedUser!, cep: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="rua">Rua</Label>
+                      <Input
+                        id="rua"
+                        value={editedUser?.rua || ""}
+                        onChange={(e) => setEditedUser({ ...editedUser!, rua: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="numero">Número</Label>
+                      <Input
+                        id="numero"
+                        value={editedUser?.numero || ""}
+                        onChange={(e) => setEditedUser({ ...editedUser!, numero: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cidade">Cidade</Label>
+                      <Input
+                        id="cidade"
+                        value={editedUser?.cidade || ""}
+                        onChange={(e) => setEditedUser({ ...editedUser!, cidade: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="estado">Estado</Label>
+                      <Input
+                        id="estado"
+                        value={editedUser?.estado || ""}
+                        onChange={(e) => setEditedUser({ ...editedUser!, estado: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="pais">País</Label>
+                      <Input
+                        id="pais"
+                        value={editedUser?.pais || ""}
+                        onChange={(e) => setEditedUser({ ...editedUser!, pais: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end space-x-3">
+                    <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button onClick={handleSave}>Salvar</Button>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm text-gray-500 mb-1">Telefone</h3>
-                  <p className="font-medium">{userTelefone}</p>
-                </div>
-                <div>
-                  <h3 className="text-sm text-gray-500 mb-1">Data de Nascimento</h3>
-                  <p className="font-medium">{userData}</p>
-                </div>
-                <div>
-                  <h3 className="text-sm text-gray-500 mb-1">Endereço</h3>
-                  <p className="font-medium">{userEndereco}</p>
-                </div>
-                <div>
-                  <h3 className="text-sm text-gray-500 mb-1">CPF</h3>
-                  <p className="font-medium">{userCpf}</p>
-                </div>
-              </div>
+              )}
             </div>
 
+            {/* Card 1 */}
             <div className="bg-white rounded-xl shadow-md p-6 mb-6">
               <h2 className="text-2xl font-bold mb-6 text-primary">Próximas Reservas</h2>
               <div className="space-y-4">
@@ -356,4 +533,3 @@ export default function TenantProfile() {
     </MainLayout>
   )
 }
-
