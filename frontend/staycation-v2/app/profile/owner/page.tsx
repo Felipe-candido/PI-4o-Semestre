@@ -1,12 +1,72 @@
+"use client"
+
+import type React from "react"
+
 import MainLayout from "@/components/layout/MainLayout"
 import Link from "next/link"
 import { Calendar, MapPin, Star, Edit, Shield, Bell, CreditCard, User, Home, DollarSign, Settings } from "lucide-react"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 export default function OwnerProfile() {
   // Em uma aplicação real, você obteria os dados do usuário do seu contexto de autenticação
   const userRole = "owner"
   const userName = "Maria Oliveira"
   const userAvatar = "/images/owner-avatar.jpg"
+
+  const [isEditing, setIsEditing] = useState(false)
+  const [userData, setUserData] = useState({
+    nome: "Maria",
+    sobrenome: "Oliveira",
+    email: "maria.oliveira@email.com",
+    telefone: "(11) 97654-3210",
+    dataNascimento: "22/08/1980",
+    endereco: "Av. Paulista, 1000 - São Paulo, SP",
+    cep: "01310-100",
+    rua: "Av. Paulista",
+    numero: "1000",
+    cidade: "São Paulo",
+    estado: "SP",
+    pais: "Brasil",
+    cpf: "987.654.321-00",
+    banco: "001",
+    agencia: "1234",
+    conta: "56789-0",
+    membroDesde: "Março de 2021",
+  })
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target
+    setUserData((prev) => ({
+      ...prev,
+      [id]: value,
+    }))
+  }
+
+  const handleSave = () => {
+    // Em uma aplicação real, você enviaria os dados para a API
+    // await fetch('/api/profile', { method: 'PUT', body: JSON.stringify(userData) })
+
+    // Atualizar o endereço completo
+    const enderecoCompleto = `${userData.rua}, ${userData.numero} - ${userData.cidade}, ${userData.estado}`
+
+    // Atualizar os dados bancários
+    const dadosBancarios = `Banco ${userData.banco} - Ag. ${userData.agencia} - CC ${userData.conta}`
+
+    setUserData({
+      ...userData,
+      endereco: enderecoCompleto,
+    })
+
+    setIsEditing(false)
+  }
+
+  const handleCancel = () => {
+    // Restaurar os dados originais
+    setIsEditing(false)
+  }
 
   return (
     <MainLayout userRole={userRole} userName={userName} userAvatar={userAvatar}>
@@ -155,45 +215,128 @@ export default function OwnerProfile() {
             <div className="bg-white rounded-xl shadow-md p-6 mb-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-primary">Informações Pessoais</h2>
-                <button className="flex items-center text-secondary hover:text-secondary/80">
-                  <Edit className="w-4 h-4 mr-1" />
-                  Editar
-                </button>
+                {!isEditing && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center text-secondary hover:text-secondary/80"
+                  >
+                    <Edit className="w-4 h-4 mr-1" />
+                    Editar
+                  </button>
+                )}
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-sm text-gray-500 mb-1">Nome Completo</h3>
-                  <p className="font-medium">Maria Oliveira</p>
+
+              {!isEditing ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-sm text-gray-500 mb-1">Nome Completo</h3>
+                    <p className="font-medium">{`${userData.nome} ${userData.sobrenome}`}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm text-gray-500 mb-1">E-mail</h3>
+                    <p className="font-medium">{userData.email}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm text-gray-500 mb-1">Telefone</h3>
+                    <p className="font-medium">{userData.telefone}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm text-gray-500 mb-1">Data de Nascimento</h3>
+                    <p className="font-medium">{userData.dataNascimento}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm text-gray-500 mb-1">Endereço</h3>
+                    <p className="font-medium">{userData.endereco}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm text-gray-500 mb-1">CPF</h3>
+                    <p className="font-medium">{userData.cpf}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm text-gray-500 mb-1">Dados Bancários</h3>
+                    <p className="font-medium">{`Banco ${userData.banco} - Ag. ${userData.agencia} - CC ${userData.conta}`}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm text-gray-500 mb-1">Membro desde</h3>
+                    <p className="font-medium">{userData.membroDesde}</p>
+                  </div>
                 </div>
+              ) : (
                 <div>
-                  <h3 className="text-sm text-gray-500 mb-1">E-mail</h3>
-                  <p className="font-medium">maria.oliveira@email.com</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="nome">Nome</Label>
+                      <Input id="nome" value={userData.nome} onChange={handleInputChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="sobrenome">Sobrenome</Label>
+                      <Input id="sobrenome" value={userData.sobrenome} onChange={handleInputChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">E-mail</Label>
+                      <Input id="email" type="email" value={userData.email} onChange={handleInputChange} disabled />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="telefone">Telefone</Label>
+                      <Input id="telefone" value={userData.telefone} onChange={handleInputChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="dataNascimento">Data de Nascimento</Label>
+                      <Input id="dataNascimento" value={userData.dataNascimento} onChange={handleInputChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cpf">CPF</Label>
+                      <Input id="cpf" value={userData.cpf} onChange={handleInputChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cep">CEP</Label>
+                      <Input id="cep" value={userData.cep} onChange={handleInputChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="rua">Rua</Label>
+                      <Input id="rua" value={userData.rua} onChange={handleInputChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="numero">Número</Label>
+                      <Input id="numero" value={userData.numero} onChange={handleInputChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cidade">Cidade</Label>
+                      <Input id="cidade" value={userData.cidade} onChange={handleInputChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="estado">Estado</Label>
+                      <Input id="estado" value={userData.estado} onChange={handleInputChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="pais">País</Label>
+                      <Input id="pais" value={userData.pais} onChange={handleInputChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="banco">Banco</Label>
+                      <Input id="banco" value={userData.banco} onChange={handleInputChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="agencia">Agência</Label>
+                      <Input id="agencia" value={userData.agencia} onChange={handleInputChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="conta">Conta</Label>
+                      <Input id="conta" value={userData.conta} onChange={handleInputChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="membroDesde">Membro desde</Label>
+                      <Input id="membroDesde" value={userData.membroDesde} onChange={handleInputChange} disabled />
+                    </div>
+                  </div>
+                  <div className="flex justify-end space-x-3">
+                    <Button variant="outline" onClick={handleCancel}>
+                      Cancelar
+                    </Button>
+                    <Button onClick={handleSave}>Salvar</Button>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm text-gray-500 mb-1">Telefone</h3>
-                  <p className="font-medium">(11) 97654-3210</p>
-                </div>
-                <div>
-                  <h3 className="text-sm text-gray-500 mb-1">Data de Nascimento</h3>
-                  <p className="font-medium">22/08/1980</p>
-                </div>
-                <div>
-                  <h3 className="text-sm text-gray-500 mb-1">Endereço</h3>
-                  <p className="font-medium">Av. Paulista, 1000 - São Paulo, SP</p>
-                </div>
-                <div>
-                  <h3 className="text-sm text-gray-500 mb-1">CPF</h3>
-                  <p className="font-medium">987.654.321-00</p>
-                </div>
-                <div>
-                  <h3 className="text-sm text-gray-500 mb-1">Dados Bancários</h3>
-                  <p className="font-medium">Banco 001 - Ag. 1234 - CC 56789-0</p>
-                </div>
-                <div>
-                  <h3 className="text-sm text-gray-500 mb-1">Membro desde</h3>
-                  <p className="font-medium">Março de 2021</p>
-                </div>
-              </div>
+              )}
             </div>
 
             <div className="bg-white rounded-xl shadow-md p-6 mb-6">
@@ -372,4 +515,3 @@ export default function OwnerProfile() {
     </MainLayout>
   )
 }
-
