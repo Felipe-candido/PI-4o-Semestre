@@ -3,12 +3,10 @@ import Link from "next/link"
 import { Save, ArrowLeft, Trash2, Image, Plus, Minus } from "lucide-react"
 
 export default function EditProperty({ params }: { params: { id: string } }) {
-  // Em uma aplicação real, você obteria os dados do usuário e da propriedade do seu contexto/API
   const userRole = "owner"
   const userName = "Maria Oliveira"
   const userAvatar = "/images/owner-avatar.jpg"
 
-  // Dados simulados da propriedade
   const property = {
     id: params.id,
     name: "Chalé na Montanha",
@@ -77,295 +75,7 @@ export default function EditProperty({ params }: { params: { id: string } }) {
           <h1 className="text-2xl font-bold mb-6 text-primary">Editar Propriedade</h1>
           
           <form className="space-y-8">
-            {/* Informações Básicas */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Informações Básicas</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="property-name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Nome da Propriedade
-                  </label>
-                  <input
-                    id="property-name"
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                    defaultValue={property.name}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="property-type" className="block text-sm font-medium text-gray-700 mb-1">
-                    Tipo de Propriedade
-                  </label>
-                  <select
-                    id="property-type"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                    defaultValue={property.type}
-                  >
-                    <option>Chalé</option>
-                    <option>Casa de Campo</option>
-                    <option>Fazenda</option>
-                    <option>Cabana</option>
-                    <option>Sítio</option>
-                  </select>
-                </div>
-                <div className="md:col-span-2">
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                    Descrição
-                  </label>
-                  <textarea
-                    id="description"
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                    defaultValue={property.description}
-                  ></textarea>
-                </div>
-              </div>
-            </div>
-
-            {/* Localização */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Localização</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                    Endereço
-                  </label>
-                  <input
-                    id="address"
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                    defaultValue={property.address}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
-                    Cidade
-                  </label>
-                  <input
-                    id="city"
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                    defaultValue={property.city}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
-                    Estado
-                  </label>
-                  <input
-                    id="state"
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                    defaultValue={property.state}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="zip" className="block text-sm font-medium text-gray-700 mb-1">
-                    CEP
-                  </label>
-                  <input
-                    id="zip"
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                    defaultValue={property.zipCode}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
-                    País
-                  </label>
-                  <input
-                    id="country"
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                    defaultValue={property.country}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Preços */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Preços</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
-                    Preço por Noite (R$)
-                  </label>
-                  <input
-                    id="price"
-                    type="number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                    defaultValue={property.price}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="weekend-price" className="block text-sm font-medium text-gray-700 mb-1">
-                    Preço de Fim de Semana (R$)
-                  </label>
-                  <input
-                    id="weekend-price"
-                    type="number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                    defaultValue={property.weekendPrice}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="cleaning-fee" className="block text-sm font-medium text-gray-700 mb-1">
-                    Taxa de Limpeza (R$)
-                  </label>
-                  <input
-                    id="cleaning-fee"
-                    type="number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                    defaultValue={property.cleaningFee}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Detalhes */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Detalhes da Propriedade</h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div>
-                  <label htmlFor="max-guests" className="block text-sm font-medium text-gray-700 mb-1">
-                    Máximo de Hóspedes
-                  </label>
-                  <div className="flex">
-                    <button
-                      type="button"
-                      className="px-3 py-2 border border-gray-300 rounded-l-lg bg-gray-50 hover:bg-gray-100"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <input
-                      id="max-guests"
-                      type="number"
-                      className="w-full px-3 py-2 border-y border-gray-300 text-center focus:outline-none focus:ring-primary focus:border-primary"
-                      defaultValue={property.maxGuests}
-                    />
-                    <button
-                      type="button"
-                      className="px-3 py-2 border border-gray-300 rounded-r-lg bg-gray-50 hover:bg-gray-100"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="bedrooms" className="block text-sm font-medium text-gray-700 mb-1">
-                    Quartos
-                  </label>
-                  <div className="flex">
-                    <button
-                      type="button"
-                      className="px-3 py-2 border border-gray-300 rounded-l-lg bg-gray-50 hover:bg-gray-100"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <input
-                      id="bedrooms"
-                      type="number"
-                      className="w-full px-3 py-2 border-y border-gray-300 text-center focus:outline-none focus:ring-primary focus:border-primary"
-                      defaultValue={property.bedrooms}
-                    />
-                    <button
-                      type="button"
-                      className="px-3 py-2 border border-gray-300 rounded-r-lg bg-gray-50 hover:bg-gray-100"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="beds" className="block text-sm font-medium text-gray-700 mb-1">
-                    Camas
-                  </label>
-                  <div className="flex">
-                    <button
-                      type="button"
-                      className="px-3 py-2 border border-gray-300 rounded-l-lg bg-gray-50 hover:bg-gray-100"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <input
-                      id="beds"
-                      type="number"
-                      className="w-full px-3 py-2 border-y border-gray-300 text-center focus:outline-none focus:ring-primary focus:border-primary"
-                      defaultValue={property.beds}
-                    />
-                    <button
-                      type="button"
-                      className="px-3 py-2 border border-gray-300 rounded-r-lg bg-gray-50 hover:bg-gray-100"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="bathrooms" className="block text-sm font-medium text-gray-700 mb-1">
-                    Banheiros
-                  </label>
-                  <div className="flex">
-                    <button
-                      type="button"
-                      className="px-3 py-2 border border-gray-300 rounded-l-lg bg-gray-50 hover:bg-gray-100"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <input
-                      id="bathrooms"
-                      type="number"
-                      className="w-full px-3 py-2 border-y border-gray-300 text-center focus:outline-none focus:ring-primary focus:border-primary"
-                      defaultValue={property.bathrooms}
-                    />
-                    <button
-                      type="button"
-                      className="px-3 py-2 border border-gray-300 rounded-r-lg bg-gray-50 hover:bg-gray-100"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Comodidades */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Comodidades</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {[
-                  "Wi-Fi",
-                  "Cozinha completa",
-                  "Lareira",
-                  "Estacionamento",
-                  "Churrasqueira",
-                  "Vista para montanha",
-                  "Aquecimento",
-                  "TV",
-                  "Área externa",
-                  "Piscina",
-                  "Ar condicionado",
-                  "Máquina de lavar",
-                  "Secadora",
-                  "Ferro de passar",
-                  "Berço",
-                  "Cadeira alta",
-                  "Detector de fumaça",
-                  "Extintor de incêndio"
-                ].map((amenity) => (
-                  <label key={amenity} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      className="rounded text-primary focus:ring-primary h-4 w-4"
-                      defaultChecked={property.amenities.includes(amenity)}
-                    />
-                    <span className="ml-2 text-sm text-gray-700">{amenity}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+            {/* ... (suas seções anteriores) ... */}
 
             {/* Fotos */}
             <div>
@@ -381,19 +91,107 @@ export default function EditProperty({ params }: { params: { id: string } }) {
                     <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                       <button
                         type="button"
-                        className="p-1 bg-white rounded-full"
+                        className="p-2 bg-white rounded-full hover:bg-red-100"
                       >
                         <Trash2 className="w-5 h-5 text-red-600" />
                       </button>
                     </div>
                   </div>
                 ))}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center h-40 bg-gray-50 hover:bg-gray-100 cursor-pointer">
-                  <Image className="w-8 h-8 text
+                <label className="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center h-40 bg-gray-50 hover:bg-gray-100 cursor-pointer">
+                  <input type="file" className="hidden" />
+                  <Image className="w-8 h-8 text-gray-400" />
+                  <span className="text-sm text-gray-500 mt-2">Adicionar Foto</span>
+                </label>
+              </div>
+            </div>
 
+            {/* Regras */}
+            <div>
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">Regras da Propriedade</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="check-in" className="block text-sm font-medium text-gray-700 mb-1">
+                    Horário de Check-in
+                  </label>
+                  <input
+                    id="check-in"
+                    type="time"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                    defaultValue={property.rules.checkIn}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="check-out" className="block text-sm font-medium text-gray-700 mb-1">
+                    Horário de Check-out
+                  </label>
+                  <input
+                    id="check-out"
+                    type="time"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                    defaultValue={property.rules.checkOut}
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    id="pets-allowed"
+                    type="checkbox"
+                    className="rounded text-primary focus:ring-primary h-5 w-5"
+                    defaultChecked={property.rules.petsAllowed}
+                  />
+                  <label htmlFor="pets-allowed" className="text-sm text-gray-700">Permitir animais de estimação</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    id="smoking-allowed"
+                    type="checkbox"
+                    className="rounded text-primary focus:ring-primary h-5 w-5"
+                    defaultChecked={property.rules.smokingAllowed}
+                  />
+                  <label htmlFor="smoking-allowed" className="text-sm text-gray-700">Permitir fumar</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    id="parties-allowed"
+                    type="checkbox"
+                    className="rounded text-primary focus:ring-primary h-5 w-5"
+                    defaultChecked={property.rules.partiesAllowed}
+                  />
+                  <label htmlFor="parties-allowed" className="text-sm text-gray-700">Permitir festas/eventos</label>
+                </div>
+                <div>
+                  <label htmlFor="min-nights" className="block text-sm font-medium text-gray-700 mb-1">
+                    Noites Mínimas
+                  </label>
+                  <input
+                    id="min-nights"
+                    type="number"
+                    min="1"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                    defaultValue={property.rules.minNights}
+                  />
+                </div>
+              </div>
+            </div>
 
-```plaintext file="public/images/admin-avatar.jpg"
-
-
-\
-
+            {/* Botões Finais */}
+            <div className="flex justify-end space-x-4 mt-8">
+              <button
+                type="button"
+                className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90"
+              >
+                Salvar Alterações
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </MainLayout>
+  )
+}
