@@ -142,4 +142,8 @@ class UserAuthenticated(viewsets.ViewSet):
         user = request.user
         serializer = UserSerializer(user)
         return Response(serializer.data)
+    
+
+
+
 

@@ -57,3 +57,29 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = usuario
         fields = ['id', 'nome', 'sobrenome', 'email', 'tipo']
+
+
+class editSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = usuario
+        fields = ''
+
+    def validate_tipo(self, value):
+        if value not in usuario.TipoUsuario.values:
+            raise serializers.ValidationError("Tipo de usuário inválido.")
+        return value
+
+    def create(self, validated_data):
+        groups = validated_data.pop('groups', None)
+        user = usuario.objects.create_user(**validated_data)
+        user_permissions = validated_data.pop('user_permissions', None)
+        
+        if groups:
+            user.groups.set(groups)
+        
+        if user_permissions:
+            user.user_permissions.set(user_permissions)  
+        
+        return user
+        

@@ -30,7 +30,13 @@ class customUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
         
 
-
+class Endereco(models.Model):
+    rua = models.CharField(max_length=255)
+    cep = models.CharField(max_length=8)
+    numero = models.IntegerField()
+    cidade = models.CharField(max_length=255)
+    estado = models.CharField(max_length=255)
+    pais = models.CharField(max_length=255)
 
 class usuario(AbstractBaseUser, PermissionsMixin):
     class TipoUsuario(models.TextChoices):
@@ -41,15 +47,27 @@ class usuario(AbstractBaseUser, PermissionsMixin):
 
     
     id = models.AutoField(primary_key=True)
+    cpf = models.CharField(max_length=11, null=True, blank=True)
+    dataNascimento = models.DateField(null=True, blank=True)
     email = models.EmailField(unique=True)
     nome = models.CharField(max_length=255)
+    telefone = models.IntegerField(null=True)
     sobrenome = models.CharField(max_length=255, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=now)
+    endereco = models.ForeignKey(Endereco, on_delete=models.CASCADE, null=True, blank=True)
     tipo = models.CharField(max_length=13,
                             choices=TipoUsuario.choices,
                             default=TipoUsuario.VISITANTE)
+    
+    class meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['endereco', 'id', 'cpf', 'dataNascimento', 'email', 'nome', 'sobrenome', 'is_staff', 'is_active', 'date_joined', 'tipo'],
+                name='unique_endereco_pessoa' 
+            )
+        ]
 
     objects = customUserManager()
 
