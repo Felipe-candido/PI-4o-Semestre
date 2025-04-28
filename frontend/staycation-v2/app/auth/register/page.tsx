@@ -12,6 +12,7 @@ import { useEffect, useState } from "react"
 import { toast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
 
+
 const registerSchema = z
   .object({
     nome: z.string().min(3, "O nome deve ter no mínimo 3 letras"),
