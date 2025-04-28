@@ -9,6 +9,24 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { toast } from "@/components/ui/use-toast"
+
+// CRIA A ESTRUTURA DO FORM E SUAS VALIDACOES
+const registerSchema = z
+  .object({
+    nome: z.string().min(3, "O nome deve ter no mínimo 3 letras"),
+    sobrenome: z.string().min(3, "O sobrenome deve ter no mínimo 3 letras"),
+    cpf: z.string().min(11, "Digite um CPF valido"),
+    dataNascimento: z.date().
+  })
+  
+
+type RegisterFormValues = z.infer<typeof registerSchema>
+
+
 
 interface UserData {
   id: string
