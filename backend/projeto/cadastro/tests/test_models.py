@@ -2,7 +2,7 @@ from django.test import TestCase
 from cadastro.models import usuario
 from django.db import IntegrityError
 
-class UsuarioModelTestCase(TestCase):
+class UsuarioModelTest(TestCase):
 
       def test_create_usuario(self):
             user = usuario.objects.create(
