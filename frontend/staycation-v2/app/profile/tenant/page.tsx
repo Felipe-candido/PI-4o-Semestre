@@ -89,21 +89,44 @@ export default function TenantProfile() {
   
   const handleSave = async () => {
     try {
+
+      const payload = {
+        user: {
+          nome: editedUser?.nome,
+          sobrenome: editedUser?.sobrenome,
+          telefone: editedUser?.telefone,
+          dataNascimento: editedUser?.dataNascimento,
+          cpf: editedUser?.cpf
+        },
+        endereco: {
+          rua: editedEndereco?.rua,
+          numero: editedEndereco?.numero,
+          cidade: editedEndereco?.cidade,
+          estado: editedEndereco?.estado,
+          cep: editedEndereco?.cep,
+          pais: editedEndereco?.pais
+        }
+      };
+
       const response = await apiFetch("/api/editar-perfil/edit/", {
         method: "PATCH",
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...editedUser,
-          endereco: editedEndereco
-        })
+        body: JSON.stringify(payload)
       })
 
-      setUser(response.user)
-      setEndereco(response.endereco)
-      setIsModalOpen(false)
+      if (response?.success) {
+        setUser(prev => ({ ...prev, ...response.user }));
+        setEndereco(prev => ({ ...prev, ...response.endereco }));
+        setIsModalOpen(false);
+        
+        toast({
+          title: "Sucesso",
+          description: "Perfil atualizado com sucesso",
+        });
+      }
       
       toast({
         title: "Sucesso",
