@@ -1,7 +1,8 @@
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status, viewsets
-from .serializers import registroSerializer, loginSerializer, UserSerializer
+from .models import Endereco
+from .serializers import EnderecoSerializer, registroSerializer, loginSerializer, UserSerializer, edit_user_serializer
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -19,7 +20,7 @@ class view_registro(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):   
         dados = request.data.copy()
-        dados['tipo'] = 'proprietario'
+        dados['tipo'] = 'locatario'
         serializer = self.get_serializer(data = dados)
         if serializer.is_valid():
             serializer.save()
@@ -140,10 +141,47 @@ class UserAuthenticated(viewsets.ViewSet):
     @action(detail=False, methods=['get'])
     def me(self, request):
         user = request.user
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
+        try:
+            endereco = Endereco.objects.get(user=user)
+            endereco_serializer = EnderecoSerializer(endereco)
+        except Endereco.DoesNotExist:
+            endereco_serializer = None
+
+        user_serializer = UserSerializer(user)
+        
+        return Response({
+            'user': user_serializer.data,
+            'endereco': endereco_serializer.data if endereco_serializer else None
+        })
     
 
+class editUsuario(viewsets.ViewSet):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
-
+    @action(detail=False, methods=['patch'])
+    def edit(self, request):
+        user = request.user
+        data = request.data
+        
+        # ATUALIZA OS DADOS DO USUARIO
+        user_serializer = UserSerializer(user, data=data.get('user', {}), partial=True)
+        user_serializer.is_valid(raise_exception=True)
+        user_serializer.save()
+        
+        # ATUALIZA OU CRIA UM ENDERECO
+        endereco_data = data.get('endereco', {})
+        if endereco_data:
+            endereco, created = Endereco.objects.update_or_create(
+                user=user,
+                defaults=endereco_data
+            )
+            endereco_serializer = EnderecoSerializer(endereco)
+        else:
+            endereco_serializer = None
+        
+        return Response({
+            'user': user_serializer.data,
+            'endereco': endereco_serializer.data if endereco_serializer else None
+        })
 

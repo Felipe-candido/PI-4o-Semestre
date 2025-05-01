@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
+from .models import Endereco
 
 usuario = get_user_model()
 
@@ -56,30 +57,37 @@ class loginSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = usuario
-        fields = ['id', 'nome', 'sobrenome', 'email', 'tipo']
+        fields = '__all__'
 
 
-class editSerializer(serializers.ModelSerializer):
+class EnderecoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Endereco
+        fields = ['rua', 'cidade', 'estado', 'cep', 'pais']
+
+
+class edit_user_serializer(serializers.ModelSerializer):
+    endereco = EnderecoSerializer(required=False)
 
     class Meta:
         model = usuario
-        fields = ''
+        fields =  ['email', 'nome', 'cpf', 'telefone', 'endereco', 'dataNascimento']
+        read_only_fields = ['id', 'email']  
 
-    def validate_tipo(self, value):
-        if value not in usuario.TipoUsuario.values:
-            raise serializers.ValidationError("Tipo de usuário inválido.")
-        return value
+    def update(self, instance, validated_data):
+        endereco_data = validated_data.pop('endereco', None)
 
-    def create(self, validated_data):
-        groups = validated_data.pop('groups', None)
-        user = usuario.objects.create_user(**validated_data)
-        user_permissions = validated_data.pop('user_permissions', None)
-        
-        if groups:
-            user.groups.set(groups)
-        
-        if user_permissions:
-            user.user_permissions.set(user_permissions)  
-        
-        return user
+        # ATUALIZA OS CAMPOS DO USUARIO
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # ATUALZIA OU CRIA O ENDERECO
+        if endereco_data:
+            endereco, _ = Endereco.objects.get_or_create(usuario=instance)
+            for attr, value in endereco_data.items():
+                setattr(endereco, attr, value)
+            endereco.save()
+
+        return instance
         
