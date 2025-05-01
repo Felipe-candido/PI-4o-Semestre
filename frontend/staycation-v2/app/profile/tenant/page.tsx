@@ -16,43 +16,34 @@ import { toast } from "@/components/ui/use-toast"
 
 // CRIA A ESTRUTURA DO FORM E SUAS VALIDACOES
   
-
-
 interface UserData {
   id: string
   nome: string
-  sobrenome?: string
+  sobrenome: string
   email: string
-  tipo: string
-  avatar?: string
   telefone: string
-  data: string
+  dataNascimento: string
   cpf: string
-  cep?: string
+  tipo : string
+  avatar: string
+}
+
+interface Endereco {
   rua?: string
   numero?: string
   cidade?: string
   estado?: string
+  cep?: string
   pais?: string
-  endereco: string
 }
 
 export default function TenantProfile() {
   const [user, setUser] = useState<UserData | null>(null)
+  const [endereco, setEndereco] = useState<Endereco | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editedUser, setEditedUser] = useState<UserData | null>(null)
+  const [editedEndereco, setEditedEndereco] = useState<Endereco | null>(null)
 
-  // Extrair nome e sobrenome do nome completo
-  const nomeCompleto = user?.nome || ""
-  const [nome, sobrenome] = nomeCompleto.split(" ")[0]
-    ? [nomeCompleto.split(" ")[0], nomeCompleto.split(" ").slice(1).join(" ")]
-    : ["", ""]
-
-  // Extrair informações de endereço
-  const enderecoCompleto = user?.endereco || ""
-  const enderecoPartes = enderecoCompleto.split(", ")
-  const [cep, rua, numero, cidade, estado, pais] =
-    enderecoPartes.length >= 6 ? enderecoPartes : ["", "", "", "", "", ""]
   const router = useRouter()
 
   const userRole = user?.tipo || "visitante"
@@ -60,57 +51,84 @@ export default function TenantProfile() {
   const userAvatar = user?.avatar || "/placeholder.svg"
   const userEmail = user?.email
   const userTelefone = user?.telefone || ""
-  const userData = user?.data || ""
+  const userData = user?.dataNascimento || ""
   const userCpf = user?.cpf || ""
-  const userEndereco = user?.endereco || ""
+
+
 
   useEffect(() => {
-    async function fetchUser() {
-      const user = await apiFetch("/api/me")
-      console.log("Usuário logado:", user)
-      setUser(user)
+    // FUNCAO PARA CARREGAR OS DADOS DO USUARIO AUTENTICADO
+    async function fetchUsuario() {
+      try {
+        const response = await apiFetch("/api/me", {
+          credentials: 'include'
+        })
+        // CRIA UMA INSTANCIA PARA EXIBICAO
+        setUser(response.user)
+        // E OUTRA PARA EDICAO
+        setEditedUser({...response.user})
+        setEndereco(response.endereco || {})
+        setEditedEndereco(response.endereco || {})
+      } catch (error) {
+      
+        router.push('/auth/login')
+         
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os dados do usuário",
+          variant: "destructive",
+        })
+      }
     }
-    fetchUser()
+    fetchUsuario()
   }, [])
 
+  const handleEdit = () => {
+    setIsModalOpen(true)
+  }
+  
   const handleSave = async () => {
-    if (!editedUser) return
+    try {
+      const response = await apiFetch("/api/editar-perfil/edit/", {
+        method: "PATCH",
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...editedUser,
+          endereco: editedEndereco
+        })
+      })
 
-    // Construir nome completo
-    const nomeCompleto = `${editedUser.nome} ${editedUser.sobrenome || ""}`.trim()
-
-    // Construir endereço completo
-    const enderecoCompleto =
-      `${editedUser.cep || ""}, ${editedUser.rua || ""}, ${editedUser.numero || ""}, ${editedUser.cidade || ""}, ${editedUser.estado || ""}, ${editedUser.pais || ""}`
-        .replace(/^, /, "")
-        .replace(/, $/, "")
-
-    const updatedUser = {
-      ...editedUser,
-      nome: nomeCompleto,
-      endereco: enderecoCompleto,
+      setUser(response.user)
+      setEndereco(response.endereco)
+      setIsModalOpen(false)
+      
+      toast({
+        title: "Sucesso",
+        description: "Perfil atualizado com sucesso",
+      })
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o perfil",
+        variant: "destructive",
+      })
     }
-
-    // Aqui você implementaria a chamada à API para salvar as alterações
-    // await apiFetch('/api/me', { method: 'PUT', body: JSON.stringify(updatedUser) })
-
-    setUser(updatedUser)
-    setIsModalOpen(false)
   }
 
-  const handleEdit = () => {
-    setEditedUser({
-      ...user!,
-      nome: nome,
-      sobrenome: sobrenome,
-      cep: cep,
-      rua: rua,
-      numero: numero,
-      cidade: cidade,
-      estado: estado,
-      pais: pais,
-    })
-    setIsModalOpen(true)
+  const formatAddress = () => {
+    if (!endereco) return "Não informado"
+    const parts = [
+      endereco.rua,
+      endereco.numero,
+      endereco.cidade,
+      endereco.estado,
+      endereco.cep,
+      endereco.pais
+    ].filter(Boolean)
+    return parts.join(", ") || "Não informado"
   }
 
   return (
@@ -238,31 +256,31 @@ export default function TenantProfile() {
 
               {!isModalOpen ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="text-sm text-gray-500 mb-1">Nome Completo</h3>
-                    <p className="font-medium">{userName}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm text-gray-500 mb-1">E-mail</h3>
-                    <p className="font-medium">{userEmail}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm text-gray-500 mb-1">Telefone</h3>
-                    <p className="font-medium">{userTelefone}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm text-gray-500 mb-1">Data de Nascimento</h3>
-                    <p className="font-medium">{userData}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm text-gray-500 mb-1">Endereço</h3>
-                    <p className="font-medium">{userEndereco}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm text-gray-500 mb-1">CPF</h3>
-                    <p className="font-medium">{userCpf}</p>
-                  </div>
+                <div>
+                  <h3 className="text-sm text-gray-500 mb-1">Nome Completo</h3>
+                  <p className="font-medium">{user?.nome} {user?.sobrenome}</p>
                 </div>
+                <div>
+                  <h3 className="text-sm text-gray-500 mb-1">E-mail</h3>
+                  <p className="font-medium">{user?.email}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm text-gray-500 mb-1">Telefone</h3>
+                  <p className="font-medium">{user?.telefone || "Não informado"}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm text-gray-500 mb-1">Data de Nascimento</h3>
+                  <p className="font-medium">{user?.dataNascimento || "Não informada"}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm text-gray-500 mb-1">Endereço</h3>
+                  <p className="font-medium">{formatAddress()}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm text-gray-500 mb-1">CPF</h3>
+                  <p className="font-medium">{user?.cpf || "Não informado"}</p>
+                </div>
+              </div>
               ) : (
                 <div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -271,7 +289,7 @@ export default function TenantProfile() {
                       <Input
                         id="nome"
                         value={editedUser?.nome || ""}
-                        onChange={(e) => setEditedUser({ ...editedUser!, nome: e.target.value })}
+                        onChange={(e) => setEditedUser({...editedUser!, nome: e.target.value})}
                       />
                     </div>
                     <div className="space-y-2">
@@ -279,7 +297,7 @@ export default function TenantProfile() {
                       <Input
                         id="sobrenome"
                         value={editedUser?.sobrenome || ""}
-                        onChange={(e) => setEditedUser({ ...editedUser!, sobrenome: e.target.value })}
+                        onChange={(e) => setEditedUser({...editedUser!, sobrenome: e.target.value})}
                       />
                     </div>
                     <div className="space-y-2">
@@ -288,7 +306,6 @@ export default function TenantProfile() {
                         id="email"
                         type="email"
                         value={editedUser?.email || ""}
-                        onChange={(e) => setEditedUser({ ...editedUser!, email: e.target.value })}
                         disabled
                       />
                     </div>
@@ -297,15 +314,16 @@ export default function TenantProfile() {
                       <Input
                         id="telefone"
                         value={editedUser?.telefone || ""}
-                        onChange={(e) => setEditedUser({ ...editedUser!, telefone: e.target.value })}
+                        onChange={(e) => setEditedUser({...editedUser!, telefone: e.target.value})}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="data">Data de Nascimento</Label>
+                      <Label htmlFor="dataNascimento">Data de Nascimento</Label>
                       <Input
-                        id="data"
-                        value={editedUser?.data || ""}
-                        onChange={(e) => setEditedUser({ ...editedUser!, data: e.target.value })}
+                        id="dataNascimento"
+                        type="date"
+                        value={editedUser?.dataNascimento || ""}
+                        onChange={(e) => setEditedUser({...editedUser!, dataNascimento: e.target.value})}
                       />
                     </div>
                     <div className="space-y-2">
@@ -313,55 +331,55 @@ export default function TenantProfile() {
                       <Input
                         id="cpf"
                         value={editedUser?.cpf || ""}
-                        onChange={(e) => setEditedUser({ ...editedUser!, cpf: e.target.value })}
+                        onChange={(e) => setEditedUser({...editedUser!, cpf: e.target.value})}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="cep">CEP</Label>
                       <Input
                         id="cep"
-                        value={editedUser?.cep || ""}
-                        onChange={(e) => setEditedUser({ ...editedUser!, cep: e.target.value })}
+                        value={editedEndereco?.cep || ""}
+                        onChange={(e) => setEditedEndereco({...editedEndereco!, cep: e.target.value})}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="rua">Rua</Label>
                       <Input
                         id="rua"
-                        value={editedUser?.rua || ""}
-                        onChange={(e) => setEditedUser({ ...editedUser!, rua: e.target.value })}
+                        value={editedEndereco?.rua || ""}
+                        onChange={(e) => setEditedEndereco({...editedEndereco!, rua: e.target.value})}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="numero">Número</Label>
                       <Input
                         id="numero"
-                        value={editedUser?.numero || ""}
-                        onChange={(e) => setEditedUser({ ...editedUser!, numero: e.target.value })}
+                        value={editedEndereco?.numero || ""}
+                        onChange={(e) => setEditedEndereco({...editedEndereco!, numero: e.target.value})}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="cidade">Cidade</Label>
                       <Input
                         id="cidade"
-                        value={editedUser?.cidade || ""}
-                        onChange={(e) => setEditedUser({ ...editedUser!, cidade: e.target.value })}
+                        value={editedEndereco?.cidade || ""}
+                        onChange={(e) => setEditedEndereco({...editedEndereco!, cidade: e.target.value})}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="estado">Estado</Label>
                       <Input
                         id="estado"
-                        value={editedUser?.estado || ""}
-                        onChange={(e) => setEditedUser({ ...editedUser!, estado: e.target.value })}
+                        value={editedEndereco?.estado || ""}
+                        onChange={(e) => setEditedEndereco({...editedEndereco!, estado: e.target.value})}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="pais">País</Label>
                       <Input
                         id="pais"
-                        value={editedUser?.pais || ""}
-                        onChange={(e) => setEditedUser({ ...editedUser!, pais: e.target.value })}
+                        value={editedEndereco?.pais || ""}
+                        onChange={(e) => setEditedEndereco({...editedEndereco!, pais: e.target.value})}
                       />
                     </div>
                   </div>
