@@ -120,13 +120,17 @@ export default function TenantProfile() {
       if (response?.success) {
         setUser(prev => ({ ...prev, ...response.user }));
         setEndereco(prev => ({ ...prev, ...response.endereco }));
-        setIsModalOpen(false);
+        
         
         toast({
           title: "Sucesso",
           description: "Perfil atualizado com sucesso",
         });
       }
+      setIsModalOpen(false);
+      
+      window.location.reload();
+      
       
       toast({
         title: "Sucesso",
