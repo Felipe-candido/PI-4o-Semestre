@@ -163,7 +163,8 @@ class editUsuario(viewsets.ViewSet):
     def edit(self, request):
         user = request.user
         data = request.data
-        
+
+        user.tipo = 'proprietario'
         # ATUALIZA OS DADOS DO USUARIO
         user_serializer = UserSerializer(user, data=data.get('user', {}), partial=True)
         user_serializer.is_valid(raise_exception=True)
