@@ -71,7 +71,7 @@ class usuario(AbstractBaseUser, PermissionsMixin):
         return self.email
     
 
-class Endereco(models.Model):
+class Endereco_usuario(models.Model):
     user = models.OneToOneField(usuario, on_delete=models.CASCADE, related_name='endereco')
     rua = models.CharField(max_length=255)
     numero = models.CharField(max_length=10)
