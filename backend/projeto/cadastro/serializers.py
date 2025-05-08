@@ -63,7 +63,7 @@ class UserSerializer(serializers.ModelSerializer):
 class EnderecoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Endereco_usuario
-        fields = ['rua', 'cidade', 'estado', 'cep', 'pais']
+        fields = ['rua', 'cidade', 'estado', 'cep', 'pais', 'numero']
 
 
 class edit_user_serializer(serializers.ModelSerializer):
