@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated
 
 
-class cadastro_imovel(viewsets.ViewSet):
+class cadastro_imovel(viewsets.ModelViewSet):
       queryset = Imovel.objects.all()
       serializer_class = imovel_serializer
       http_method_names = ['post', 'options']
