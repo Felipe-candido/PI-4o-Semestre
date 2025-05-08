@@ -180,6 +180,7 @@ class editUsuario(viewsets.ViewSet):
         else:
             endereco_serializer = None
         
+        print(endereco_serializer.data)
         return Response({
             'user': user_serializer.data,
             'endereco': endereco_serializer.data if endereco_serializer else None
