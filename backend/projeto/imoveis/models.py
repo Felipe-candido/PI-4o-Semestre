@@ -19,7 +19,7 @@ class Imovel(models.Model):
       preco = models.FloatField()
       numero_hospedes = models.IntegerField()
       regras = models.TextField(null=True, blank=True)
-      comodidades = models.ManyToManyField(Comodidade, blank=True)
+      comodidades = models.ManyToManyField(Comodidade, blank=True, null=True)
 
       def __str__(self):
             return self.titulo
