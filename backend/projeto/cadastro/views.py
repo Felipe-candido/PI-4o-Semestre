@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status, viewsets
-from .models import Endereco
+from .models import Endereco_usuario
 from .serializers import EnderecoSerializer, registroSerializer, loginSerializer, UserSerializer, edit_user_serializer
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -142,9 +142,9 @@ class UserAuthenticated(viewsets.ViewSet):
     def me(self, request):
         user = request.user
         try:
-            endereco = Endereco.objects.get(user=user)
+            endereco = Endereco_usuario.objects.get(user=user)
             endereco_serializer = EnderecoSerializer(endereco)
-        except Endereco.DoesNotExist:
+        except Endereco_usuario.DoesNotExist:
             endereco_serializer = None
 
         user_serializer = UserSerializer(user)
@@ -172,7 +172,7 @@ class editUsuario(viewsets.ViewSet):
         # ATUALIZA OU CRIA UM ENDERECO
         endereco_data = data.get('endereco', {})
         if endereco_data:
-            endereco, created = Endereco.objects.update_or_create(
+            endereco, created = Endereco_usuario.objects.update_or_create(
                 user=user,
                 defaults=endereco_data
             )

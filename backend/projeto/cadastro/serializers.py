@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
-from .models import Endereco
+from .models import Endereco_usuario
 
 usuario = get_user_model()
 
@@ -62,7 +62,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class EnderecoSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Endereco
+        model = Endereco_usuario
         fields = ['rua', 'cidade', 'estado', 'cep', 'pais']
 
 
@@ -84,7 +84,7 @@ class edit_user_serializer(serializers.ModelSerializer):
 
         # ATUALZIA OU CRIA O ENDERECO
         if endereco_data:
-            endereco, _ = Endereco.objects.get_or_create(usuario=instance)
+            endereco, _ = Endereco_usuario.objects.get_or_create(usuario=instance)
             for attr, value in endereco_data.items():
                 setattr(endereco, attr, value)
             endereco.save()
