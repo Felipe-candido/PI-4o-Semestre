@@ -5,71 +5,158 @@ import type React from "react"
 import MainLayout from "@/components/layout/MainLayout"
 import Link from "next/link"
 import { Calendar, MapPin, Star, Edit, Shield, Bell, CreditCard, User, Home, DollarSign, Settings } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "@/components/ui/use-toast"
+import { apiFetch } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+
+interface UserData {
+  id: string
+  nome: string
+  sobrenome: string
+  email: string
+  telefone: string
+  dataNascimento: string
+  cpf: string
+  tipo : string
+  avatar: string
+}
+
+interface Endereco {
+  rua?: string
+  numero?: string
+  cidade?: string
+  estado?: string
+  cep?: string
+  pais?: string
+}
+
 export default function OwnerProfile() {
-  // Em uma aplicação real, você obteria os dados do usuário do seu contexto de autenticação
-  const userRole = "owner"
-  const userName = "Maria Oliveira"
-  const userAvatar = "/images/owner-avatar.jpg"
+  const [user, setUser] = useState<UserData | null>(null)
+  const [endereco, setEndereco] = useState<Endereco | null>(null)
+  const [editedUser, setEditedUser] = useState<UserData | null>(null)
+  const [editedEndereco, setEditedEndereco] = useState<Endereco | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const router = useRouter()
 
-  const [isEditing, setIsEditing] = useState(false)
-  const [userData, setUserData] = useState({
-    nome: "Maria",
-    sobrenome: "Oliveira",
-    email: "maria.oliveira@email.com",
-    telefone: "(11) 97654-3210",
-    dataNascimento: "22/08/1980",
-    endereco: "Av. Paulista, 1000 - São Paulo, SP",
-    cep: "01310-100",
-    rua: "Av. Paulista",
-    numero: "1000",
-    cidade: "São Paulo",
-    estado: "SP",
-    pais: "Brasil",
-    cpf: "987.654.321-00",
-    banco: "001",
-    agencia: "1234",
-    conta: "56789-0",
-    membroDesde: "Março de 2021",
-  })
+  const userRole = user?.tipo || "visitante"
+  const userName = user?.nome || "Visitante"
+  const userAvatar = user?.avatar || "/placeholder.svg"
+  const userEmail = user?.email
+  const userTelefone = user?.telefone || ""
+  const userData = user?.dataNascimento || ""
+  const userCpf = user?.cpf || ""
+  
+  useEffect(() => {
+    // FUNCAO PARA CARREGAR OS DADOS DO USUARIO AUTENTICADO
+    async function fetchUsuario() {
+      try {
+        const response = await apiFetch("/api/me", {
+          credentials: 'include'
+        })
+        // CRIA UMA INSTANCIA PARA EXIBICAO
+        setUser(response.user)
+        // E OUTRA PARA EDICAO
+        setEditedUser({...response.user})
+        setEndereco(response.endereco || {})
+        setEditedEndereco(response.endereco || {})
+      } catch (error) {
+      
+        router.push('/auth/login')
+         
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os dados do usuário",
+          variant: "destructive",
+        })
+      }
+    }
+    fetchUsuario()
+  }, [])
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target
-    setUserData((prev) => ({
-      ...prev,
-      [id]: value,
-    }))
+  const handleEdit = () => {
+    setIsModalOpen(true)
   }
 
-  const handleSave = () => {
-    // Em uma aplicação real, você enviaria os dados para a API
-    // await fetch('/api/profile', { method: 'PUT', body: JSON.stringify(userData) })
+ 
 
-    // Atualizar o endereço completo
-    const enderecoCompleto = `${userData.rua}, ${userData.numero} - ${userData.cidade}, ${userData.estado}`
+  const handleSave = async () => {
+    try {
 
-    // Atualizar os dados bancários
-    const dadosBancarios = `Banco ${userData.banco} - Ag. ${userData.agencia} - CC ${userData.conta}`
+      const payload = {
+        user: {
+          nome: editedUser?.nome,
+          sobrenome: editedUser?.sobrenome,
+          telefone: editedUser?.telefone,
+          dataNascimento: editedUser?.dataNascimento,
+          cpf: editedUser?.cpf
+        },
+        endereco: {
+          rua: editedEndereco?.rua,
+          numero: editedEndereco?.numero,
+          cidade: editedEndereco?.cidade,
+          estado: editedEndereco?.estado,
+          cep: editedEndereco?.cep,
+          pais: editedEndereco?.pais
+        }
+      };
 
-    setUserData({
-      ...userData,
-      endereco: enderecoCompleto,
-    })
+      const response = await apiFetch("/api/editar-perfil/edit/", {
+        method: "PATCH",
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload)
+      })
 
-    setIsEditing(false)
+      if (response?.success) {
+        setUser(prev => ({ ...prev, ...response.user }));
+        setEndereco(prev => ({ ...prev, ...response.endereco }));
+        
+        
+        toast({
+          title: "Sucesso",
+          description: "Perfil atualizado com sucesso",
+        });
+      }
+      setIsModalOpen(false);
+      
+      window.location.reload();
+      
+      
+      toast({
+        title: "Sucesso",
+        description: "Perfil atualizado com sucesso",
+      })
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o perfil",
+        variant: "destructive",
+      })
+    }
   }
 
-  const handleCancel = () => {
-    // Restaurar os dados originais
-    setIsEditing(false)
+  const formatAddress = () => {
+    if (!endereco) return "Não informado"
+    const parts = [
+      endereco.rua,
+      endereco.numero,
+      endereco.cidade,
+      endereco.estado,
+      endereco.cep,
+      endereco.pais
+    ].filter(Boolean)
+    return parts.join(", ") || "Não informado"
   }
 
   return (
-    <MainLayout userRole={userRole} userName={userName} userAvatar={userAvatar}>
+    <MainLayout userName={userName} userAvatar={userAvatar}>
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar */}
@@ -215,9 +302,9 @@ export default function OwnerProfile() {
             <div className="bg-white rounded-xl shadow-md p-6 mb-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-primary">Informações Pessoais</h2>
-                {!isEditing && (
+                {!isModalOpen && (
                   <button
-                    onClick={() => setIsEditing(true)}
+                    onClick={handleEdit}
                     className="flex items-center text-secondary hover:text-secondary/80"
                   >
                     <Edit className="w-4 h-4 mr-1" />
@@ -226,39 +313,31 @@ export default function OwnerProfile() {
                 )}
               </div>
 
-              {!isEditing ? (
+              {!isModalOpen ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <h3 className="text-sm text-gray-500 mb-1">Nome Completo</h3>
-                    <p className="font-medium">{`${userData.nome} ${userData.sobrenome}`}</p>
+                    <p className="font-medium">{user?.nome} {user?.sobrenome}</p>
                   </div>
                   <div>
                     <h3 className="text-sm text-gray-500 mb-1">E-mail</h3>
-                    <p className="font-medium">{userData.email}</p>
+                    <p className="font-medium">{user?.email}</p>
                   </div>
                   <div>
                     <h3 className="text-sm text-gray-500 mb-1">Telefone</h3>
-                    <p className="font-medium">{userData.telefone}</p>
+                    <p className="font-medium">{user?.telefone}</p>
                   </div>
                   <div>
                     <h3 className="text-sm text-gray-500 mb-1">Data de Nascimento</h3>
-                    <p className="font-medium">{userData.dataNascimento}</p>
+                    <p className="font-medium">{user?.dataNascimento}</p>
                   </div>
                   <div>
                     <h3 className="text-sm text-gray-500 mb-1">Endereço</h3>
-                    <p className="font-medium">{userData.endereco}</p>
+                    <p className="font-medium">{formatAddress()}</p>
                   </div>
                   <div>
                     <h3 className="text-sm text-gray-500 mb-1">CPF</h3>
-                    <p className="font-medium">{userData.cpf}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm text-gray-500 mb-1">Dados Bancários</h3>
-                    <p className="font-medium">{`Banco ${userData.banco} - Ag. ${userData.agencia} - CC ${userData.conta}`}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm text-gray-500 mb-1">Membro desde</h3>
-                    <p className="font-medium">{userData.membroDesde}</p>
+                    <p className="font-medium">{user?.cpf}</p>
                   </div>
                 </div>
               ) : (
@@ -266,71 +345,106 @@ export default function OwnerProfile() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div className="space-y-2">
                       <Label htmlFor="nome">Nome</Label>
-                      <Input id="nome" value={userData.nome} onChange={handleInputChange} />
+                      <Input
+                        id="nome"
+                        value={editedUser?.nome || ""}
+                        onChange={(e) => setEditedUser({...editedUser!, nome: e.target.value})}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="sobrenome">Sobrenome</Label>
-                      <Input id="sobrenome" value={userData.sobrenome} onChange={handleInputChange} />
+                      <Input
+                        id="sobrenome"
+                        value={editedUser?.sobrenome || ""}
+                        onChange={(e) => setEditedUser({...editedUser!, sobrenome: e.target.value})}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">E-mail</Label>
-                      <Input id="email" type="email" value={userData.email} onChange={handleInputChange} disabled />
+                      <Input
+                        id="email"
+                        type="email"
+                        value={editedUser?.email || ""}
+                        disabled
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="telefone">Telefone</Label>
-                      <Input id="telefone" value={userData.telefone} onChange={handleInputChange} />
+                      <Input
+                        id="telefone"
+                        value={editedUser?.telefone || ""}
+                        onChange={(e) => setEditedUser({...editedUser!, telefone: e.target.value})}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="dataNascimento">Data de Nascimento</Label>
-                      <Input id="dataNascimento" value={userData.dataNascimento} onChange={handleInputChange} />
+                      <Input
+                        id="dataNascimento"
+                        type="date"
+                        value={editedUser?.dataNascimento || ""}
+                        onChange={(e) => setEditedUser({...editedUser!, dataNascimento: e.target.value})}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="cpf">CPF</Label>
-                      <Input id="cpf" value={userData.cpf} onChange={handleInputChange} />
+                      <Input
+                        id="cpf"
+                        value={editedUser?.cpf || ""}
+                        onChange={(e) => setEditedUser({...editedUser!, cpf: e.target.value})}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="cep">CEP</Label>
-                      <Input id="cep" value={userData.cep} onChange={handleInputChange} />
+                      <Input
+                        id="cep"
+                        value={editedEndereco?.cep || ""}
+                        onChange={(e) => setEditedEndereco({...editedEndereco!, cep: e.target.value})}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="rua">Rua</Label>
-                      <Input id="rua" value={userData.rua} onChange={handleInputChange} />
+                      <Input
+                        id="rua"
+                        value={editedEndereco?.rua || ""}
+                        onChange={(e) => setEditedEndereco({...editedEndereco!, rua: e.target.value})}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="numero">Número</Label>
-                      <Input id="numero" value={userData.numero} onChange={handleInputChange} />
+                      <Input
+                        id="numero"
+                        value={editedEndereco?.numero || ""}
+                        onChange={(e) => setEditedEndereco({...editedEndereco!, numero: e.target.value})}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="cidade">Cidade</Label>
-                      <Input id="cidade" value={userData.cidade} onChange={handleInputChange} />
+                      <Input
+                        id="cidade"
+                        value={editedEndereco?.cidade || ""}
+                        onChange={(e) => setEditedEndereco({...editedEndereco!, cidade: e.target.value})}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="estado">Estado</Label>
-                      <Input id="estado" value={userData.estado} onChange={handleInputChange} />
+                      <Input
+                        id="estado"
+                        value={editedEndereco?.estado || ""}
+                        onChange={(e) => setEditedEndereco({...editedEndereco!, estado: e.target.value})}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="pais">País</Label>
-                      <Input id="pais" value={userData.pais} onChange={handleInputChange} />
+                      <Input
+                        id="pais"
+                        value={editedEndereco?.pais || ""}
+                        onChange={(e) => setEditedEndereco({...editedEndereco!, pais: e.target.value})}
+                      />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="banco">Banco</Label>
-                      <Input id="banco" value={userData.banco} onChange={handleInputChange} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="agencia">Agência</Label>
-                      <Input id="agencia" value={userData.agencia} onChange={handleInputChange} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="conta">Conta</Label>
-                      <Input id="conta" value={userData.conta} onChange={handleInputChange} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="membroDesde">Membro desde</Label>
-                      <Input id="membroDesde" value={userData.membroDesde} onChange={handleInputChange} disabled />
-                    </div>
+                    
                   </div>
                   <div className="flex justify-end space-x-3">
-                    <Button variant="outline" onClick={handleCancel}>
+                    <Button variant="outline" onClick={() => setIsModalOpen(false)}>
                       Cancelar
                     </Button>
                     <Button onClick={handleSave}>Salvar</Button>
