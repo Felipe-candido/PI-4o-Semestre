@@ -84,6 +84,7 @@ export default function CreateListing() {
             {/* Informações Básicas */}
             <div>
               <h2 className="text-xl font-semibold mb-4">Informações Básicas</h2>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Nome da Propriedade</label>
@@ -93,6 +94,17 @@ export default function CreateListing() {
                     placeholder="Digite o nome da propriedade"
                   />
                 </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Número de Hóspedes</label>
+                  <input
+                    type="number"
+                    min="1"
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    placeholder="Ex: 8"
+                  />
+                </div>
+
               </div>
 
               {/* Descrição do imóvel */}
