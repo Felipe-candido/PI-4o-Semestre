@@ -172,7 +172,6 @@ export default function TenantProfile() {
                   className="w-24 h-24 rounded-full mb-4 object-cover"
                 />
                 <h2 className="text-xl font-bold">{userName}</h2>
-                <p className="text-gray-600">Locatário desde 2022</p>
                 <div className="flex items-center mt-2">
                   <Star className="w-4 h-4 text-secondary fill-current" />
                   <span className="ml-1 text-sm">4.9 (15 avaliações)</span>
