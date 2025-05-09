@@ -2,8 +2,33 @@
 
 import { useEffect, useState } from "react"
 import MainLayout from "@/components/layout/MainLayout"
+import { useRouter } from "next/navigation"
+import { apiFetch } from "@/lib/api"
+import { toast } from "@/components/ui/use-toast"
+
+
+interface ImovelPayload {
+  titulo: string
+  descricao: string
+  preco: number
+  numero_hospedes: number
+  regras: string
+  comodidades: string[] 
+  endereco: Endereco
+}
+
+interface Endereco {
+  rua?: string
+  numero?: string
+  cidade?: string
+  estado?: string
+  cep?: string
+  pais?: string
+}
 
 export default function CreateListing() {
+  const [user, setUser] = useState<UserData | null>(null)
+  const router = useRouter()
   const userRole = "owner"
   const userName = "John Doe"
   const userAvatar = "/placeholder.svg?height=32&width=32"
@@ -26,6 +51,30 @@ export default function CreateListing() {
   const [complementoVisivel, setComplementoVisivel] = useState(false)
   const [cidade, setCidade] = useState("")
   const [estado, setEstado] = useState("")
+
+  useEffect(() => {
+    // FUNCAO PARA CARREGAR OS DADOS DO USUARIO AUTENTICADO
+    async function fetchUsuario() {
+      try {
+        const response = await apiFetch("/api/me", {
+          credentials: 'include'
+        })
+        // CRIA UMA INSTANCIA PARA EXIBICAO
+        setUser(response.user)
+        // E OUTRA PARA EDICAO
+      } catch (error) {
+      
+        router.push('/auth/login')
+         
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os dados do usuário",
+          variant: "destructive",
+        })
+      }
+    }
+    fetchUsuario()
+  }, [])
 
   useEffect(() => {
     const taxaCalculada = valorTotal * taxa
@@ -93,7 +142,7 @@ export default function CreateListing() {
                     placeholder="Digite o nome da propriedade"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-1">Número de Hóspedes</label>
                   <input
