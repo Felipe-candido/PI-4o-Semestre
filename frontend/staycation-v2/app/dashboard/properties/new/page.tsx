@@ -93,15 +93,26 @@ export default function CreateListing() {
                     placeholder="Digite o nome da propriedade"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Tipo de Propriedade</label>
-                  <select className="w-full p-2 border border-gray-300 rounded-md">
-                    <option>Casa de Campo</option>
-                    <option>Sítio</option>
-                    <option>Chácara</option>
-                    <option>Villa</option>
-                  </select>
-                </div>
+              </div>
+
+              {/* Descrição do imóvel */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium mb-1">Descrição do Imóvel</label>
+                <textarea
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  placeholder="Descreva os detalhes do imóvel"
+                  rows={4}
+                />
+              </div>
+
+              {/* Regras da propriedade */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium mb-1">Regras da Propriedade</label>
+                <textarea
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  placeholder="Informe as regras que os hóspedes devem seguir"
+                  rows={3}
+                />
               </div>
             </div>
 
