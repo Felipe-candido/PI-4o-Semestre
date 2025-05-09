@@ -9,19 +9,12 @@ from rest_framework.permissions import IsAuthenticated
 
 
 class cadastro_imovel(viewsets.ModelViewSet):
-      queryset = Imovel.objects.all()
-      serializer_class = imovel_serializer
-      http_method_names = ['post', 'options']
+    queryset = Imovel.objects.all()
+    serializer_class = imovel_serializer
+    http_method_names = ['post']
 
-      def create(self, request, *args, **kwargs):
-            dados = request.data.copy()
-            serializer = self.get_serializer(data = dados)
-            if serializer.is_valid():
-                  serializer.save()
-                  return Response({'mensagem': 'Imovel registrado com sucesso'},
-                                   status=status.HTTP_201_CREATED)
-            
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get_serializer_context(self):
+        return {'request': self.request}
 
 
 

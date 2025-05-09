@@ -35,6 +35,7 @@ class Endereco_imovel(models.Model):
     estado = models.CharField(max_length=100)
     cep = models.CharField(max_length=20)
     pais = models.CharField(max_length=255)
+    bairro = models.CharField(max_length=255)
 
     def __str__(self):
         return f"{self.rua}, {self.numero} - {self.cidade}"
