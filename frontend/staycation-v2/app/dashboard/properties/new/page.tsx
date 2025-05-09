@@ -93,6 +93,17 @@ export default function CreateListing() {
                     placeholder="Digite o nome da propriedade"
                   />
                 </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Número de Hóspedes</label>
+                  <input
+                    type="number"
+                    min="1"
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    placeholder="Ex: 8"
+                  />
+                </div>
+
               </div>
 
               {/* Descrição do imóvel */}
