@@ -7,7 +7,7 @@ import { apiFetch } from "@/lib/api"
 import { toast } from "@/components/ui/use-toast"
 
 
-interface ImovelPayload {
+interface Imovel {
   titulo: string
   descricao: string
   preco: number
@@ -26,15 +26,16 @@ interface Endereco {
   pais?: string
 }
 
+interface UserData {
+  id: string
+  nome: string
+  avatar: string
+}
+
 export default function CreateListing() {
   const [user, setUser] = useState<UserData | null>(null)
   const router = useRouter()
-  const userRole = "owner"
-  const userName = "John Doe"
-  const userAvatar = "/placeholder.svg?height=32&width=32"
-
   const taxa = 0.07
-
   const [valorTotalInput, setValorTotalInput] = useState("")
   const [valorTotal, setValorTotal] = useState(0)
   const [valorTaxa, setValorTaxa] = useState(0)
@@ -44,13 +45,13 @@ export default function CreateListing() {
   const [comodidade, setComodidade] = useState("")
   const [comodidades, setComodidades] = useState<string[]>([])
 
-  const [rua, setRua] = useState("")
-  const [bairro, setBairro] = useState("")
-  const [numero, setNumero] = useState("")
-  const [complemento, setComplemento] = useState("")
-  const [complementoVisivel, setComplementoVisivel] = useState(false)
-  const [cidade, setCidade] = useState("")
-  const [estado, setEstado] = useState("")
+  const [endereco, setEndereco] = useState<Endereco | null>(null)
+
+ 
+  const userName = user?.nome || "Visitante"
+  const userId = user?.id || "Visitante"
+  const userAvatar = user?. avatar || ""
+
 
   useEffect(() => {
     // FUNCAO PARA CARREGAR OS DADOS DO USUARIO AUTENTICADO
@@ -123,8 +124,26 @@ export default function CreateListing() {
     setComodidades(comodidades.filter((c) => c !== item))
   }
 
+  const handleSave = async () => {
+    try {
+
+      const payload = {
+        user: {
+          nome: user?.nome,
+          id: user?.id,
+        },
+        endereco: {
+          rua: endereco?.rua,
+          numero: endereco?.numero,
+          cidade: endereco?.cidade,
+          estado: endereco?.estado,
+          cep: endereco?.cep,
+          pais: endereco?.pais
+        }
+      };
+
   return (
-    <MainLayout userRole={userRole} userName={userName} userAvatar={userAvatar}>
+    <MainLayout userName={userName} userAvatar={userAvatar}>
       <div className="container mx-auto">
         <h1 className="text-3xl font-bold mb-6">Criar Novo Anúncio</h1>
 
