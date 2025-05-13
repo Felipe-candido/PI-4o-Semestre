@@ -11,8 +11,9 @@ class EnderecoImovelSerializer(serializers.ModelSerializer):
 
 class imovel_serializer(serializers.ModelSerializer):
     endereco = EnderecoImovelSerializer()
-    comodidades = serializers.PrimaryKeyRelatedField(
+    comodidades = serializers.SlugRelatedField(
         many=True,
+        slug_field='nome',
         queryset=Comodidade.objects.all(),
         required=False
     )
@@ -29,10 +30,9 @@ class imovel_serializer(serializers.ModelSerializer):
         comodidades_data = validated_data.pop('comodidades', [])
 
         # Adiciona o proprietário manualmente
-        request = self.context.get('request')
-        proprietario = request.user if request else None
+        user = self.context['request'].user
 
-        imovel = Imovel.objects.create(proprietario=proprietario, **validated_data)
+        imovel = Imovel.objects.create(proprietario=user, **validated_data)
 
         Endereco_imovel.objects.create(imovel=imovel, **endereco_data)
 
