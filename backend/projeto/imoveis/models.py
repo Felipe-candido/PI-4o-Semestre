@@ -19,7 +19,7 @@ class Imovel(models.Model):
       preco = models.FloatField()
       numero_hospedes = models.IntegerField()
       regras = models.TextField(null=True, blank=True)
-      comodidades = models.ManyToManyField(Comodidade, blank=True, null=True)
+      comodidades = models.ManyToManyField(Comodidade, blank=True)
 
       def __str__(self):
             return self.titulo
@@ -34,7 +34,6 @@ class Endereco_imovel(models.Model):
     cidade = models.CharField(max_length=100)
     estado = models.CharField(max_length=100)
     cep = models.CharField(max_length=20)
-    pais = models.CharField(max_length=255)
     bairro = models.CharField(max_length=255)
 
     def __str__(self):
