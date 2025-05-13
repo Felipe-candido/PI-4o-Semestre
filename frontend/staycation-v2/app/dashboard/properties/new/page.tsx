@@ -54,6 +54,7 @@ export default function CreateListing() {
   const [valorTaxa, setValorTaxa] = useState(0)
   const [valorLiquido, setValorLiquido] = useState(0)
   const [valorLiquidoInput, setValorLiquidoInput] = useState("")
+  const [erros, setErros] = useState<{ [key: string]: string }>({});
 
   const [comodidade, setComodidade] = useState("")
   const [comodidades, setComodidades] = useState<string[]>([])
@@ -137,8 +138,38 @@ export default function CreateListing() {
   }
 
   const handleSave = async () => {
-    try {
 
+    const errosTemp: { [key: string]: string } = {}
+    
+
+    // Validações
+    if (!imovel?.titulo) errosTemp.titulo = "O nome da propriedade é obrigatório."
+    if (!imovel?.descricao) errosTemp.descricao = "A descrição é obrigatória."
+    if (!imovel?.numero_hospedes) errosTemp.numero_hospedes = "Número de hóspedes é obrigatório."
+    if (!imovel?.regras) errosTemp.regras = "As regras são obrigatórias."
+    if (!valorTotal || valorTotal <= 0) errosTemp.preco = "Informe um valor válido."
+    if (!endereco?.rua) errosTemp.rua = "Rua é obrigatória."
+    if (!endereco?.numero) errosTemp.numero = "Número é obrigatório."
+    if (!endereco?.cidade) errosTemp.cidade = "Cidade é obrigatória."
+    if (!endereco?.estado) errosTemp.estado = "Estado é obrigatório."
+    if (!endereco?.cep) errosTemp.cep = "CEP é obrigatório."
+    if (!endereco?.bairro) errosTemp.bairro = "Bairro é obrigatório."
+    
+
+    // Ap[os as validacoes, se tivar compos faltando essa parte atualiza o estado dos erros e nao prossegue
+    if (Object.keys(errosTemp).length > 0) {
+      setErros(errosTemp)
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha todos os campos obrigatórios antes de salvar.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setErros({}) // Limpa erros se tudo estiver válido
+
+    try {
       const payload = {
         imovel: {
           titulo: imovel?.titulo,
@@ -199,23 +230,27 @@ export default function CreateListing() {
                   <Label className="block text-sm font-medium mb-1">Nome da Propriedade</Label>
                   <Input
                     type="text"
+                    required
                     className="w-full p-2 border border-gray-300 rounded-md"
                     placeholder="Digite o nome da propriedade"
                     value={imovel?.titulo || ""}
                     onChange={(e) => setImovel({ ...imovel!, titulo: e.target.value })}
                   />
+                  <p className="text-red-500 text-sm mt-1">{erros.titulo}</p>
                 </div>
 
                 <div>
                   <Label className="block text-sm font-medium mb-1">Número de Hóspedes</Label>
                   <Input
                     type="number"
+                    required
                     min="1"
                     className="w-full p-2 border border-gray-300 rounded-md"
                     placeholder="Ex: 8"
                     value={imovel?.numero_hospedes || ""}
                     onChange={(e) => setImovel({ ...imovel!, numero_hospedes: e.target.value })}
                   />
+                  <p className="text-red-500 text-sm mt-1">{erros.numero_hospedes}</p>
                 </div>
 
               </div>
@@ -230,6 +265,7 @@ export default function CreateListing() {
                   value={imovel?.descricao || ""}
                   onChange={(e) => setImovel({ ...imovel!, descricao: e.target.value })}
                 />
+                <p className="text-red-500 text-sm mt-1">{erros.descricao}</p>
               </div>
 
               {/* Regras da propriedade */}
@@ -242,6 +278,7 @@ export default function CreateListing() {
                   value={imovel?.regras || ""}
                   onChange={(e) => setImovel({ ...imovel!, regras: e.target.value })}
                 />
+                <p className="text-red-500 text-sm mt-1">{erros.regras}</p>
               </div>
             </div>
 
@@ -253,31 +290,37 @@ export default function CreateListing() {
                   <Label className="block text-sm font-medium mb-1">Rua</Label>
                   <Input
                     type="text"
+                    required
                     value={endereco?.rua || ""}
                     onChange={(e) => setEndereco({...endereco!, rua: e.target.value})}
                     className="w-full p-2 border border-gray-300 rounded-md"
                     placeholder="Digite a rua"
                   />
+                  <p className="text-red-500 text-sm mt-1">{erros.ruas}</p>
                 </div>
                 <div>
                   <Label className="block text-sm font-medium mb-1">Bairro</Label>
                   <Input
                     type="text"
+                    required
                     value={endereco?.bairro || ""}
                     onChange={(e) => setEndereco({...endereco!, bairro: e.target.value})}
                     className="w-full p-2 border border-gray-300 rounded-md"
                     placeholder="Digite o bairro"
                   />
+                  <p className="text-red-500 text-sm mt-1">{erros.bairro}</p>
                 </div>
                 <div>
                   <Label className="block text-sm font-medium mb-1">Número</Label>
                   <Input
                     type="text"
+                    required
                     value={endereco?.numero || ""}
                     onChange={(e) => setEndereco({...endereco!, numero: e.target.value})}
                     className="w-full p-2 border border-gray-300 rounded-md"
                     placeholder="Digite o número"
                   />
+                  <p className="text-red-500 text-sm mt-1">{erros.numero}</p>
                 </div>
               </div>      
 
@@ -286,31 +329,37 @@ export default function CreateListing() {
                   <Label className="block text-sm font-medium mb-1">Cidade</Label>
                   <Input
                     type="text"
+                    required
                     value={endereco?.cidade || ""}
                     onChange={(e) => setEndereco({...endereco!, cidade: e.target.value})}
                     className="w-full p-2 border border-gray-300 rounded-md"
                     placeholder="Digite a cidade"
                   />
+                  <p className="text-red-500 text-sm mt-1">{erros.cidade}</p>
                 </div>
                 <div>
                   <Label className="block text-sm font-medium mb-1">Estado</Label>
                   <Input
                     type="text"
+                    required
                     value={endereco?.estado || ""}
                     onChange={(e) => setEndereco({...endereco!, estado: e.target.value})}
                     className="w-full p-2 border border-gray-300 rounded-md"
                     placeholder="Digite o estado"
                   />
+                  <p className="text-red-500 text-sm mt-1">{erros.estado}</p>
                 </div>
                 <div>
                   <Label className="block text-sm font-medium mb-1">Cep</Label>
                   <Input
                     type="text"
+                    required
                     value={endereco?.cep || ""}
                     onChange={(e) => setEndereco({...endereco!, cep: e.target.value})}
                     className="w-full p-2 border border-gray-300 rounded-md"
                     placeholder="Digite o estado"
                   />
+                  <p className="text-red-500 text-sm mt-1">{erros.cep}</p>
                 </div>
               </div>
             </div>
@@ -325,12 +374,14 @@ export default function CreateListing() {
                     <span className="px-4 py-2 bg-white text-gray-700 border-r border-violet-200">R$</span>
                     <input
                       type="text"
+                      required
                       value={valorTotal}
                       onChange={handleValorTotalChange}
                       className="w-full px-3 py-2 text-gray-700 focus:outline-none bg-white"
                       placeholder=""
                       onFocus={(e) => e.target.select()}
                     />
+                    <p className="text-red-500 text-sm mt-1">{erros.preco}</p>
                   </div>
                   <p className="text-xs italic text-gray-500 mt-1">
                     Este é o valor que o hóspede verá na proposta
