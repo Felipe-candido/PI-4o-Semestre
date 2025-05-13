@@ -92,15 +92,5 @@ cep_validation = RegexValidator(
     
    
 
-class chacara(models.Model):
-    id = models.AutoField(primary_key=True)
-    nome = models.CharField(max_length=255)
-    Descricao = models.TextField()
-    preco = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    capacidade = models.IntegerField(default=0)
-    cep = models.CharField(max_length=9, verbose_name="CEP", help_text="Formato: XXXXX-XXX", validators=[cep_validation]) 
-
-    def __str__(self):
-        return self.nome
 
     
