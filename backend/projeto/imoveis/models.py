@@ -2,6 +2,9 @@ from django.db import models
 from django.conf import settings
 
 
+     
+
+
 class Comodidade(models.Model):
      nome = models.CharField(max_length=100, unique=True)
 
@@ -21,10 +24,18 @@ class Imovel(models.Model):
       regras = models.TextField(null=True, blank=True)
       comodidades = models.ManyToManyField(Comodidade, blank=True)
 
+
       def __str__(self):
             return self.titulo
 
       
+class imagem_imovel(models.Model):
+     imovel = models.ForeignKey(Imovel, on_delete=models.CASCADE)
+     imagem = models.ImageField(upload_to='imoveis/')
+     legenda = models.CharField(max_length=255, blank=True)
+
+     def __str__(self):
+        return f"Imagem de {self.imovel.titulo}"
 
 
 class Endereco_imovel(models.Model):

@@ -443,7 +443,7 @@ export default function CreateListing() {
             </div>
 
             {/* Fotos */}
-            {/* <div>
+            <div>
               <h2 className="text-xl font-semibold mb-4">Fotos</h2>
               <div className="border-2 border-dashed border-gray-300 p-6 rounded-md text-center hover:border-blue-500 transition-colors">
                 <p className="text-gray-500 mb-4">Arraste e solte as fotos aqui ou clique para fazer upload</p>
@@ -462,7 +462,7 @@ export default function CreateListing() {
                   Escolher Fotos
                 </label>
               </div>
-            </div> */}
+            </div>
 
             <div className="flex justify-end space-x-3">
               <Button onClick={handleSave}>Salvar</Button>
