@@ -61,6 +61,8 @@ export default function CreateListing() {
 
   const [endereco, setEndereco] = useState<Endereco | null>(null)
 
+  const [imagens, setImagens] = useState<File[]>([])
+
  
   const userName = user?.nome || "Visitante"
   const userId = user?.id || "Visitante"
@@ -137,6 +139,13 @@ export default function CreateListing() {
     setComodidades(comodidades.filter((c) => c !== item))
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const arquivos = Array.from(e.target.files)
+      setImagens(prev => [...prev, ...arquivos])
+    }
+  }
+
   const handleSave = async () => {
 
     const errosTemp: { [key: string]: string } = {}
@@ -156,7 +165,7 @@ export default function CreateListing() {
     if (!endereco?.bairro) errosTemp.bairro = "Bairro é obrigatório."
     
 
-    // Ap[os as validacoes, se tivar compos faltando essa parte atualiza o estado dos erros e nao prossegue
+    // Apos as validacoes, se tivar compos faltando, essa parte atualiza o estado dos erros e nao prossegue
     if (Object.keys(errosTemp).length > 0) {
       setErros(errosTemp)
       toast({
@@ -447,7 +456,7 @@ export default function CreateListing() {
               <h2 className="text-xl font-semibold mb-4">Fotos</h2>
               <div className="border-2 border-dashed border-gray-300 p-6 rounded-md text-center hover:border-blue-500 transition-colors">
                 <p className="text-gray-500 mb-4">Arraste e solte as fotos aqui ou clique para fazer upload</p>
-                <input
+                <Input
                   type="file"
                   accept="image/*"
                   multiple
@@ -455,13 +464,25 @@ export default function CreateListing() {
                   id="file-upload"
                   onChange={(e) => handleFileChange(e)}
                 />
-                <label
+                <Label
                   htmlFor="file-upload"
                   className="bg-blue-600 text-white py-2 px-4 rounded-md cursor-pointer hover:bg-blue-700 transition"
                 >
                   Escolher Fotos
-                </label>
+                </Label>
               </div>
+            </div>
+
+            <div className="flex flex-wrap gap-4 mt-4">
+              {imagens.map((img, index) => (
+                <div key={index} className="w-24 h-24 overflow-hidden rounded border border-gray-300">
+                  <img
+                    src={URL.createObjectURL(img)}
+                    alt={`Imagem ${index + 1}`}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+              ))}
             </div>
 
             <div className="flex justify-end space-x-3">
