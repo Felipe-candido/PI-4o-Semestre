@@ -27,7 +27,6 @@ class cadastro_imovel(viewsets.ModelViewSet):
 
             dados_imovel = request.data.get("imovel", {})
             dados_endereco = request.data.get("endereco", {})
-            comodidades = request.data.get("comodidades", [])
             imagens = request.FILES.getlist("imagens", [])
 
             if not dados_imovel or not dados_endereco:
@@ -45,8 +44,8 @@ class cadastro_imovel(viewsets.ModelViewSet):
                 import json
                 dados_endereco = json.loads(dados_endereco)
 
+            # Adiciona o endereço aos dados do imóvel
             dados_imovel["endereco"] = dados_endereco
-            dados_imovel["comodidades"] = comodidades
 
             logger.info(f"Dados processados: {dados_imovel}")
         

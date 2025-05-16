@@ -23,14 +23,21 @@ class ComodidadeSerializer(serializers.ModelSerializer):
         fields = ['id', 'nome']
 
 
+class ComodidadeField(serializers.Field):
+    def to_representation(self, value):
+        return [comodidade.nome for comodidade in value.all()]
+
+    def to_internal_value(self, data):
+        comodidades = []
+        for nome in data:
+            comodidade, created = Comodidade.objects.get_or_create(nome=nome)
+            comodidades.append(comodidade)
+        return comodidades
+
+
 class imovel_serializer(serializers.ModelSerializer):
     endereco = EnderecoImovelSerializer()
-    comodidades = serializers.SlugRelatedField(
-        many=True,
-        slug_field='nome',
-        queryset=Comodidade.objects.all(),
-        required=False
-    )
+    comodidades = ComodidadeField(required=False)
     imagens = ImagemImovelSerializer(many=True, required=False)
 
     class Meta:
@@ -65,10 +72,10 @@ class imovel_serializer(serializers.ModelSerializer):
             Endereco_imovel.objects.create(imovel=imovel, **endereco_data)
             logger.info("Endereço criado com sucesso")
 
-            # Adiciona as comodidades
+            # Adiciona as comodidades ao imóvel
             if comodidades_data:
                 imovel.comodidades.set(comodidades_data)
-                logger.info("Comodidades adicionadas com sucesso")
+                logger.info(f"Comodidades adicionadas: {[c.nome for c in comodidades_data]}")
 
             # Adiciona as imagens
             for imagem_data in imagens_data:
@@ -76,6 +83,7 @@ class imovel_serializer(serializers.ModelSerializer):
                 logger.info(f"Imagem adicionada: {imagem_data.get('legenda', '')}")
 
             return imovel
+
         except Exception as e:
-            logger.error(f"Erro ao criar imóvel no serializer: {str(e)}", exc_info=True)
+            logger.error(f"Erro na criação do imóvel: {str(e)}", exc_info=True)
             raise serializers.ValidationError(f"Erro ao criar imóvel: {str(e)}")
