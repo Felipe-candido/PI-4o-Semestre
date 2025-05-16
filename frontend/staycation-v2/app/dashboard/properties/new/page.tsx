@@ -147,10 +147,8 @@ export default function CreateListing() {
   }
 
   const handleSave = async () => {
-
     const errosTemp: { [key: string]: string } = {}
     
-
     // Validações
     if (!imovel?.titulo) errosTemp.titulo = "O nome da propriedade é obrigatório."
     if (!imovel?.descricao) errosTemp.descricao = "A descrição é obrigatória."
@@ -164,8 +162,6 @@ export default function CreateListing() {
     if (!endereco?.cep) errosTemp.cep = "CEP é obrigatório."
     if (!endereco?.bairro) errosTemp.bairro = "Bairro é obrigatório."
     
-
-    // Apos as validacoes, se tivar compos faltando, essa parte atualiza o estado dos erros e nao prossegue
     if (Object.keys(errosTemp).length > 0) {
       setErros(errosTemp)
       toast({
@@ -176,49 +172,57 @@ export default function CreateListing() {
       return
     }
 
-    setErros({}) // Limpa erros se tudo estiver válido
+    setErros({})
 
     try {
-      const payload = {
-        imovel: {
-          titulo: imovel?.titulo,
-          descricao: imovel?.descricao,
-          preco: valorTotal,
-          numero_hospedes: imovel?.numero_hospedes,
-          regras: imovel?.regras
-        },
-        endereco: {
-          rua: endereco?.rua,
-          numero: endereco?.numero,
-          cidade: endereco?.cidade,
-          estado: endereco?.estado,
-          cep: endereco?.cep,
-          bairro: endereco?.bairro
-        }
-      };
+      const formData = new FormData()
+      
+      // Adiciona os dados do imóvel
+      const dadosImovel = {
+        titulo: imovel?.titulo,
+        descricao: imovel?.descricao,
+        preco: valorTotal,
+        numero_hospedes: parseInt(imovel?.numero_hospedes || "0"),
+        regras: imovel?.regras,
+        comodidades: comodidades
+      }
+      
+      formData.append('imovel', JSON.stringify(dadosImovel))
+
+      // Adiciona os dados do endereço
+      const dadosEndereco = {
+        rua: endereco?.rua,
+        numero: endereco?.numero,
+        cidade: endereco?.cidade,
+        estado: endereco?.estado,
+        cep: endereco?.cep,
+        bairro: endereco?.bairro
+      }
+      
+      formData.append('endereco', JSON.stringify(dadosEndereco))
+
+      // Adiciona as imagens
+      imagens.forEach((imagem) => {
+        formData.append('imagens', imagem)
+      })
 
       const response = await apiFetch("/api/imoveis/registrar/", {
         method: "POST",
-        credentials: 'include',
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload)
+        body: formData
       })
 
-      if (response?.success) {     
+      if (response?.mensagem) {     
         toast({
           title: "Sucesso",
-          description: "Anuncio criado com sucesso",
+          description: response.mensagem,
         });
+        router.push('/profile/owner');
       }
-      
-      router.push('/profile/owner');
-  
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Erro ao criar anúncio:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível criar o anuncio",
+        description: error.message || "Não foi possível criar o anúncio",
         variant: "destructive",
       })
     }
@@ -305,7 +309,7 @@ export default function CreateListing() {
                     className="w-full p-2 border border-gray-300 rounded-md"
                     placeholder="Digite a rua"
                   />
-                  <p className="text-red-500 text-sm mt-1">{erros.ruas}</p>
+                  <p className="text-red-500 text-sm mt-1">{erros.rua}</p>
                 </div>
                 <div>
                   <Label className="block text-sm font-medium mb-1">Bairro</Label>
