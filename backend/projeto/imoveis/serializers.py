@@ -44,7 +44,7 @@ class imovel_serializer(serializers.ModelSerializer):
         model = Imovel
         fields = [
             'id', 'titulo', 'descricao', 'preco',
-            'numero_hospedes', 'regras', 'comodidades', 'endereco', 'imagens'
+            'numero_hospedes', 'regras', 'comodidades', 'endereco', 'imagens', 'logo'
         ]
 
     def create(self, validated_data):
@@ -64,20 +64,20 @@ class imovel_serializer(serializers.ModelSerializer):
             logger.info(f"Dados do endereço: {endereco_data}")
             logger.info(f"Comodidades: {comodidades_data}")
 
-            # Cria o imóvel
+            
             imovel = Imovel.objects.create(**validated_data)
             logger.info(f"Imóvel criado com ID: {imovel.id}")
 
-            # Cria o endereço
+            # CRIA O ENDEREÇO DO IMÓVEL
             Endereco_imovel.objects.create(imovel=imovel, **endereco_data)
             logger.info("Endereço criado com sucesso")
 
-            # Adiciona as comodidades ao imóvel
+            # ADICIONA AS COMODIDADES AO IMÓVEL
             if comodidades_data:
                 imovel.comodidades.set(comodidades_data)
                 logger.info(f"Comodidades adicionadas: {[c.nome for c in comodidades_data]}")
 
-            # Adiciona as imagens
+            # ADICIONA AS IMAGENS AO IMÓVEL
             for imagem_data in imagens_data:
                 imagem_imovel.objects.create(imovel=imovel, **imagem_data)
                 logger.info(f"Imagem adicionada: {imagem_data.get('legenda', '')}")
