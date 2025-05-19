@@ -57,6 +57,14 @@ class cadastro_imovel(viewsets.ModelViewSet):
             imovel = serializer.save()
             logger.info(f"Imóvel criado com sucesso: {imovel.id}")
 
+            # Processa o logo se existir
+            logo = request.FILES.get('logo')
+            if logo:
+                logger.info(f"Processando logo: {logo.name}")
+                imovel.logo = logo
+                imovel.save()
+                logger.info("Logo adicionado com sucesso")
+
             # Processa as imagens
             for imagem in imagens:
                 logger.info(f"Processando imagem: {imagem.name}")

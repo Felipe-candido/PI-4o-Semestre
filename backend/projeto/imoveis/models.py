@@ -23,6 +23,12 @@ class Imovel(models.Model):
       numero_hospedes = models.IntegerField()
       regras = models.TextField(null=True, blank=True)
       comodidades = models.ManyToManyField(Comodidade, blank=True)
+      logo = models.ImageField(
+          upload_to='imoveis/logos/',
+          null=True,
+          blank=True,
+          verbose_name='Logo do Imóvel'
+      )
 
 
       def __str__(self):
