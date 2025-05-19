@@ -21,6 +21,7 @@ interface Imovel {
   regras: string
   comodidades: string[] 
   endereco: Endereco
+  logo?: File
 }
 
 interface Endereco {
@@ -184,10 +185,15 @@ export default function CreateListing() {
         preco: valorTotal,
         numero_hospedes: parseInt(imovel?.numero_hospedes || "0"),
         regras: imovel?.regras,
-        comodidades: comodidades
+        comodidades: comodidades,
       }
       
       formData.append('imovel', JSON.stringify(dadosImovel))
+
+      // Adiciona o logo se existir
+      if (imovel?.logo) {
+        formData.append('logo', imovel.logo)
+      }
 
       // Adiciona os dados do endereço
       const dadosEndereco = {
@@ -266,6 +272,23 @@ export default function CreateListing() {
                   <p className="text-red-500 text-sm mt-1">{erros.numero_hospedes}</p>
                 </div>
 
+                <div>
+                  <Label className="block text-sm font-medium mb-1">Logo da Propriedade</Label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    required
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setImovel({ ...imovel!, logo: file });
+                      }
+                    }}
+                  />
+                  <p className="text-sm text-gray-500 mt-1">Faça upload de uma logo para sua propriedade</p>
+                  <p className="text-red-500 text-sm mt-1">{erros.logo}</p>
+                </div>
               </div>
 
               {/* Descrição do imóvel */}
