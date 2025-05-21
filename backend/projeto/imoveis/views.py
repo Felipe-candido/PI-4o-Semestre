@@ -83,6 +83,31 @@ class cadastro_imovel(viewsets.ModelViewSet):
             )
 
 
+
+class imovel_list(viewsets.ReadOnlyModelViewSet):
+    queryset = Imovel.objects.all().select_related('endereco').prefetch_related('imagens', 'comodidades')
+    serializer_class = imovel_serializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        cidade = self.request.query_params.get('cidade')
+
+        if cidade:
+            queryset = queryset.filter(endereco__cidade__iexact=cidade)
+
+        return queryset
+
+
+
+
+
+
+
+
+
+
+
+
 class ComodidadeViewSet(viewsets.ModelViewSet):
     authentication_classes = [CookieJWTAuthentication]
     permission_classes = [IsAuthenticated]

@@ -1,12 +1,87 @@
+'use client'
+
 import Link from "next/link"
 import MainLayout from "@/components/layout/MainLayout"
 import { Search, MapPin, Calendar, Users, Filter, Star } from "lucide-react"
+import { useEffect, useState } from "react"
+
+interface Imovel {
+  id: number
+  titulo: string
+  descricao: string
+  preco: number
+  endereco: {
+    cidade: string
+    estado: string
+  }
+  logo?: string
+}
 
 export default function SearchPage() {
-  // In a real app, you would get the user data from your auth context
+
+  const [imoveis, setImoveis] = useState<Imovel[]>([])
+  const [cidadeDetectada, setCidadeDetectada] = useState('');
+  const [cidadeConfirmada, setCidadeConfirmada] = useState(false);
+  const [cidadeEditavel, setCidadeEditavel] = useState(false);
+  const [cidade, setCidade] = useState('')
+
+
+  // REQUISICAO PARA O BACKEND PARA PEGAR OS IMOVEIS
+  async function buscarImoveis(cidadeEscolhida: string) {
+    setCidade(cidadeEscolhida);
+    
+    // CHAMA A VIEW QUE RETORNA OS IMOVEIS DE ACORDO COM A CIDADE
+    const imoveisFetch = await fetch(
+      `http://localhost:8000/api/imoveis/list/?cidade=${encodeURIComponent(cidadeEscolhida)}`
+    );
+
+    const imoveisData = await imoveisFetch.json();
+    setImoveis(imoveisData);
+  }
+
+ 
+  useEffect(() => {
+    async function fetchCidade() {
+
+      if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(async (position) => {
+          const { latitude, longitude } = position.coords
+
+          console.log('Localização detectada:', latitude, longitude);
+
+          // API NOMINATIM QUE CONVERTE A COORDENADA PARA CIDADE
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          )
+
+          const data = await res.json()
+          const cidadeDetectada = data.address.city || data.address.town || data.address.village || data.address.state
+          setCidadeDetectada(cidadeDetectada)
+        })
+      }
+    }
+
+    fetchCidade()
+  }, [])
+
+
+  useEffect(() => {
+    if (cidadeDetectada) {
+      buscarImoveis(cidadeDetectada)
+    }
+  }, [cidadeDetectada])
+
+ 
+
+
+  
+
   const userRole = "visitor"
   const userName = "Visitante"
   const userAvatar = "/placeholder.svg?height=32&width=32"
+
+  console.log(imoveis);
+  console.table(imoveis);
 
   return (
     <MainLayout userRole={userRole} userName={userName} userAvatar={userAvatar}>
@@ -66,6 +141,55 @@ export default function SearchPage() {
           </div>
         </section>
 
+        {cidadeDetectada && !cidadeConfirmada && (
+          <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded mb-4">
+            <p className="mb-2">
+              Detectamos que você está em <strong>{cidadeDetectada}</strong>. Deseja buscar imóveis nessa cidade?
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setCidadeConfirmada(true);
+                  buscarImoveis(cidadeDetectada);
+                }}
+                className="bg-primary text-white px-4 py-1 rounded"
+              >
+                Sim, confirmar
+              </button>
+              <button
+                onClick={() => setCidadeEditavel(true)}
+                className="border border-primary text-primary px-4 py-1 rounded"
+              >
+                Alterar cidade
+              </button>
+            </div>
+          </div>
+        )}
+
+        {cidadeEditavel && !cidadeConfirmada &&(
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Digite a cidade:</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                className="border border-gray-300 rounded px-3 py-2 w-full"
+                placeholder="Ex: Campinas"
+                value={cidade}
+                onChange={(e) => setCidade(e.target.value)}
+              />
+              <button
+                onClick={() => {
+                  setCidadeConfirmada(true);
+                  buscarImoveis(cidade);
+                }}
+                className="bg-primary text-white px-4 py-2 rounded"
+              >
+                Buscar
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Filter Pills */}
         <section className="mb-6 flex flex-wrap gap-2">
           <button className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm font-medium">
@@ -89,19 +213,21 @@ export default function SearchPage() {
           <h1 className="text-2xl font-bold">
             <span className="text-primary">248</span> propriedades encontradas
           </h1>
-          <p className="text-gray-600">São Paulo, Brasil • 15-20 de Maio • 2 hóspedes</p>
+          <p className="text-gray-600">{cidade} • 15-20 de Maio • 2 hóspedes</p>
         </section>
+
+        
 
         {/* Search Results */}
         <section className="mb-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-              <Link href={`/properties/${item}`} key={item} className="group">
+            {imoveis.map((imovel) => (
+              <Link href={`/properties/${imovel.id}`} key={imovel.id} className="group">
                 <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow flex flex-col sm:flex-row h-full">
                   <div className="relative h-64 sm:h-auto sm:w-2/5">
                     <img
-                      src={`/placeholder.svg?height=300&width=400&text=Propriedade+${item}`}
-                      alt={`Propriedade ${item}`}
+                      src={imovel.logo}
+                      alt={`Propriedade ${imovel.titulo}`}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute top-3 right-3 bg-white rounded-full p-1.5 shadow">
@@ -124,7 +250,7 @@ export default function SearchPage() {
                   <div className="p-4 flex flex-col flex-grow sm:w-3/5">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h3 className="font-semibold text-lg">Refúgio Campestre {item}</h3>
+                        <h3 className="font-semibold text-lg">{imovel.titulo}</h3>
                         <p className="text-gray-600 text-sm">São Paulo, Brasil</p>
                       </div>
                       <div className="flex items-center">
@@ -133,8 +259,7 @@ export default function SearchPage() {
                       </div>
                     </div>
                     <p className="text-gray-600 text-sm mb-3 flex-grow">
-                      Casa de campo tranquila com vistas incríveis, atividades ao ar livre e piscina privativa. Perfeito
-                      para famílias e grupos.
+                      {imovel.descricao}
                     </p>
                     <div className="flex flex-wrap gap-2 mb-3">
                       <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">Piscina</span>
@@ -143,7 +268,7 @@ export default function SearchPage() {
                     </div>
                     <div className="flex justify-between items-center">
                       <p className="font-semibold">
-                        R$120 <span className="text-gray-600 font-normal text-sm">noite</span>
+                        {imovel.preco} <span className="text-gray-600 font-normal text-sm">noite</span>
                       </p>
                       <span className="text-xs text-gray-600">15-20 de Maio • R$600 total</span>
                     </div>

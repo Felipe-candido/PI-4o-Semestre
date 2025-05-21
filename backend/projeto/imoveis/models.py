@@ -36,7 +36,7 @@ class Imovel(models.Model):
 
       
 class imagem_imovel(models.Model):
-     imovel = models.ForeignKey(Imovel, on_delete=models.CASCADE)
+     imovel = models.ForeignKey(Imovel, related_name='imagens', on_delete=models.CASCADE)
      imagem = models.ImageField(upload_to='imoveis/')
      legenda = models.CharField(max_length=255, blank=True)
 
