@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated
 from projeto.services import CookieJWTAuthentication
 import logging
+from rest_framework.views import APIView
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +85,7 @@ class cadastro_imovel(viewsets.ModelViewSet):
 
 
 
-class imovel_list(viewsets.ReadOnlyModelViewSet):
+class imovel_list_cidade(viewsets.ReadOnlyModelViewSet):
     queryset = Imovel.objects.all().select_related('endereco').prefetch_related('imagens', 'comodidades')
     serializer_class = imovel_serializer
 
@@ -96,9 +97,20 @@ class imovel_list(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(endereco__cidade__iexact=cidade)
 
         return queryset
+    
 
+class imovel_por_id(APIView):
+    def get(self, request):
+        imovel_id = request.query_params.get("id")
+        if not imovel_id:
+            return Response({'error': 'ID não fornecido'}, status=status.HTTP_400_BAD_REQUEST)
 
-
+        try:
+            imovel = Imovel.objects.select_related('endereco').prefetch_related('imagens', 'comodidades').get(id=imovel_id)
+            serializer = imovel_serializer(imovel)
+            return Response(serializer.data)
+        except Imovel.DoesNotExist:
+            return Response({'error': 'Imóvel não encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
 
 

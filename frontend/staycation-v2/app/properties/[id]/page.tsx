@@ -1,9 +1,73 @@
+'use client'
+
 import Link from "next/link"
 import MainLayout from "@/components/layout/MainLayout"
 import { Star, MapPin, Wifi, Tv, Utensils, Car, Wind, PawPrint } from "lucide-react"
+import { useState, useEffect } from "react"
+import { useParams } from 'next/navigation'
+import { number } from "zod"
 
-export default function PropertyDetails({ params }: { params: { id: string } }) {
-  // In a real app, you would get the user data from your auth context
+interface Comodidade {
+  id: number
+  nome: string
+}
+
+interface Imovel {
+  id: number
+  titulo: string
+  descricao: string
+  preco: number
+  numero_hospedes: number
+  endereco: {
+    cidade: string
+    estado: string
+    numero: number
+    bairro: string
+  }
+  logo?: string
+  imagens: { imagem: string; legenda: string }[]
+  comodidades: Comodidade[]
+}
+
+
+export default function PropertyDetails() {
+  const { id } = useParams()
+  const [imovel, setImovel] = useState<Imovel | null>(null)
+
+
+  const iconesPorComodidade: Record<string, JSX.Element> = {
+    WiFi: <Wifi className="w-6 h-6 text-blue-500" />,
+    Estacionamento: <Car className="w-6 h-6 text-blue-500" />,
+    Piscina: <Wind className="w-6 h-6 text-blue-500" />,
+    TV: <Tv className="w-6 h-6 text-blue-500" />,
+    Cozinha: <Utensils className="w-6 h-6 text-blue-500" />,
+    Pets: <PawPrint className="w-6 h-6 text-blue-500" />,
+    // adicione mais conforme suas comodidades
+  }
+
+  useEffect(() => {
+    
+    async function fetchImovel() {
+      try{
+        const res = await fetch(`http://localhost:8000/api/imoveis/propriedade/?id=${id}`)
+        
+        const data = await res.json()
+        setImovel(data)
+        console.log(data)
+
+      } catch(error){
+        console.error('erro ao buscar imovel: ', error)
+      }
+      
+    }
+
+    if(id){
+      fetchImovel()
+      
+    }
+  }, [id])
+
+
   const userRole = "visitor"
   const userName = "Guest"
   const userAvatar = "/placeholder.svg?height=32&width=32"
@@ -13,7 +77,7 @@ export default function PropertyDetails({ params }: { params: { id: string } }) 
       <div className="container mx-auto px-4">
         {/* Property Title */}
         <section className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Peaceful Countryside Retreat</h1>
+          <h1 className="text-3xl font-bold mb-2">{imovel?.titulo}</h1>
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center">
               <Star className="w-5 h-5 text-primary fill-current" />
@@ -25,7 +89,7 @@ export default function PropertyDetails({ params }: { params: { id: string } }) 
             </div>
             <div className="flex items-center text-gray-600">
               <MapPin className="w-4 h-4 mr-1" />
-              <span>São Paulo, Brazil</span>
+              <span>{imovel?.endereco?.cidade}, {imovel?.endereco?.estado}</span>
             </div>
             <button className="ml-auto text-primary hover:underline flex items-center">
               <svg
@@ -68,39 +132,39 @@ export default function PropertyDetails({ params }: { params: { id: string } }) 
         <section className="mb-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-2 md:grid-rows-2 rounded-xl overflow-hidden">
             <div className="md:col-span-2 md:row-span-2">
-              <img
-                src="/placeholder.svg?height=600&width=800&text=Main+Image"
+            <img
+                src={imovel?.imagens[0]?.imagem ? `http://localhost:8000/${imovel.imagens[0].imagem}` : "/placeholder.svg?height=600&width=800&text=Main+Image"}
                 alt="Main property view"
                 className="w-full h-full object-cover"
               />
             </div>
             <div>
               <img
-                src="/placeholder.svg?height=300&width=400&text=Image+2"
+                src={imovel?.imagens[1]?.imagem ? `http://localhost:8000/${imovel.imagens[1].imagem}` : "/placeholder.svg?height=300&width=400&text=Image+2"}
                 alt="Property image"
                 className="w-full h-full object-cover"
               />
             </div>
             <div>
-              <img
-                src="/placeholder.svg?height=300&width=400&text=Image+3"
-                alt="Property image"
-                className="w-full h-full object-cover"
-              />
+            <img
+              src={imovel?.imagens[2]?.imagem ? `http://localhost:8000/${imovel.imagens[2].imagem}` : "/placeholder.svg?height=300&width=400&text=Image+3"}
+              alt="Property image"
+              className="w-full h-full object-cover"
+            />
             </div>
             <div>
-              <img
-                src="/placeholder.svg?height=300&width=400&text=Image+4"
-                alt="Property image"
-                className="w-full h-full object-cover"
-              />
+            <img
+              src={imovel?.imagens[3]?.imagem ? `http://localhost:8000/${imovel.imagens[3].imagem}` : "/placeholder.svg?height=300&width=400&text=Image+4"}
+              alt="Property image"
+              className="w-full h-full object-cover"
+            />
             </div>
             <div>
-              <img
-                src="/placeholder.svg?height=300&width=400&text=Image+5"
-                alt="Property image"
-                className="w-full h-full object-cover"
-              />
+            <img
+              src={imovel?.imagens[4]?.imagem ? `http://localhost:8000/${imovel.imagens[4].imagem}` : "/placeholder.svg?height=300&width=400&text=Image+5"}
+              alt="Property image"
+              className="w-full h-full object-cover"
+            />
             </div>
           </div>
           <button className="mt-2 border border-gray-800 rounded-lg px-4 py-2 text-sm font-medium flex items-center">
@@ -128,8 +192,8 @@ export default function PropertyDetails({ params }: { params: { id: string } }) 
             <section className="mb-8 border-b border-gray-200 pb-8">
               <div className="flex justify-between items-start">
                 <div>
-                  <h2 className="text-2xl font-bold mb-2">Farm house hosted by Maria</h2>
-                  <p className="text-gray-600">8 guests · 4 bedrooms · 6 beds · 3 baths</p>
+                  <h2 className="text-2xl font-bold mb-2">proprietario</h2>
+                  <p className="text-gray-600">{imovel?.numero_hospedes} Hospedes</p>
                 </div>
                 <img
                   src="/placeholder.svg?height=56&width=56&text=Host"
@@ -141,106 +205,45 @@ export default function PropertyDetails({ params }: { params: { id: string } }) 
 
             {/* Property Description */}
             <section className="mb-8 border-b border-gray-200 pb-8">
-              <h2 className="text-xl font-bold mb-4">About this place</h2>
+              <h2 className="text-xl font-bold mb-4">Sobre esse lugar</h2>
               <p className="text-gray-600 mb-4">
-                Welcome to our peaceful countryside retreat, nestled in the beautiful hills of São Paulo. This spacious
-                farm house offers the perfect escape from city life, with stunning views, fresh air, and plenty of
-                outdoor activities.
+                {imovel?.descricao}
               </p>
               <p className="text-gray-600 mb-4">
-                The property features 4 comfortable bedrooms, a fully equipped kitchen, spacious living areas, and a
-                large outdoor space with a pool, BBQ area, and garden. It's perfect for families, groups of friends, or
-                anyone looking to reconnect with nature.
+                {imovel?.regras}
               </p>
-              <p className="text-gray-600">
-                Located just 1 hour from São Paulo city, you'll enjoy the tranquility of the countryside while still
-                being close to amenities. Nearby attractions include hiking trails, a lake for fishing, and local farms
-                where you can buy fresh produce.
-              </p>
-              <button className="mt-4 text-primary font-semibold hover:underline">Show more</button>
             </section>
 
             {/* Amenities */}
             <section className="mb-8 border-b border-gray-200 pb-8">
-              <h2 className="text-xl font-bold mb-4">What this place offers</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center">
-                  <Wifi className="w-6 h-6 mr-4 text-gray-600" />
-                  <span>Free Wifi</span>
-                </div>
-                <div className="flex items-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-6 h-6 mr-4 text-gray-600"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
-                    />
-                  </svg>
-                  <span>Pool</span>
-                </div>
-                <div className="flex items-center">
-                  <Tv className="w-6 h-6 mr-4 text-gray-600" />
-                  <span>TV with streaming</span>
-                </div>
-                <div className="flex items-center">
-                  <Utensils className="w-6 h-6 mr-4 text-gray-600" />
-                  <span>Fully equipped kitchen</span>
-                </div>
-                <div className="flex items-center">
-                  <Car className="w-6 h-6 mr-4 text-gray-600" />
-                  <span>Free parking on premises</span>
-                </div>
-                <div className="flex items-center">
-                  <Wind className="w-6 h-6 mr-4 text-gray-600" />
-                  <span>Air conditioning</span>
-                </div>
-                <div className="flex items-center">
-                  <PawPrint className="w-6 h-6 mr-4 text-gray-600" />
-                  <span>Pets allowed</span>
-                </div>
-                <div className="flex items-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-6 h-6 mr-4 text-gray-600"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18z"
-                    />
-                  </svg>
-                  <span>BBQ grill</span>
-                </div>
+              <h2 className="text-xl font-bold mb-6">O que esse lugar oferece</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
+                {imovel?.comodidades?.map((comodidade, idx) => (
+                  <div key={idx} className="flex items-center space-x-3">
+                    <div>
+                      {iconesPorComodidade[comodidade] ?? (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="w-6 h-6 text-gray-400"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M12 4.5v15m7.5-7.5h-15"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-gray-700 font-medium">{comodidade}</span>
+                  </div>
+                ))}
               </div>
-              <button className="mt-6 border border-gray-800 rounded-lg px-6 py-2 font-medium">
-                Show all 12 amenities
-              </button>
             </section>
 
-            {/* Calendar */}
-            <section className="mb-8 border-b border-gray-200 pb-8">
-              <h2 className="text-xl font-bold mb-4">7 nights in São Paulo</h2>
-              <p className="text-gray-600 mb-4">May 15, 2023 - May 22, 2023</p>
-              <div className="bg-gray-100 p-4 rounded-lg text-center">
-                <p className="text-gray-600">Calendar placeholder - would show availability</p>
-              </div>
-            </section>
 
             {/* Reviews */}
             <section id="reviews" className="mb-8">
@@ -251,66 +254,6 @@ export default function PropertyDetails({ params }: { params: { id: string } }) 
                 <span className="font-bold text-lg">128 reviews</span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div className="flex flex-col">
-                  <div className="flex justify-between mb-2">
-                    <span>Cleanliness</span>
-                    <div className="flex items-center">
-                      <div className="w-24 h-1 bg-gray-300 rounded-full mr-2">
-                        <div className="w-[95%] h-full bg-gray-800 rounded-full"></div>
-                      </div>
-                      <span className="text-sm">4.8</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between mb-2">
-                    <span>Communication</span>
-                    <div className="flex items-center">
-                      <div className="w-24 h-1 bg-gray-300 rounded-full mr-2">
-                        <div className="w-full h-full bg-gray-800 rounded-full"></div>
-                      </div>
-                      <span className="text-sm">5.0</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between mb-2">
-                    <span>Check-in</span>
-                    <div className="flex items-center">
-                      <div className="w-24 h-1 bg-gray-300 rounded-full mr-2">
-                        <div className="w-[90%] h-full bg-gray-800 rounded-full"></div>
-                      </div>
-                      <span className="text-sm">4.5</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex justify-between mb-2">
-                    <span>Accuracy</span>
-                    <div className="flex items-center">
-                      <div className="w-24 h-1 bg-gray-300 rounded-full mr-2">
-                        <div className="w-[95%] h-full bg-gray-800 rounded-full"></div>
-                      </div>
-                      <span className="text-sm">4.8</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between mb-2">
-                    <span>Location</span>
-                    <div className="flex items-center">
-                      <div className="w-24 h-1 bg-gray-300 rounded-full mr-2">
-                        <div className="w-[90%] h-full bg-gray-800 rounded-full"></div>
-                      </div>
-                      <span className="text-sm">4.5</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between mb-2">
-                    <span>Value</span>
-                    <div className="flex items-center">
-                      <div className="w-24 h-1 bg-gray-300 rounded-full mr-2">
-                        <div className="w-[95%] h-full bg-gray-800 rounded-full"></div>
-                      </div>
-                      <span className="text-sm">4.8</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[1, 2, 3, 4].map((review) => (
@@ -344,8 +287,8 @@ export default function PropertyDetails({ params }: { params: { id: string } }) 
             <div className="sticky top-24 bg-white rounded-xl border border-gray-200 shadow-lg p-6">
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <span className="text-2xl font-bold">$120</span>
-                  <span className="text-gray-600"> night</span>
+                  <span className="text-2xl font-bold">R$ {imovel?.preco}</span>
+                  <span className="text-gray-600"> Dia</span>
                 </div>
                 <div className="flex items-center">
                   <Star className="w-4 h-4 text-primary fill-current" />
@@ -386,23 +329,14 @@ export default function PropertyDetails({ params }: { params: { id: string } }) 
               <button className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 px-4 rounded-lg mb-4">
                 Reserve
               </button>
-              <p className="text-center text-gray-600 mb-6">You won't be charged yet</p>
 
               <div className="space-y-4">
                 <div className="flex justify-between">
-                  <span className="underline">$120 x 7 nights</span>
-                  <span>$840</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="underline">Cleaning fee</span>
+                  <span className="underline">Taxa de limpeza</span>
                   <span>$60</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="underline">Service fee</span>
-                  <span>$90</span>
-                </div>
                 <div className="flex justify-between pt-4 border-t border-gray-300 font-bold">
-                  <span>Total before taxes</span>
+                  <span>Total</span>
                   <span>$990</span>
                 </div>
               </div>
@@ -412,18 +346,12 @@ export default function PropertyDetails({ params }: { params: { id: string } }) 
 
         {/* Location */}
         <section className="mb-12">
-          <h2 className="text-xl font-bold mb-4">Where you'll be</h2>
+          <h2 className="text-xl font-bold mb-4">Voce estara aqui</h2>
           <div className="h-80 bg-gray-200 rounded-xl mb-4">
             <div className="w-full h-full flex items-center justify-center text-gray-500">
               Map placeholder - Google Maps would be integrated here
             </div>
           </div>
-          <h3 className="font-bold mb-2">São Paulo, Brazil</h3>
-          <p className="text-gray-600 mb-4">
-            The property is located in a peaceful rural area, about 1 hour drive from São Paulo city center. It's
-            surrounded by nature, with beautiful views of the countryside.
-          </p>
-          <button className="text-primary font-semibold hover:underline">Show more</button>
         </section>
       </div>
     </MainLayout>
