@@ -7,9 +7,13 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 
 router.register(r"registrar", views.cadastro_imovel, basename='registro')
-router.register(r"list", views.imovel_list, basename='list')
+router.register(r"list", views.imovel_list_cidade, basename='list')
+
+
+
 
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('propriedade/', views.imovel_por_id.as_view())
 ]

@@ -2,9 +2,6 @@ from django.db import models
 from django.conf import settings
 
 
-     
-
-
 class Comodidade(models.Model):
      nome = models.CharField(max_length=100, unique=True)
 
