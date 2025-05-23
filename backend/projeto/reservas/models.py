@@ -1,0 +1,24 @@
+from django.db import models
+from django.contrib.auth import get_user_model
+from imoveis.models import Imovel
+
+Usuario = get_user_model()
+
+class Reserva(models.Model):
+    STATUS_CHOICES = [
+        ('PENDENTE', 'Pendente'),
+        ('CONFIRMADA', 'Confirmada'),
+        ('CANCELADA', 'Cancelada'),
+    ]
+    
+    chacara = models.ForeignKey(Imovel, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    data_inicio = models.DateTimeField()
+    data_fim = models.DateTimeField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDENTE')
+    valor_total = models.DecimalField(max_digits=10, decimal_places=2)
+    evento_google_id = models.CharField(max_length=255, blank=True, null=True)  
+    criado_em = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Reserva de {self.chacara.nome} por {self.usuario.username}" 

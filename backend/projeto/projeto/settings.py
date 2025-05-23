@@ -10,6 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+from dotenv import load_dotenv
+import os
+
+
 from datetime import timedelta
 from pathlib import Path
 import os
@@ -44,6 +48,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework_simplejwt',
     'imoveis',
+    'reservas',
 ]
 
 
@@ -170,3 +175,12 @@ SIMPLE_JWT = {
 }
 
 AUTH_USER_MODEL = 'cadastro.usuario'
+
+
+
+load_dotenv()
+
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
+
+GOOGLE_REDIRECT_URI = 'http://localhost:8000/api/reservas/google-calendar/callback/'

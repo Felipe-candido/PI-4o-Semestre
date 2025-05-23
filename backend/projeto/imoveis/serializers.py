@@ -44,7 +44,7 @@ class imovel_serializer(serializers.ModelSerializer):
         model = Imovel
         fields = [
             'id', 'titulo', 'descricao', 'preco',
-            'numero_hospedes', 'regras', 'comodidades', 'endereco', 'imagens', 'logo'
+            'numero_hospedes', 'regras', 'comodidades', 'endereco', 'imagens', 'logo', 'id_reserva'
         ]
 
     def create(self, validated_data):
