@@ -11,4 +11,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('cadastro.urls')),
     path('api/imoveis/', include('imoveis.urls')),
+    path('api/reservas/', include('reservas.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -2,6 +2,8 @@ from django.db import models
 from django.conf import settings
 
 
+
+
 class Comodidade(models.Model):
      nome = models.CharField(max_length=100, unique=True)
 
@@ -20,6 +22,7 @@ class Imovel(models.Model):
       numero_hospedes = models.IntegerField()
       regras = models.TextField(null=True, blank=True)
       comodidades = models.ManyToManyField(Comodidade, blank=True)
+      id_reserva = models.CharField(max_length=200, blank=True)
       logo = models.ImageField(
           upload_to='imoveis/logos/',
           null=True,
