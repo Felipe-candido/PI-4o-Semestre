@@ -3,7 +3,7 @@
 import Link from "next/link"
 import MainLayout from "@/components/layout/MainLayout"
 import { Star, MapPin, Wifi, Tv, Utensils, Car, Wind, PawPrint } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, JSX } from "react"
 import { useParams } from 'next/navigation'
 import { number } from "zod"
 
@@ -303,32 +303,22 @@ export default function PropertyDetails() {
               <div className="border border-gray-300 rounded-lg mb-4">
                 <div className="grid grid-cols-2 divide-x divide-gray-300">
                   <div className="p-3">
-                    <label className="block text-xs font-bold uppercase">CHECK-IN</label>
-                    <input type="text" placeholder="Add date" className="w-full border-none p-0 focus:ring-0" />
+                    <label className="block text-xs font-bold uppercase">PREÇO</label>
+                    <p className="text-lg font-bold">R$ {imovel?.preco}/dia</p>
                   </div>
                   <div className="p-3">
-                    <label className="block text-xs font-bold uppercase">CHECKOUT</label>
-                    <input type="text" placeholder="Add date" className="w-full border-none p-0 focus:ring-0" />
+                    <label className="block text-xs font-bold uppercase">CAPACIDADE</label>
+                    <p className="text-lg font-bold">{imovel?.numero_hospedes} hóspedes</p>
                   </div>
-                </div>
-                <div className="border-t border-gray-300 p-3">
-                  <label className="block text-xs font-bold uppercase">GUESTS</label>
-                  <select className="w-full border-none p-0 focus:ring-0 appearance-none bg-transparent">
-                    <option>1 guest</option>
-                    <option>2 guests</option>
-                    <option>3 guests</option>
-                    <option>4 guests</option>
-                    <option>5 guests</option>
-                    <option>6 guests</option>
-                    <option>7 guests</option>
-                    <option>8 guests</option>
-                  </select>
                 </div>
               </div>
 
-              <button className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 px-4 rounded-lg mb-4">
-                Reserve
-              </button>
+              <Link 
+                href={`/properties/${id}/reserve`}
+                className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 px-4 rounded-lg mb-4 block text-center"
+              >
+                Reservar Agora
+              </Link>
 
               <div className="space-y-4">
                 <div className="flex justify-between">
