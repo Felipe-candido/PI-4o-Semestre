@@ -63,7 +63,7 @@ export default function ReservePage() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/reservas/verificar-disponibilidade/?imovel_id=${id}&data_inicio=${format(formData.dataInicio, "yyyy-MM-dd")}&data_fim=${format(formData.dataFim, "yyyy-MM-dd")}`
+        `http://localhost:8000/api/imoveis/chacaras/?imovel_id=${id}/verificar-disponibilidade/?data_inicio=${format(formData.dataInicio, "yyyy-MM-dd")}&data_fim=${format(formData.dataFim, "yyyy-MM-dd")}`
       )
       const data = await response.json()
       setDisponivel(data.disponivel)

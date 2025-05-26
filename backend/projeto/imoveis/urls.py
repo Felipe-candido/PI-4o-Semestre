@@ -8,6 +8,7 @@ router = DefaultRouter()
 
 router.register(r"registrar", views.cadastro_imovel, basename='registro')
 router.register(r"list", views.imovel_list_cidade, basename='list')
+router.register(r'chacaras', views.ChacaraViewSet)
 
 
 
