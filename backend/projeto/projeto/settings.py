@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from dotenv import load_dotenv
 import os
+from pathlib import Path
 
 
 from datetime import timedelta
@@ -178,9 +179,12 @@ AUTH_USER_MODEL = 'cadastro.usuario'
 
 
 
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
+# Carrega o .env da raiz
+load_dotenv(BASE_DIR / '.env')
+
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
 GOOGLE_REDIRECT_URI = 'http://localhost:8000/api/reservas/google-calendar/callback/'

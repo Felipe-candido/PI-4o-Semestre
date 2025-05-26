@@ -10,30 +10,7 @@ from .serializers import ReservaSerializer
 from datetime import datetime
 from .services import GoogleCalendarService
 
-class ChacaraViewSet(viewsets.ModelViewSet):
-    queryset = Imovel.objects.all()
-    serializer_class = imovel_serializer
-    
-    @action(detail=True, methods=['get'])
-    def verificar_disponibilidade(self, request, pk=None):
-        imovel = self.get_object()
-        data_inicio = request.query_params.get('data_inicio')
-        data_fim = request.query_params.get('data_fim')
-        
-        if not data_inicio or not data_fim:
-            return Response(
-                {'error': 'Data início e fim são obrigatórios'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
-        calendar_service = GoogleCalendarService()
-        disponivel = calendar_service.verificar_disponibilidade(
-            imovel.id_reserva,
-            datetime.fromisoformat(data_inicio),
-            datetime.fromisoformat(data_fim)
-        )
-        
-        return Response({'disponivel': disponivel})
+
 
 class ReservaViewSet(viewsets.ModelViewSet):
     queryset = Reserva.objects.all()

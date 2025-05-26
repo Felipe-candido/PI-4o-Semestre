@@ -45,7 +45,7 @@ class Command(BaseCommand):
                 imovel=imovel,
                 rua=endereco_dados['rua'],
                 numero=endereco_dados['numero'],
-                cidade="Brotas",
+                cidade="Leme",
                 estado=endereco_dados['estado'],
                 cep=endereco_dados['cep'].replace("-", ""),
                 bairro=endereco_dados['bairro']
