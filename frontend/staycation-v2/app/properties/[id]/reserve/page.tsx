@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import MainLayout from "@/components/layout/MainLayout"
 import { Calendar } from "@/components/ui/calendar"
@@ -35,19 +35,25 @@ export default function ReservePage() {
   })
 
   // Buscar dados do imóvel
-  useState(() => {
+  useEffect(() => {
+    let isMounted = true
+  
     const fetchImovel = async () => {
       try {
         const response = await fetch(`http://localhost:8000/api/imoveis/propriedade/?id=${id}`)
         const data = await response.json()
-        setImovel(data)
+        if (isMounted) setImovel(data)
       } catch (error) {
-        setError("Erro ao carregar dados do imóvel")
+        if (isMounted) setError("Erro ao carregar dados do imóvel")
       }
     }
-    
+  
     if (id) {
       fetchImovel()
+    }
+  
+    return () => {
+      isMounted = false
     }
   }, [id])
 
