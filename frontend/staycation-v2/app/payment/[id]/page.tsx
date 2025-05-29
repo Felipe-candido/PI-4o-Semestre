@@ -4,20 +4,18 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import MainLayout from "@/components/layout/MainLayout"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface ReservaDetalhes {
   id: string
   imovel: {
     titulo: string
-    preco: number
+    valor_total: number
   }
   data_inicio: string
   data_fim: string
-  valor_total: number
+  numero_hospedes: number
   status: string
 }
 
@@ -25,79 +23,84 @@ export default function PaymentPage() {
   const { id } = useParams()
   const router = useRouter()
   const [reserva, setReserva] = useState<ReservaDetalhes | null>(null)
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  
-  // Dados do cartão
-  const [formData, setFormData] = useState({
-    numeroCartao: '',
-    nomeCartao: '',
-    validade: '',
-    cvv: ''
-  })
+  const [loading, setLoading] = useState(true)
 
-  // Buscar detalhes da reserva
   useEffect(() => {
-    const fetchReserva = async () => {
-      try {
-        const response = await fetch(`http://localhost:8000/api/reservas/${id}/`)
-        if (!response.ok) throw new Error('Reserva não encontrada')
-        const data = await response.json()
-        setReserva(data)
-      } catch (error) {
-        setError("Erro ao carregar dados da reserva")
-      }
-    }
-
-    if (id) {
-      fetchReserva()
-    }
-  }, [id])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
-
-    try {
-      // Aqui você implementaria a integração com o gateway de pagamento
-      const response = await fetch(`http://localhost:8000/api/reservas/${id}/confirmar-pagamento/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          reserva_id: id
-        })
+    const initMercadoPago = async () => {
+      // @ts-ignore
+      const mp = new MercadoPago('SEU_PUBLIC_KEY', {
+        locale: 'pt-BR'
       })
 
-      if (response.ok) {
-        router.push(`/reservas/${id}/confirmacao`)
-      } else {
-        setError("Erro ao processar pagamento")
-      }
-    } catch (error) {
-      setError("Erro ao processar pagamento")
-    } finally {
-      setLoading(false)
-    }
-  }
+      try {
+        // Buscar dados da reserva
+        const reservaResponse = await fetch(`http://localhost:8000/api/reservas/${id}/`)
+        const reservaData = await reservaResponse.json()
+        setReserva(reservaData)
 
-  if (!reserva) {
+        // Criar preferência de pagamento
+        const preferenceResponse = await fetch('http://localhost:8000/api/pagamentos/criar-preferencia/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            reserva_id: id,
+            valor: reservaData.valor_total,
+            descricao: `Reserva em ${reservaData.imovel.titulo}`
+          })
+        })
+
+        const preference = await preferenceResponse.json()
+
+        // Renderizar botão do Mercado Pago
+        mp.checkout({
+          preference: {
+            id: preference.id
+          },
+          render: {
+            container: '#payment-form',
+            label: 'Pagar com Mercado Pago',
+          }
+        })
+      } catch (error) {
+        setError("Erro ao inicializar pagamento")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    const loadMercadoPagoScript = () => {
+      const script = document.createElement('script')
+      script.src = 'https://sdk.mercadopago.com/js/v2'
+      script.onload = () => initMercadoPago()
+      document.body.appendChild(script)
+    }
+
+    loadMercadoPagoScript()
+  }, [id])
+
+  if (loading) {
     return (
       <MainLayout>
         <div className="container mx-auto px-4 py-8">
-          <div className="max-w-3xl mx-auto">
-            {error ? (
-              <Alert variant="destructive">
-                <AlertTitle>Erro</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            ) : (
-              <div>Carregando...</div>
-            )}
+          <div className="max-w-3xl mx-auto text-center">
+            Carregando pagamento...
           </div>
+        </div>
+      </MainLayout>
+    )
+  }
+
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-8">
+          <Alert variant="destructive">
+            <AlertTitle>Erro</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         </div>
       </MainLayout>
     )
@@ -107,105 +110,31 @@ export default function PaymentPage() {
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6">Pagamento da Reserva</h1>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Detalhes da Reserva */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Detalhes da Reserva</CardTitle>
-                <CardDescription>Confira os detalhes antes de pagar</CardDescription>
-              </CardHeader>
-              <CardContent>
+          <Card>
+            <CardHeader>
+              <CardTitle>Finalizar Pagamento</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {reserva && (
                 <div className="space-y-4">
                   <div>
-                    <h3 className="font-semibold">Imóvel</h3>
-                    <p>{reserva.imovel.titulo}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">Período</h3>
+                    <h3 className="font-semibold">Detalhes da Reserva</h3>
+                    <p>Propriedade: {reserva.imovel.titulo}</p>
                     <p>Check-in: {new Date(reserva.data_inicio).toLocaleDateString()}</p>
                     <p>Check-out: {new Date(reserva.data_fim).toLocaleDateString()}</p>
+                    <p>Hóspedes: {reserva.numero_hospedes}</p>
+                    <p className="text-xl font-bold mt-2">
+                      Valor Total: R$ {reserva.imovel.valor_total.toFixed(2)}
+                    </p>
                   </div>
-                  <div>
-                    <h3 className="font-semibold">Valor Total</h3>
-                    <p className="text-2xl font-bold">R$ {reserva.valor_total.toFixed(2)}</p>
+
+                  <div id="payment-form" className="mt-6">
+                    {/* O botão do Mercado Pago será renderizado aqui */}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Formulário de Pagamento */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Dados do Pagamento</CardTitle>
-                <CardDescription>Preencha os dados do seu cartão</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  {error && (
-                    <Alert variant="destructive">
-                      <AlertTitle>Erro</AlertTitle>
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
-
-                  <div>
-                    <Label htmlFor="numeroCartao">Número do Cartão</Label>
-                    <Input
-                      id="numeroCartao"
-                      placeholder="1234 5678 9012 3456"
-                      value={formData.numeroCartao}
-                      onChange={(e) => setFormData({...formData, numeroCartao: e.target.value})}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="nomeCartao">Nome no Cartão</Label>
-                    <Input
-                      id="nomeCartao"
-                      placeholder="Como está no cartão"
-                      value={formData.nomeCartao}
-                      onChange={(e) => setFormData({...formData, nomeCartao: e.target.value})}
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="validade">Validade</Label>
-                      <Input
-                        id="validade"
-                        placeholder="MM/AA"
-                        value={formData.validade}
-                        onChange={(e) => setFormData({...formData, validade: e.target.value})}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="cvv">CVV</Label>
-                      <Input
-                        id="cvv"
-                        placeholder="123"
-                        value={formData.cvv}
-                        onChange={(e) => setFormData({...formData, cvv: e.target.value})}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={loading}
-                  >
-                    {loading ? "Processando..." : `Pagar R$ ${reserva.valor_total.toFixed(2)}`}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </MainLayout>

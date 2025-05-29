@@ -49,8 +49,6 @@ class imovel_serializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         try:
-            logger.info("Iniciando criação de imóvel no serializer")
-            logger.info(f"Dados validados: {validated_data}")
 
             endereco_data = validated_data.pop('endereco')
             comodidades_data = validated_data.pop('comodidades', [])
@@ -60,13 +58,9 @@ class imovel_serializer(serializers.ModelSerializer):
             user = self.context['request'].user
             validated_data['proprietario'] = user
 
-            logger.info(f"Dados do imóvel: {validated_data}")
-            logger.info(f"Dados do endereço: {endereco_data}")
-            logger.info(f"Comodidades: {comodidades_data}")
-
-            
+         
             imovel = Imovel.objects.create(**validated_data)
-            logger.info(f"Imóvel criado com ID: {imovel.id}")
+         
 
             # CRIA O ENDEREÇO DO IMÓVEL
             Endereco_imovel.objects.create(imovel=imovel, **endereco_data)
