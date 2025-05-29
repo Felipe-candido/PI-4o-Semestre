@@ -33,7 +33,7 @@ export default function ConfirmacaoPage() {
   useEffect(() => {
     const fetchReserva = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/reservas/${id}/`)
+        const response = await fetch(`http://localhost:8000/api/reservas/confirma/${id}/`)
         if (!response.ok) throw new Error('Reserva não encontrada')
         const data = await response.json()
         setReserva(data)

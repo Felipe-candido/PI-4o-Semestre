@@ -12,28 +12,35 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'nome', 'email', 'first_name', 'last_name']
 
 class ReservaSerializer(serializers.ModelSerializer):
-    usuario = UserSerializer(read_only=True)
-    imovel = Imovel()
-    imovel_id = serializers.PrimaryKeyRelatedField(
-        queryset=Imovel.objects.all(),
-        write_only=True,
-        source='chacara'
-    )
+    Imovel = serializers.PrimaryKeyRelatedField(queryset=Imovel.objects.all())
+    imovel_id = serializers.IntegerField(write_only=True, required=False)
+    numero_hospedes = serializers.IntegerField(required=True)
+    valor_total = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
+    usuario = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.all(), required=False)
 
     class Meta:
         model = Reserva
         fields = [
-            'id', 'imovel', 'imovel_id', 'usuario', 'data_inicio', 
-            'data_fim', 'status', 'valor_total', 'criado_em'
+            'id', 'Imovel', 'imovel_id', 'usuario', 'data_inicio', 
+            'data_fim', 'numero_hospedes', 'observacoes', 'valor_total', 
+            'status', 'evento_google_id', 'criado_em'
         ]
-        read_only_fields = ['status', 'valor_total']
+        read_only_fields = ['id', 'status', 'evento_google_id', 'criado_em']
+
+    def validate(self, data):
+        # Validar número de hóspedes
+        if data.get('numero_hospedes', 0) <= 0:
+            raise serializers.ValidationError("O número de hóspedes deve ser maior que zero")
+        return data
 
     def create(self, validated_data):
-        # Calcula o valor total baseado nos dias de reserva
-        data_inicio = validated_data['data_inicio']
-        data_fim = validated_data['data_fim']
-        dias = (data_fim - data_inicio).days
-        imovel = validated_data['imovel']
-        
-        validated_data['valor_total'] = imovel.preco_diaria * dias
-        return super().create(validated_data) 
+        # Se tiver imovel_id, usar ele para definir Imovel
+        if 'imovel_id' in validated_data:
+            imovel_id = validated_data.pop('imovel_id')
+            validated_data['Imovel'] = Imovel.objects.get(pk=imovel_id)
+
+        # Garantir que temos o usuário
+        if 'usuario' not in validated_data and self.context.get('request'):
+            validated_data['usuario'] = self.context['request'].user
+
+        return super().create(validated_data)

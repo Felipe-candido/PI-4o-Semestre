@@ -18,6 +18,8 @@ interface ReservaForm {
   observacoes: string
 }
 
+
+
 export default function ReservePage() {
   const { id } = useParams()
   const router = useRouter()
@@ -26,6 +28,7 @@ export default function ReservePage() {
   const [error, setError] = useState("")
   const [disponivel, setDisponivel] = useState<boolean | null>(null)
   const [valorTotal, setValorTotal] = useState(0)
+  const [usuario, setUsuario] = useState<any>(null)
   
   const [formData, setFormData] = useState<ReservaForm>({
     dataInicio: undefined,
@@ -33,6 +36,28 @@ export default function ReservePage() {
     numeroHospedes: 1,
     observacoes: ""
   })
+
+  // Buscar dados do usuario
+  useEffect(() => {
+    const fetchUsuario = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/me/', {
+          credentials: 'include',
+        })
+        if (!response.ok) {
+          router.push('/auth/login') // Redireciona para login se não estiver autenticado
+          return
+        }
+        const data = await response.json()
+        setUsuario(data)
+      } catch (error) {
+        console.error('Erro ao buscar dados do usuário:', error)
+        router.push('/auth/login')
+      }
+    }
+
+    fetchUsuario()
+  }, [])
 
   // Buscar dados do imóvel
   useEffect(() => {
@@ -68,10 +93,16 @@ export default function ReservePage() {
     setError("")
 
     try {
+      // Converter as datas para UTC e formatar como ISO
+      const dataInicioUTC = new Date(formData.dataInicio.getTime() - formData.dataInicio.getTimezoneOffset() * 60000);
+      const dataFimUTC = new Date(formData.dataFim.getTime() - formData.dataFim.getTimezoneOffset() * 60000);
+
       const response = await fetch(
-        `http://localhost:8000/api/imoveis/chacaras/?imovel_id=${id}/verificar-disponibilidade/?data_inicio=${format(formData.dataInicio, "yyyy-MM-dd")}&data_fim=${format(formData.dataFim, "yyyy-MM-dd")}`
+        `http://localhost:8000/api/imoveis/chacaras/${id}/verificar_disponibilidade/?data_inicio=${dataInicioUTC.toISOString()}&data_fim=${dataFimUTC.toISOString()}`
       )
       const data = await response.json()
+      console.log("Resposta da verificação:", data)
+      console.log("Disponível:", data.disponivel)
       setDisponivel(data.disponivel)
       
       if (data.disponivel) {
@@ -93,30 +124,69 @@ export default function ReservePage() {
       return
     }
 
+    if (!usuario) {
+      setError("Você precisa estar logado para fazer uma reserva")
+      router.push('/auth/login')
+      return
+    }
+
+    setLoading(true)
+    setError("")
+
     try {
-      const response = await fetch('http://localhost:8000/api/reservas/', {
+      const dataInicio = new Date(formData.dataInicio!)
+      const dataFim = new Date(formData.dataFim!)
+      
+      dataInicio.setMinutes(dataInicio.getMinutes() - dataInicio.getTimezoneOffset())
+      dataFim.setMinutes(dataFim.getMinutes() - dataFim.getTimezoneOffset())
+
+      const dadosReserva = {
+        Imovel: id,
+        data_inicio: dataInicio.toISOString(), 
+        data_fim: dataFim.toISOString(),
+        numero_hospedes: formData.numeroHospedes,
+        observacoes: formData.observacoes || "",
+        valor_total: valorTotal,
+        usuario: usuario.id // Adicionando o ID do usuário
+      }
+      console.log("Dados sendo enviados:", dadosReserva)
+
+      const response = await fetch('http://localhost:8000/api/reservas/confirma/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRFToken': getCSRFToken(),
+          'Accept': 'application/json',
         },
-        body: JSON.stringify({
-          imovel_id: id,
-          data_inicio: format(formData.dataInicio!, "yyyy-MM-dd'T'HH:mm:ss"),
-          data_fim: format(formData.dataFim!, "yyyy-MM-dd'T'HH:mm:ss"),
-          numero_hospedes: formData.numeroHospedes,
-          observacoes: formData.observacoes
-        })
+        credentials: 'include',
+        body: JSON.stringify(dadosReserva)
       })
 
-      if (response.ok) {
-        const reserva = await response.json()
-        router.push(`/payment/${reserva.id}`)
-      } else {
-        setError("Erro ao criar reserva")
+      const responseData = await response.json()
+      console.log("Resposta completa da API:", responseData)
+
+      if (!response.ok) {
+        console.error("Erro da API:", responseData)
+        throw new Error(responseData.error || responseData.details || responseData.message || "Erro ao criar reserva")
       }
+
+      console.log("Reserva criada com sucesso:", responseData)
+      router.push(`/payment/${responseData.id}`)
     } catch (error) {
-      setError("Erro ao processar sua reserva")
+      console.error("Erro completo:", error)
+      setError(error instanceof Error ? error.message : "Erro ao processar sua reserva")
+    } finally {
+      setLoading(false)
     }
+  }
+
+  function getCSRFToken() {
+    const cookieValue = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('csrftoken='))
+      ?.split('=')[1];
+    console.log("CSRF Token encontrado:", cookieValue)
+    return cookieValue || '';
   }
 
   return (
@@ -132,12 +202,21 @@ export default function ReservePage() {
             </Alert>
           )}
 
-          {disponivel && (
+          {disponivel === true && (
             <Alert className="mb-6">
               <AlertTitle>Disponível!</AlertTitle>
               <AlertDescription>
                 O imóvel está disponível para as datas selecionadas.
                 Valor total: R$ {valorTotal.toFixed(2)}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {disponivel === false && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertTitle>Indisponível</AlertTitle>
+              <AlertDescription>
+                Desculpe, o imóvel não está disponível para as datas selecionadas.
               </AlertDescription>
             </Alert>
           )}
@@ -198,12 +277,13 @@ export default function ReservePage() {
               {loading ? "Verificando..." : "Verificar Disponibilidade"}
             </Button>
 
-            {disponivel && (
+            {disponivel === true && (
               <Button
                 onClick={prosseguirParaPagamento}
                 variant="default"
+                disabled={loading}
               >
-                Prosseguir para Pagamento
+                {loading ? "Processando..." : "Prosseguir para Pagamento"}
               </Button>
             )}
           </div>

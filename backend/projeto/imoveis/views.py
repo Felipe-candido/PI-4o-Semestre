@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from django.shortcuts import render
-
+from dateutil.parser import parse
 from reservas.services import GoogleCalendarService
 from .models import Imovel, Comodidade, imagem_imovel
 from rest_framework.response import Response
@@ -12,6 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from projeto.services import CookieJWTAuthentication
 import logging
 from rest_framework.views import APIView
+from rest_framework.exceptions import APIException
 
 logger = logging.getLogger(__name__)
 
@@ -57,10 +58,15 @@ class cadastro_imovel(viewsets.ModelViewSet):
             if not serializer.is_valid():
                 logger.error(f"Erros de validação: {serializer.errors}")
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+            calendar_service = GoogleCalendarService()
+            calendar_id = calendar_service.criar_calendario_chacara(dados_imovel.get('titulo', 'Novo Imóvel'))
+            
 
-            imovel = serializer.save()
+            imovel = serializer.save(id_reserva=calendar_id)
             logger.info(f"Imóvel criado com sucesso: {imovel.id}")
 
+            
             # Processa o logo se existir
             logo = request.FILES.get('logo')
             if logo:
@@ -125,23 +131,59 @@ class ChacaraViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def verificar_disponibilidade(self, request, pk=None):
         imovel = self.get_object()
-        data_inicio = request.query_params.get('data_inicio')
-        data_fim = request.query_params.get('data_fim')
+        data_inicio_str = request.query_params.get('data_inicio')
+        data_fim_str = request.query_params.get('data_fim')
         
-        if not data_inicio or not data_fim:
+        if not data_inicio_str or not data_fim_str:
             return Response(
                 {'error': 'Data início e fim são obrigatórios'},
                 status=status.HTTP_400_BAD_REQUEST
             )
             
-        calendar_service = GoogleCalendarService()
-        disponivel = calendar_service.verificar_disponibilidade(
-            imovel.id_reserva,
-            datetime.fromisoformat(data_inicio),
-            datetime.fromisoformat(data_fim)
-        )
-        
-        return Response({'disponivel': disponivel})
+        try:
+            # Converter strings para datetime (aceita vários formatos, incluindo ISO)
+            data_inicio = parse(data_inicio_str)
+            data_fim = parse(data_fim_str)
+            
+            # Garantir que as datas têm timezone (UTC)
+            if not data_inicio.tzinfo:
+                data_inicio = data_inicio.replace(tzinfo=timezone.utc)
+            if not data_fim.tzinfo:
+                data_fim = data_fim.replace(tzinfo=timezone.utc)
+            
+            # Verificar se a data final é após a inicial
+            if data_fim <= data_inicio:
+                return Response(
+                    {'error': 'A data final deve ser após a data inicial'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            calendar_service = GoogleCalendarService()
+            
+            # Verificar disponibilidade (passando os objetos datetime diretamente)
+            disponivel = calendar_service.verificar_disponibilidade(
+                imovel.id_reserva,
+                data_inicio,
+                data_fim
+            )
+            
+            return Response({
+                'disponivel': disponivel,
+                'data_inicio': data_inicio.isoformat(),
+                'data_fim': data_fim.isoformat()
+            })
+            
+        except ValueError as e:
+            return Response(
+                {'error': f'Formato de data inválido. Detalhes: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            logger.error(f"Erro ao verificar disponibilidade: {str(e)}")
+            return Response(
+                {'error': f'Erro ao verificar disponibilidade: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 
