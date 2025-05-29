@@ -4,7 +4,7 @@ from . import views
 
 router = DefaultRouter()
 
-router.register(r'reserva', views.ReservaViewSet)
+router.register(r'confirma', views.ReservaViewSet, basename='confirma')
 
 urlpatterns = [
     path('', include(router.urls)),

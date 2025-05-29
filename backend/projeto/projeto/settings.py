@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'imoveis',
     'reservas',
+    'pagamentos',
 ]
 
 
@@ -188,3 +189,9 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
 GOOGLE_REDIRECT_URI = 'http://localhost:8000/api/reservas/google-calendar/callback/'
+
+
+# Mercado Pago Settings
+MERCADO_PAGO_PUBLIC_KEY = 'YOUR_PUBLIC_KEY'
+MERCADO_PAGO_ACCESS_TOKEN = 'YOUR_ACCESS_TOKEN'
+FRONTEND_URL = 'http://localhost:3000' 
