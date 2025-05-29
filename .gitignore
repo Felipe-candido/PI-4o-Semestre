@@ -6,3 +6,4 @@
 *$py.class
 .env
 google_auth.env
+/backend/projeto/credentials.json
