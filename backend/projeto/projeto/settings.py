@@ -13,14 +13,12 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from dotenv import load_dotenv
 import os
 from pathlib import Path
-
-
 from datetime import timedelta
-from pathlib import Path
-import os
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(dotenv_path=BASE_DIR / "tokens.env")
 
 
 # Quick-start development settings - unsuitable for production
@@ -180,10 +178,6 @@ AUTH_USER_MODEL = 'cadastro.usuario'
 
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-
-# Carrega o .env da raiz
-load_dotenv(BASE_DIR / '.env')
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
@@ -192,6 +186,6 @@ GOOGLE_REDIRECT_URI = 'http://localhost:8000/api/reservas/google-calendar/callba
 
 
 # Mercado Pago Settings
-MERCADO_PAGO_PUBLIC_KEY = 'YOUR_PUBLIC_KEY'
-MERCADO_PAGO_ACCESS_TOKEN = 'YOUR_ACCESS_TOKEN'
+MERCADO_PAGO_PUBLIC_KEY = os.getenv("MERCADO_PAGO_PUBLIC_KEY")
+MERCADO_PAGO_ACCESS_TOKEN = os.getenv("MERCADO_PAGO_ACCESS_TOKEN")
 FRONTEND_URL = 'http://localhost:3000' 

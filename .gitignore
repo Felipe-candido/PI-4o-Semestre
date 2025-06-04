@@ -6,7 +6,9 @@
 *$py.class
 .env
 google_auth.env
+tokens.env
 /backend/projeto/credentials.json
 /backend/projeto/token.pickle
+/backend/projeto/tokens.env
 token.pickle
 *.pickle
