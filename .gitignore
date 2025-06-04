@@ -8,5 +8,7 @@
 google_auth.env
 /backend/projeto/credentials.json
 /backend/projeto/token.pickle
+/backend/projeto/tokens.env
 token.pickle
 *.pickle
+tokens.env

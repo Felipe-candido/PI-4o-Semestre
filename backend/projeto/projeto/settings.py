@@ -183,7 +183,7 @@ AUTH_USER_MODEL = 'cadastro.usuario'
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Carrega o .env da raiz
-load_dotenv(BASE_DIR / '.env')
+load_dotenv(BASE_DIR / 'tokens.env')
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
