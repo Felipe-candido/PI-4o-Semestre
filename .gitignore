@@ -12,3 +12,4 @@ tokens.env
 /backend/projeto/tokens.env
 token.pickle
 *.pickle
+tokens.env
