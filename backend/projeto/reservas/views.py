@@ -7,9 +7,28 @@ from django.shortcuts import get_object_or_404
 from imoveis.models import Imovel
 from .models import Reserva
 from imoveis.serializers import imovel_serializer
-from .serializers import ReservaSerializer
+from .serializers import ReservaSerializer, ReservaReadSerializer
 from datetime import datetime, timezone
 from .services import GoogleCalendarService
+from rest_framework.views import APIView
+
+
+
+class buscar_reserva(APIView):
+    def get(self, request):
+        reserva_id = request.query_params.get("id")
+        if not reserva_id:
+            return Response({'error': 'reserva nao encontrada'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            reserva = Reserva.objects.select_related('Imovel').get(id = reserva_id)
+            serializer = ReservaReadSerializer(reserva)
+            return Response(serializer.data)
+
+        except Reserva.DoesNotExist:
+            return Response({'error': 'Reserva não encontrada'}, status=status.HTTP_404_NOT_FOUND)
+
+            
 
 
 

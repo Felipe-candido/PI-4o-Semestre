@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from imoveis.models import Imovel
+from django.conf import settings
 
 Usuario = get_user_model()
 
@@ -12,7 +13,7 @@ class Reserva(models.Model):
     ]
     
     Imovel = models.ForeignKey(Imovel, on_delete=models.CASCADE)
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     data_inicio = models.DateTimeField()
     data_fim = models.DateTimeField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDENTE')

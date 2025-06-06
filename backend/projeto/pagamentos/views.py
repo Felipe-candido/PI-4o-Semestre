@@ -1,5 +1,5 @@
+import json
 from django.shortcuts import render
-
 import mercadopago
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -10,13 +10,19 @@ sdk = mercadopago.SDK(settings.MERCADO_PAGO_ACCESS_TOKEN)
 
 @api_view(['POST'])
 def criar_preferencia(request):
+    reserva_id = None
     try:
         reserva_id = request.data.get('reserva_id')
+        print("🔍 reserva_id recebido:", reserva_id)
         valor = request.data.get('valor')
         descricao = request.data.get('descricao')
 
         # Buscar reserva
         reserva = Reserva.objects.get(id=reserva_id)
+        print("🔗 FRONTEND_URL:", settings.FRONTEND_URL)
+        print("✅ back_urls['success']:", f"{settings.FRONTEND_URL}/payment/{reserva_id}/confirmacao")
+
+
 
         # Criar preferência no Mercado Pago
         preference_data = {
@@ -29,15 +35,18 @@ def criar_preferencia(request):
                 }
             ],
             "back_urls": {
-                "success": f"{settings.FRONTEND_URL}/reservas/{reserva_id}/confirmacao",
+                "success": f"{settings.FRONTEND_URL}/payment/{reserva_id}/confirmacao",
                 "failure": f"{settings.FRONTEND_URL}/payment/{reserva_id}",
                 "pending": f"{settings.FRONTEND_URL}/payment/{reserva_id}"
             },
-            "auto_return": "approved",
+            # "auto_return": "approved",
             "external_reference": str(reserva_id)
         }
 
+        print("📦 Preference Data:", json.dumps(preference_data, indent=2))
+
         preference_response = sdk.preference().create(preference_data)
+        print("🧾 Resposta do Mercado Pago:", preference_response)
         preference = preference_response["response"]
 
         return Response({

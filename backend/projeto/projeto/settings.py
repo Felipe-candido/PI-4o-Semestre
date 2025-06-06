@@ -180,7 +180,6 @@ AUTH_USER_MODEL = 'cadastro.usuario'
 
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Carrega o .env da raiz
 load_dotenv(BASE_DIR / 'tokens.env')
@@ -192,6 +191,6 @@ GOOGLE_REDIRECT_URI = 'http://localhost:8000/api/reservas/google-calendar/callba
 
 
 # Mercado Pago Settings
-MERCADO_PAGO_PUBLIC_KEY = 'YOUR_PUBLIC_KEY'
-MERCADO_PAGO_ACCESS_TOKEN = 'YOUR_ACCESS_TOKEN'
+MERCADO_PAGO_PUBLIC_KEY = os.getenv("MERCADO_PAGO_PUBLIC_KEY")
+MERCADO_PAGO_ACCESS_TOKEN = os.getenv("MERCADO_PAGO_ACCESS_TOKEN")
 FRONTEND_URL = 'http://localhost:3000' 

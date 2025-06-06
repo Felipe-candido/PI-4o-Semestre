@@ -12,3 +12,4 @@ google_auth.env
 token.pickle
 *.pickle
 tokens.env
+/frontend/staycation-v2/.env.local
