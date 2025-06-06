@@ -11,6 +11,13 @@ class UserSerializer(serializers.ModelSerializer):
         model = Usuario
         fields = ['id', 'nome', 'email', 'first_name', 'last_name']
 
+
+class ImovelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Imovel
+        fields = '__all__'
+
+
 class ReservaSerializer(serializers.ModelSerializer):
     Imovel = serializers.PrimaryKeyRelatedField(queryset=Imovel.objects.all())
     imovel_id = serializers.IntegerField(write_only=True, required=False)
@@ -44,3 +51,15 @@ class ReservaSerializer(serializers.ModelSerializer):
             validated_data['usuario'] = self.context['request'].user
 
         return super().create(validated_data)
+    
+
+class ReservaReadSerializer(serializers.ModelSerializer):
+    Imovel = ImovelSerializer()  
+
+    class Meta:
+        model = Reserva
+        fields = [
+            'id', 'Imovel', 'usuario', 'data_inicio', 
+            'data_fim', 'numero_hospedes', 'observacoes', 'valor_total', 
+            'status', 'evento_google_id', 'criado_em'
+        ]

@@ -28,31 +28,56 @@ export default function PaymentPage() {
 
   useEffect(() => {
     const initMercadoPago = async () => {
+      console.log('MP KEY', process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY)
+      const mercadopago_publickey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY;
       // @ts-ignore
-      const mp = new MercadoPago('SEU_PUBLIC_KEY', {
+      const mp = new MercadoPago(mercadopago_publickey, {
         locale: 'pt-BR'
       })
 
       try {
         // Buscar dados da reserva
-        const reservaResponse = await fetch(`http://localhost:8000/api/reservas/${id}/`)
+        const reservaResponse = await fetch(`http://localhost:8000/api/reservas/reserva/?id=${id}`)
         const reservaData = await reservaResponse.json()
+        console.log(reservaData)
+        try {
+          console.log('🔍 reservaData.imovel:', reservaData.Imovel)
+          console.log('Enviando dados para criar-preferencia', {
+            reserva_id: id,
+            valor: reservaData.valor_total,
+            descricao: `Reserva em ${reservaData.Imovel.titulo}`
+          })
+        } catch (err) {
+          console.error('🔥 Erro ao acessar dados da reserva:', err)
+        }
         setReserva(reservaData)
 
+
+
         // Criar preferência de pagamento
-        const preferenceResponse = await fetch('http://localhost:8000/api/pagamentos/criar-preferencia/', {
+        const preferencePayload = {
+          reserva_id: id,
+          valor: reservaData.valor_total,
+          descricao: `Reserva em ${reservaData.Imovel.titulo}`
+        }
+        console.log('📦 Enviando para criar-preferencia:', preferencePayload)
+        
+        const preferenceResponse = await fetch('http://localhost:8000/api/pagamentos/criar_preferencia/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            reserva_id: id,
-            valor: reservaData.valor_total,
-            descricao: `Reserva em ${reservaData.imovel.titulo}`
-          })
+          body: JSON.stringify(preferencePayload)
         })
-
+        
+        // 👇 Verifica se a resposta deu erro HTTP
+        if (!preferenceResponse.ok) {
+          const text = await preferenceResponse.text()
+          throw new Error(`Erro ao criar preferência: ${preferenceResponse.status} - ${text}`)
+        }
+        
         const preference = await preferenceResponse.json()
+        console.log('✅ Preferência criada:', preference)
 
         // Renderizar botão do Mercado Pago
         mp.checkout({
@@ -64,8 +89,9 @@ export default function PaymentPage() {
             label: 'Pagar com Mercado Pago',
           }
         })
-      } catch (error) {
-        setError("Erro ao inicializar pagamento")
+      } catch (error: any) {
+        console.error('🔥 ERRO COMPLETO:', error)
+        setError(error.message || "Erro ao inicializar pagamento")
       } finally {
         setLoading(false)
       }
@@ -119,12 +145,12 @@ export default function PaymentPage() {
                 <div className="space-y-4">
                   <div>
                     <h3 className="font-semibold">Detalhes da Reserva</h3>
-                    <p>Propriedade: {reserva.imovel.titulo}</p>
+                    <p>Propriedade: {reserva.Imovel.titulo}</p>
                     <p>Check-in: {new Date(reserva.data_inicio).toLocaleDateString()}</p>
                     <p>Check-out: {new Date(reserva.data_fim).toLocaleDateString()}</p>
                     <p>Hóspedes: {reserva.numero_hospedes}</p>
                     <p className="text-xl font-bold mt-2">
-                      Valor Total: R$ {reserva.imovel.valor_total.toFixed(2)}
+                      Valor Total: R$ {reserva.Imovel.valor_total}
                     </p>
                   </div>
 
