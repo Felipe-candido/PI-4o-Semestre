@@ -14,6 +14,8 @@ export default function EditImovelPage() {
   const [form, setForm] = useState<any>({})
   const [comodidade, setComodidade] = useState("")
   const [imagens, setImagens] = useState<File[]>([])
+  const [deleting, setDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   useEffect(() => {
     async function fetchImovel() {
@@ -118,13 +120,64 @@ export default function EditImovelPage() {
     }
   }
 
+  async function handleDelete() {
+    if (!showDeleteConfirm) {
+      setShowDeleteConfirm(true)
+      return
+    }
+
+    setDeleting(true)
+    setError("")
+    try {
+      const res = await fetch(`http://localhost:8000/api/imoveis/editar/${id}/`, {
+        method: "DELETE",
+        credentials: "include"
+      })
+      
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.erro || "Erro ao excluir imóvel")
+      }
+      
+      router.push("/dashboard/properties")
+    } catch (err: any) {
+      setError(err.message)
+      setShowDeleteConfirm(false)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   if (loading) return <MainLayout><div className="container mx-auto px-4 py-8 text-center">Carregando imóvel...</div></MainLayout>
   if (error) return <MainLayout><div className="container mx-auto px-4 py-8 text-center text-red-500">Erro: {error}</div></MainLayout>
 
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <h1 className="text-2xl font-bold mb-6">Editar Imóvel</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Editar Imóvel</h1>
+          <button
+            type="button"
+            onClick={handleDelete}
+            className={`px-4 py-2 rounded ${
+              showDeleteConfirm 
+                ? 'bg-red-600 hover:bg-red-700' 
+                : 'bg-red-500 hover:bg-red-600'
+            } text-white transition-colors`}
+            disabled={deleting}
+          >
+            {deleting 
+              ? "Excluindo..." 
+              : showDeleteConfirm 
+                ? "Confirmar exclusão" 
+                : "Excluir imóvel"}
+          </button>
+        </div>
+        {showDeleteConfirm && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded text-red-700">
+            Tem certeza que deseja excluir este imóvel? Esta ação não pode ser desfeita.
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block font-medium">Título</label>
