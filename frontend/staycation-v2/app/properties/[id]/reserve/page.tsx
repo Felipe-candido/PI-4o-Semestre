@@ -137,8 +137,9 @@ export default function ReservePage() {
       const dataInicio = new Date(formData.dataInicio!)
       const dataFim = new Date(formData.dataFim!)
       
-      dataInicio.setMinutes(dataInicio.getMinutes() - dataInicio.getTimezoneOffset())
-      dataFim.setMinutes(dataFim.getMinutes() - dataFim.getTimezoneOffset())
+      // Set the time to noon to avoid any timezone issues
+      dataInicio.setHours(12, 0, 0, 0)
+      dataFim.setHours(12, 0, 0, 0)
 
       const dadosReserva = {
         Imovel: id,
@@ -147,7 +148,7 @@ export default function ReservePage() {
         numero_hospedes: formData.numeroHospedes,
         observacoes: formData.observacoes || "",
         valor_total: valorTotal,
-        usuario: usuario.id // Adicionando o ID do usuário
+        usuario: usuario.id
       }
       console.log("Dados sendo enviados:", dadosReserva)
 

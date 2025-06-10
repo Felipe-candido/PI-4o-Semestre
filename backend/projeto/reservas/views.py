@@ -49,7 +49,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
         data = request.data.copy()
         data['usuario'] = request.user.id
         
-        try:
+        try: 
             # Verificar se temos imovel ou imovel_id
             imovel_id = data.get('imovel_id') or data.get('Imovel')
             if not imovel_id:
@@ -63,13 +63,8 @@ class ReservaViewSet(viewsets.ModelViewSet):
                 data['Imovel'] = data.pop('imovel_id')
             
             imovel = get_object_or_404(Imovel, pk=imovel_id)
-            data_inicio = datetime.fromisoformat(data['data_inicio'])
-            if not data_inicio.tzinfo:
-                data_inicio = data_inicio.replace(tzinfo=timezone.utc)
-            
-            data_fim = datetime.fromisoformat(data['data_fim'])
-            if not data_fim.tzinfo:
-                data_fim = data_fim.replace(tzinfo=timezone.utc)
+            data_inicio = datetime.fromisoformat(data['data_inicio'].replace('Z', '+00:00'))
+            data_fim = datetime.fromisoformat(data['data_fim'].replace('Z', '+00:00'))
             
             calendar_service = GoogleCalendarService()
             
