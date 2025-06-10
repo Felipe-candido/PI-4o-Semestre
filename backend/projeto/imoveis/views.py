@@ -265,6 +265,32 @@ class EditarImovelView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    def delete(self, request, id):
+        try:
+            logger.info(f"Iniciando exclusão do imóvel {id}")
+            
+            # Verifica se o imóvel existe e pertence ao usuário
+            try:
+                imovel = Imovel.objects.get(id=id, proprietario=request.user)
+            except Imovel.DoesNotExist:
+                return Response(
+                    {'erro': 'Imóvel não encontrado ou você não tem permissão para excluí-lo'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Exclui o imóvel (isso também excluirá automaticamente o endereço e as imagens devido ao CASCADE)
+            imovel.delete()
+            
+            logger.info(f"Imóvel {id} excluído com sucesso")
+            return Response({'mensagem': 'Imóvel excluído com sucesso!'}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Erro ao excluir imóvel: {str(e)}", exc_info=True)
+            return Response(
+                {'erro': f'Erro ao excluir imóvel: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 
 
