@@ -98,7 +98,6 @@ export default function Navbar() {
 
     if (userRole === "proprietario") {
       return [
-        { name: "Painel", path: "/dashboard", icon: <Settings size={20} /> },
         { name: "Meus Imóveis", path: "/dashboard/properties", icon: <Home size={20} /> },
         { name: "Criar Anúncio", path: "/dashboard/properties/new", icon: <PlusCircle size={20} /> },
         {
@@ -106,7 +105,7 @@ export default function Navbar() {
           path: "/dashboard/bookings",
           icon: <Calendar size={20} />,
         },
-        { name: "Ganhos", path: "/dashboard/earnings", icon: <DollarSign size={20} /> },
+        { name: "Minhas reservas", path: "/dashboard/earnings", icon: <DollarSign size={20} /> },
         { name: "Perfil", path: "/profile/owner", icon: <User size={20} /> },
       ]
     }

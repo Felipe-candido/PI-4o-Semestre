@@ -46,8 +46,7 @@ export default function PaymentPage() {
             reserva_id: id,
             valor: reservaData.valor_total,
             descricao: `Reserva em ${reservaData.Imovel.titulo}`
-          })
-        } catch (err) {
+          })        } catch (err) {
           console.error('🔥 Erro ao acessar dados da reserva:', err)
         }
         setReserva(reservaData)
