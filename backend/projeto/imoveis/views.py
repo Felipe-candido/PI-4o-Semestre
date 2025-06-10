@@ -19,10 +19,13 @@ logger = logging.getLogger(__name__)
 class cadastro_imovel(viewsets.ModelViewSet):
     authentication_classes = [CookieJWTAuthentication]
     permission_classes = [IsAuthenticated]
+    serializer_class = imovel_serializer
+    http_method_names = ['get', 'post', 'patch', 'put', 'options']
 
     queryset = Imovel.objects.all()
-    serializer_class = imovel_serializer
-    http_method_names = ['post', 'options']
+
+    def get_queryset(self):
+        return Imovel.objects.filter(proprietario=self.request.user)
 
     def create(self, request, *args, **kwargs): 
         try:
@@ -194,6 +197,73 @@ class ComodidadeViewSet(viewsets.ModelViewSet):
     queryset = Comodidade.objects.all()
     serializer_class = ComodidadeSerializer
     http_method_names = ['get', 'post', 'options']
+
+
+
+
+class EditarImovelView(APIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, id):
+        try:
+            logger.info(f"Iniciando edição do imóvel {id}")
+            logger.info(f"Dados recebidos: {request.data}")
+            logger.info(f"Arquivos recebidos: {request.FILES}")
+
+            # Verifica se o imóvel existe e pertence ao usuário
+            try:
+                imovel = Imovel.objects.get(id=id, proprietario=request.user)
+            except Imovel.DoesNotExist:
+                return Response(
+                    {'erro': 'Imóvel não encontrado ou você não tem permissão para editá-lo'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Processa os dados do imóvel
+            dados_imovel = request.data.get("imovel", {})
+            if isinstance(dados_imovel, str):
+                import json
+                dados_imovel = json.loads(dados_imovel)
+
+            # Atualiza os campos básicos do imóvel
+            for field in ['titulo', 'descricao', 'preco', 'numero_hospedes', 'regras']:
+                if field in dados_imovel:
+                    setattr(imovel, field, dados_imovel[field])
+
+            # Processa o logo se existir
+            logo = request.FILES.get('logo')
+            if logo:
+                imovel.logo = logo
+
+            # Processa as comodidades
+            comodidades = dados_imovel.get('comodidades', [])
+            if comodidades:
+                imovel.comodidades.clear()
+                for nome in comodidades:
+                    comodidade, _ = Comodidade.objects.get_or_create(nome=nome)
+                    imovel.comodidades.add(comodidade)
+
+            # Salva as alterações
+            imovel.save()
+
+            # Processa as novas imagens
+            imagens = request.FILES.getlist("imagens", [])
+            for imagem in imagens:
+                imagem_imovel.objects.create(
+                    imovel=imovel,
+                    imagem=imagem,
+                    legenda=imagem.name
+                )
+
+            return Response({'mensagem': 'Imóvel atualizado com sucesso!'}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Erro ao atualizar imóvel: {str(e)}", exc_info=True)
+            return Response(
+                {'erro': f'Erro ao atualizar imóvel: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 

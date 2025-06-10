@@ -33,12 +33,18 @@ class buscar_reserva(APIView):
 
 
 class ReservaViewSet(viewsets.ModelViewSet):
-    queryset = Reserva.objects.all()
     serializer_class = ReservaSerializer
     authentication_classes = [CookieJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
-    
+    def get_queryset(self):
+        return Reserva.objects.filter(usuario=self.request.user)
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return ReservaReadSerializer
+        return ReservaSerializer
+
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
         data['usuario'] = request.user.id
@@ -121,4 +127,13 @@ class ReservaViewSet(viewsets.ModelViewSet):
         reserva.status = 'CANCELADA'
         reserva.save()
         
-        return Response({'status': 'Reserva cancelada com sucesso'}) 
+        return Response({'status': 'Reserva cancelada com sucesso'})
+
+    @action(detail=True, methods=['post'])
+    def confirmar(self, request, pk=None):
+        reserva = self.get_object()
+        if reserva.status == 'CONFIRMADA':
+            return Response({'status': 'Reserva já está confirmada'})
+        reserva.status = 'CONFIRMADA'
+        reserva.save()
+        return Response({'status': 'Reserva confirmada com sucesso'}) 

@@ -16,5 +16,6 @@ router.register(r'chacaras', views.ChacaraViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('propriedade/', views.imovel_por_id.as_view())
+    path('propriedade/', views.imovel_por_id.as_view()),
+    path('editar/<int:id>/', views.EditarImovelView.as_view())
 ]

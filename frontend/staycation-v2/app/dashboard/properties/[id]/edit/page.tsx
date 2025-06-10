@@ -1,197 +1,217 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
 import MainLayout from "@/components/layout/MainLayout"
-import Link from "next/link"
-import { Save, ArrowLeft, Trash2, Image, Plus, Minus } from "lucide-react"
 
-export default function EditProperty({ params }: { params: { id: string } }) {
-  const userRole = "owner"
-  const userName = "Maria Oliveira"
-  const userAvatar = "/images/owner-avatar.jpg"
+export default function EditImovelPage() {
+  const { id } = useParams()
+  const router = useRouter()
+  const [imovel, setImovel] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState<any>({})
+  const [comodidade, setComodidade] = useState("")
+  const [imagens, setImagens] = useState<File[]>([])
 
-  const property = {
-    id: params.id,
-    name: "Chalé na Montanha",
-    type: "Chalé",
-    description: "Um lindo chalé localizado na Serra da Mantiqueira, com vista panorâmica para as montanhas. Perfeito para casais e famílias que buscam tranquilidade e contato com a natureza.",
-    address: "Estrada da Serra, km 15",
-    city: "Serra da Mantiqueira",
-    state: "SP",
-    zipCode: "12345-678",
-    country: "Brasil",
-    price: 180,
-    weekendPrice: 220,
-    cleaningFee: 100,
-    maxGuests: 6,
-    bedrooms: 3,
-    beds: 4,
-    bathrooms: 2,
-    amenities: [
-      "Wi-Fi",
-      "Cozinha completa",
-      "Lareira",
-      "Estacionamento",
-      "Churrasqueira",
-      "Vista para montanha",
-      "Aquecimento",
-      "TV",
-      "Área externa"
-    ],
-    images: [
-      "/images/property-1.jpg",
-      "/images/property-2.jpg",
-      "/images/property-3.jpg",
-      "/images/property-4.jpg"
-    ],
-    rules: {
-      checkIn: "15:00",
-      checkOut: "11:00",
-      petsAllowed: true,
-      smokingAllowed: false,
-      partiesAllowed: false,
-      minNights: 2
+  useEffect(() => {
+    async function fetchImovel() {
+      try {
+        const res = await fetch(`http://localhost:8000/api/imoveis/propriedade/?id=${id}`, {
+          credentials: "include",
+        })
+        if (!res.ok) throw new Error("Erro ao buscar imóvel")
+        const data = await res.json()
+        setImovel(data)
+        setForm({
+          titulo: data.titulo,
+          descricao: data.descricao,
+          preco: data.preco,
+          numero_hospedes: data.numero_hospedes,
+          regras: data.regras,
+          comodidades: data.comodidades || [],
+          logo: data.logo || null,
+        })
+      } catch (err: any) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchImovel()
+  }, [id])
+
+  function handleChange(e: any) {
+    const { name, value } = e.target
+    setForm((prev: any) => ({ ...prev, [name]: value }))
+  }
+
+  function handleAddComodidade(e: any) {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      const trimmed = comodidade.trim()
+      if (trimmed && !form.comodidades.includes(trimmed)) {
+        setForm((prev: any) => ({ ...prev, comodidades: [...prev.comodidades, trimmed] }))
+      }
+      setComodidade("")
     }
   }
 
+  function handleRemoveComodidade(item: string) {
+    setForm((prev: any) => ({ ...prev, comodidades: prev.comodidades.filter((c: string) => c !== item) }))
+  }
+
+  function handleFileChange(e: any) {
+    if (e.target.files) {
+      const arquivos = Array.from(e.target.files)
+      setImagens((prev: File[]) => [...prev, ...arquivos as File[]])
+    }
+  }
+
+  async function handleSubmit(e: any) {
+    e.preventDefault()
+    setSaving(true)
+    setError("")
+    try {
+      const formData = new FormData()
+      
+      // Cria um objeto com os dados do imóvel
+      const imovelData = {
+        titulo: form.titulo,
+        descricao: form.descricao,
+        preco: form.preco,
+        numero_hospedes: form.numero_hospedes,
+        regras: form.regras,
+        comodidades: form.comodidades
+      }
+      
+      // Adiciona os dados do imóvel como JSON
+      formData.append("imovel", JSON.stringify(imovelData))
+      
+      // Adiciona o logo se existir
+      if (form.logo && typeof form.logo !== "string") {
+        formData.append("logo", form.logo)
+      }
+      
+      // Adiciona as imagens
+      imagens.forEach((imagem) => {
+        formData.append("imagens", imagem)
+      })
+
+      const res = await fetch(`http://localhost:8000/api/imoveis/editar/${id}/`, {
+        method: "PATCH",
+        credentials: "include",
+        body: formData
+      })
+      
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.erro || "Erro ao salvar alterações")
+      }
+      
+      router.push("/dashboard/properties")
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) return <MainLayout><div className="container mx-auto px-4 py-8 text-center">Carregando imóvel...</div></MainLayout>
+  if (error) return <MainLayout><div className="container mx-auto px-4 py-8 text-center text-red-500">Erro: {error}</div></MainLayout>
+
   return (
-    <MainLayout userRole={userRole} userName={userName} userAvatar={userAvatar}>
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6 flex justify-between items-center">
-          <Link href={`/dashboard/properties`} className="text-primary hover:text-primary/80 flex items-center">
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Voltar para Minhas Propriedades
-          </Link>
-          <div className="flex space-x-2">
-            <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center">
-              <Trash2 className="w-4 h-4 mr-2" />
-              Excluir
-            </button>
-            <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 flex items-center">
-              <Save className="w-4 h-4 mr-2" />
-              Salvar Alterações
-            </button>
+    <MainLayout>
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <h1 className="text-2xl font-bold mb-6">Editar Imóvel</h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block font-medium">Título</label>
+            <input name="titulo" value={form.titulo || ""} onChange={handleChange} className="w-full border rounded px-3 py-2" />
           </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-          <h1 className="text-2xl font-bold mb-6 text-primary">Editar Propriedade</h1>
-          
-          <form className="space-y-8">
-            {/* ... (suas seções anteriores) ... */}
-
-            {/* Fotos */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Fotos</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                {property.images.map((image, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={image || "/placeholder.svg"}
-                      alt={`Imagem ${index + 1}`}
-                      className="w-full h-40 object-cover rounded-lg"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
-                      <button
-                        type="button"
-                        className="p-2 bg-white rounded-full hover:bg-red-100"
-                      >
-                        <Trash2 className="w-5 h-5 text-red-600" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                <label className="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center h-40 bg-gray-50 hover:bg-gray-100 cursor-pointer">
-                  <input type="file" className="hidden" />
-                  <Image className="w-8 h-8 text-gray-400" />
-                  <span className="text-sm text-gray-500 mt-2">Adicionar Foto</span>
-                </label>
-              </div>
+          <div>
+            <label className="block font-medium">Descrição</label>
+            <textarea name="descricao" value={form.descricao || ""} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+          </div>
+          <div>
+            <label className="block font-medium">Preço</label>
+            <input name="preco" type="number" value={form.preco || ""} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+          </div>
+          <div>
+            <label className="block font-medium">Número de hóspedes</label>
+            <input name="numero_hospedes" type="number" value={form.numero_hospedes || ""} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+          </div>
+          <div>
+            <label className="block font-medium">Regras</label>
+            <textarea name="regras" value={form.regras || ""} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+          </div>
+          <div>
+            <label className="block font-medium">Comodidades</label>
+            <input
+              type="text"
+              value={comodidade}
+              onChange={e => setComodidade(e.target.value)}
+              onKeyDown={handleAddComodidade}
+              className="w-full p-2 border border-gray-300 rounded-md mb-2"
+              placeholder="Digite e pressione Enter para adicionar"
+            />
+            <div className="flex flex-wrap gap-2">
+              {form.comodidades?.map((item: string, idx: number) => (
+                <span
+                  key={idx}
+                  className="flex items-center bg-violet-100 text-violet-700 px-3 py-1 rounded-full text-sm"
+                >
+                  {item}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveComodidade(item)}
+                    className="ml-2 text-violet-500 hover:text-violet-800"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
             </div>
+          </div>
+          <div>
+            <label className="block font-medium">Logo da Propriedade</label>
+            <input
+              type="file"
+              accept="image/*"
+              className="w-full p-2 border border-gray-300 rounded-md"
+              onChange={e => {
+                const file = e.target.files?.[0];
+                if (file) setForm((prev: any) => ({ ...prev, logo: file }));
+              }}
+            />
 
-            {/* Regras */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Regras da Propriedade</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="check-in" className="block text-sm font-medium text-gray-700 mb-1">
-                    Horário de Check-in
-                  </label>
-                  <input
-                    id="check-in"
-                    type="time"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                    defaultValue={property.rules.checkIn}
+          </div>
+          <div>
+            <label className="block font-medium">Fotos</label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="w-full p-2 border border-gray-300 rounded-md"
+              onChange={handleFileChange}
+            />
+            <div className="flex flex-wrap gap-4 mt-4">
+              {imagens.map((img, index) => (
+                <div key={index} className="w-24 h-24 overflow-hidden rounded border border-gray-300">
+                  <img
+                    src={URL.createObjectURL(img)}
+                    alt={`Imagem ${index + 1}`}
+                    className="object-cover w-full h-full"
                   />
                 </div>
-                <div>
-                  <label htmlFor="check-out" className="block text-sm font-medium text-gray-700 mb-1">
-                    Horário de Check-out
-                  </label>
-                  <input
-                    id="check-out"
-                    type="time"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                    defaultValue={property.rules.checkOut}
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    id="pets-allowed"
-                    type="checkbox"
-                    className="rounded text-primary focus:ring-primary h-5 w-5"
-                    defaultChecked={property.rules.petsAllowed}
-                  />
-                  <label htmlFor="pets-allowed" className="text-sm text-gray-700">Permitir animais de estimação</label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    id="smoking-allowed"
-                    type="checkbox"
-                    className="rounded text-primary focus:ring-primary h-5 w-5"
-                    defaultChecked={property.rules.smokingAllowed}
-                  />
-                  <label htmlFor="smoking-allowed" className="text-sm text-gray-700">Permitir fumar</label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    id="parties-allowed"
-                    type="checkbox"
-                    className="rounded text-primary focus:ring-primary h-5 w-5"
-                    defaultChecked={property.rules.partiesAllowed}
-                  />
-                  <label htmlFor="parties-allowed" className="text-sm text-gray-700">Permitir festas/eventos</label>
-                </div>
-                <div>
-                  <label htmlFor="min-nights" className="block text-sm font-medium text-gray-700 mb-1">
-                    Noites Mínimas
-                  </label>
-                  <input
-                    id="min-nights"
-                    type="number"
-                    min="1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                    defaultValue={property.rules.minNights}
-                  />
-                </div>
-              </div>
+              ))}
             </div>
-
-            {/* Botões Finais */}
-            <div className="flex justify-end space-x-4 mt-8">
-              <button
-                type="button"
-                className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90"
-              >
-                Salvar Alterações
-              </button>
-            </div>
-          </form>
-        </div>
+          </div>
+          <button type="submit" className="bg-primary text-white px-6 py-2 rounded" disabled={saving}>{saving ? "Salvando..." : "Salvar alterações"}</button>
+          {error && <div className="text-red-500 mt-2">{error}</div>}
+        </form>
       </div>
     </MainLayout>
   )
-}
+} 
