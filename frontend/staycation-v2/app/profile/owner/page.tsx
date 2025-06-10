@@ -35,12 +35,33 @@ interface Endereco {
   pais?: string
 }
 
+interface Imovel {
+  id: number
+  titulo: string
+  descricao: string
+  preco: number
+  numero_hospedes: number
+  regras: string
+  logo: string
+  endereco: {
+    cidade: string
+    estado: string
+  }
+  imagens: Array<{
+    id: number
+    imagem: string
+    legenda: string
+  }>
+}
+
 export default function OwnerProfile() {
   const [user, setUser] = useState<UserData | null>(null)
   const [endereco, setEndereco] = useState<Endereco | null>(null)
   const [editedUser, setEditedUser] = useState<UserData | null>(null)
   const [editedEndereco, setEditedEndereco] = useState<Endereco | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [imoveis, setImoveis] = useState<Imovel[]>([])
+  const [loadingImoveis, setLoadingImoveis] = useState(true)
   const router = useRouter()
 
   const userRole = user?.tipo || "visitante"
@@ -75,7 +96,27 @@ export default function OwnerProfile() {
         })
       }
     }
+
+    async function fetchImoveis() {
+      try {
+        setLoadingImoveis(true)
+        const response = await apiFetch("/api/imoveis/usuario/", {
+          credentials: 'include'
+        })
+        setImoveis(response)
+      } catch (error) {
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os imóveis",
+          variant: "destructive",
+        })
+      } finally {
+        setLoadingImoveis(false)
+      }
+    }
+
     fetchUsuario()
+    fetchImoveis()
   }, [])
 
   const handleEdit = () => {
@@ -153,6 +194,11 @@ export default function OwnerProfile() {
       endereco.pais
     ].filter(Boolean)
     return parts.join(", ") || "Não informado"
+  }
+
+  const getImageUrl = (path: string | null) => {
+    if (!path) return "/placeholder-property.jpg"
+    return `http://localhost:8000${path}`
   }
 
   return (
@@ -463,106 +509,67 @@ export default function OwnerProfile() {
                   Adicionar Propriedade
                 </Link>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="border border-gray-200 rounded-lg p-4 flex">
-                  <div className="w-1/3">
-                    <img
-                      src="/images/property-1.jpg"
-                      alt="Chalé na Montanha"
-                      className="w-full h-24 object-cover rounded-lg"
-                    />
-                  </div>
-                  <div className="w-2/3 pl-4">
-                    <h3 className="font-semibold">Chalé na Montanha</h3>
-                    <p className="text-gray-600 text-sm flex items-center mb-1">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      Serra da Mantiqueira, SP
-                    </p>
-                    <div className="flex items-center text-sm mb-2">
-                      <Star className="w-4 h-4 text-secondary fill-current" />
-                      <span className="ml-1">4.9 (18 avaliações)</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">R$180/noite</span>
-                      <Link href="/dashboard/properties/1" className="text-primary hover:text-primary/80 text-sm">
-                        Gerenciar
-                      </Link>
-                    </div>
-                  </div>
+              {loadingImoveis ? (
+                <div className="text-center py-4">Carregando imóveis...</div>
+              ) : imoveis.length === 0 ? (
+                <div className="text-center py-4 text-gray-500">
+                  Você ainda não tem propriedades cadastradas.
                 </div>
-
-                <div className="border border-gray-200 rounded-lg p-4 flex">
-                  <div className="w-1/3">
-                    <img
-                      src="/images/property-2.jpg"
-                      alt="Fazenda Histórica"
-                      className="w-full h-24 object-cover rounded-lg"
-                    />
-                  </div>
-                  <div className="w-2/3 pl-4">
-                    <h3 className="font-semibold">Fazenda Histórica</h3>
-                    <p className="text-gray-600 text-sm flex items-center mb-1">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      Campos do Jordão, SP
-                    </p>
-                    <div className="flex items-center text-sm mb-2">
-                      <Star className="w-4 h-4 text-secondary fill-current" />
-                      <span className="ml-1">4.8 (12 avaliações)</span>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {imoveis.map((imovel) => (
+                    <div key={imovel.id} className="border border-gray-200 rounded-lg p-4 flex">
+                      <div className="w-1/3">
+                        <img
+                          src={getImageUrl(imovel.logo)}
+                          alt={imovel.titulo}
+                          className="w-full h-24 object-cover rounded-lg"
+                        />
+                      </div>
+                      <div className="w-2/3 pl-4">
+                        <h3 className="font-semibold">{imovel.titulo}</h3>
+                        <p className="text-gray-600 text-sm flex items-center mb-1">
+                          <MapPin className="w-3 h-3 mr-1" />
+                          {imovel.endereco.cidade}, {imovel.endereco.estado}
+                        </p>
+                        <div className="flex items-center text-sm mb-2">
+                          <Star className="w-4 h-4 text-secondary fill-current" />
+                          <span className="ml-1">4.9 (18 avaliações)</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">R${imovel.preco}/noite</span>
+                          <Link 
+                            href={`/dashboard/properties/${imovel.id}/edit`} 
+                            className="text-primary hover:text-primary/80 text-sm"
+                          >
+                            Gerenciar
+                          </Link>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">R$250/noite</span>
-                      <Link href="/dashboard/properties/2" className="text-primary hover:text-primary/80 text-sm">
-                        Gerenciar
-                      </Link>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-
-                <div className="border border-gray-200 rounded-lg p-4 flex">
-                  <div className="w-1/3">
-                    <img
-                      src="/images/property-3.jpg"
-                      alt="Casa de Campo"
-                      className="w-full h-24 object-cover rounded-lg"
-                    />
-                  </div>
-                  <div className="w-2/3 pl-4">
-                    <h3 className="font-semibold">Casa de Campo</h3>
-                    <p className="text-gray-600 text-sm flex items-center mb-1">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      Atibaia, SP
-                    </p>
-                    <div className="flex items-center text-sm mb-2">
-                      <Star className="w-4 h-4 text-secondary fill-current" />
-                      <span className="ml-1">4.7 (9 avaliações)</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">R$150/noite</span>
-                      <Link href="/dashboard/properties/3" className="text-primary hover:text-primary/80 text-sm">
-                        Gerenciar
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4 text-center">
-                <Link
-                  href="/dashboard/properties"
-                  className="text-secondary hover:text-secondary/80 font-semibold inline-flex items-center"
-                >
-                  Ver todas as propriedades
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2}
-                    stroke="currentColor"
-                    className="w-4 h-4 ml-1"
+              )}
+              {imoveis.length > 0 && (
+                <div className="mt-4 text-center">
+                  <Link
+                    href="/dashboard/properties"
+                    className="text-secondary hover:text-secondary/80 font-semibold inline-flex items-center"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                  </svg>
-                </Link>
-              </div>
+                    Ver todas as propriedades
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="w-4 h-4 ml-1"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </Link>
+                </div>
+              )}
             </div>
 
             <div className="bg-white rounded-xl shadow-md p-6">

@@ -294,4 +294,27 @@ class EditarImovelView(APIView):
 
 
 
+class ImoveisUsuarioView(APIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            # Busca todos os imóveis do usuário autenticado
+            imoveis = Imovel.objects.filter(proprietario=request.user).select_related('endereco').prefetch_related('imagens')
+            
+            # Serializa os imóveis
+            serializer = imovel_serializer(imoveis, many=True)
+            
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"Erro ao buscar imóveis do usuário: {str(e)}", exc_info=True)
+            return Response(
+                {'erro': f'Erro ao buscar imóveis: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+
+
 
