@@ -108,8 +108,8 @@ export default function LoginForm({ onRegisterClick, onSuccess}: LoginFormProps)
         <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden">
           <div className="p-8">
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome back</h1>
-              <p className="text-gray-600">Sign in to your StayCation account</p>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Bem-vindo de volta</h1>
+              <p className="text-gray-600">Entre com sua conta staycation</p>
             </div>
 
             <FormProvider {...form}>
@@ -160,7 +160,7 @@ export default function LoginForm({ onRegisterClick, onSuccess}: LoginFormProps)
                     className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                    Remember me
+                    Lembrar de mim
                   </label>
                 </div>
 
@@ -178,7 +178,7 @@ export default function LoginForm({ onRegisterClick, onSuccess}: LoginFormProps)
                   <div className="w-full border-t border-gray-300"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                  <span className="px-2 bg-white text-gray-500">Ou entre com</span>
                 </div>
               </div>
 
@@ -212,9 +212,9 @@ export default function LoginForm({ onRegisterClick, onSuccess}: LoginFormProps)
             </div>
 
             <p className="mt-8 text-center text-sm text-gray-600">
-              Don't have an account?{" "}
+              Não tem uma conta?{" "}
               <Link href="/auth/register" className="text-primary hover:text-primary/80 font-medium">
-                Sign up
+                Cadastre-se
               </Link>
             </p>
           </div>

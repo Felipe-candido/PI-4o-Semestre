@@ -259,9 +259,9 @@ export default function RegisterForm({ onLoginClick, onRegistrationSuccess }: Re
             </div>
 
             <p className="mt-8 text-center text-sm text-gray-600">
-              Already have an account?{" "}
+              Ja tem uma conta?{" "}
               <Link href="/auth/login" className="text-primary hover:text-primary/80 font-medium">
-                Sign in
+                Entrar
               </Link>
             </p>
           </div>

@@ -215,11 +215,6 @@ export default function OwnerProfile() {
                   className="w-24 h-24 rounded-full mb-4 object-cover"
                 />
                 <h2 className="text-xl font-bold">{userName}</h2>
-                <p className="text-gray-600">Anfitriã desde 2021</p>
-                <div className="flex items-center mt-2">
-                  <Star className="w-4 h-4 text-secondary fill-current" />
-                  <span className="ml-1 text-sm">4.95 (32 avaliações)</span>
-                </div>
               </div>
               <div className="border-t border-gray-200 pt-4">
                 <nav className="flex flex-col space-y-2">
@@ -243,36 +238,16 @@ export default function OwnerProfile() {
                     className="flex items-center p-2 rounded-md text-gray-700 hover:bg-gray-100"
                   >
                     <Calendar className="mr-3 h-5 w-5" />
-                    Reservas
+                    Imoveis alugados
                   </Link>
                   <Link
                     href="/dashboard/earnings"
                     className="flex items-center p-2 rounded-md text-gray-700 hover:bg-gray-100"
                   >
                     <DollarSign className="mr-3 h-5 w-5" />
-                    Ganhos
+                    Minhas reservas
                   </Link>
-                  <Link
-                    href="/profile/owner/payments"
-                    className="flex items-center p-2 rounded-md text-gray-700 hover:bg-gray-100"
-                  >
-                    <CreditCard className="mr-3 h-5 w-5" />
-                    Pagamentos
-                  </Link>
-                  <Link
-                    href="/profile/owner/notifications"
-                    className="flex items-center p-2 rounded-md text-gray-700 hover:bg-gray-100"
-                  >
-                    <Bell className="mr-3 h-5 w-5" />
-                    Notificações
-                  </Link>
-                  <Link
-                    href="/profile/owner/security"
-                    className="flex items-center p-2 rounded-md text-gray-700 hover:bg-gray-100"
-                  >
-                    <Shield className="mr-3 h-5 w-5" />
-                    Segurança
-                  </Link>
+
                 </nav>
               </div>
             </div>
@@ -532,10 +507,6 @@ export default function OwnerProfile() {
                           <MapPin className="w-3 h-3 mr-1" />
                           {imovel.endereco.cidade}, {imovel.endereco.estado}
                         </p>
-                        <div className="flex items-center text-sm mb-2">
-                          <Star className="w-4 h-4 text-secondary fill-current" />
-                          <span className="ml-1">4.9 (18 avaliações)</span>
-                        </div>
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-medium">R${imovel.preco}/noite</span>
                           <Link 
@@ -552,84 +523,12 @@ export default function OwnerProfile() {
               )}
               {imoveis.length > 0 && (
                 <div className="mt-4 text-center">
-                  <Link
-                    href="/dashboard/properties"
-                    className="text-secondary hover:text-secondary/80 font-semibold inline-flex items-center"
-                  >
-                    Ver todas as propriedades
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="currentColor"
-                      className="w-4 h-4 ml-1"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                    </svg>
-                  </Link>
+                  
                 </div>
               )}
             </div>
 
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-2xl font-bold mb-6 text-primary">Avaliações Recentes</h2>
-              <div className="space-y-6">
-                <div className="border-b border-gray-200 pb-6">
-                  <div className="flex items-start mb-4">
-                    <img
-                      src="/images/tenant-avatar.jpg"
-                      alt="João Locatário"
-                      className="w-12 h-12 rounded-full mr-4 object-cover"
-                    />
-                    <div>
-                      <h3 className="font-semibold">João (Hóspede)</h3>
-                      <p className="text-gray-600 text-sm">Chalé na Montanha • Maio 2023</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center mb-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-4 h-4 ${star <= 5 ? "text-secondary fill-current" : "text-gray-300"}`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-gray-700">
-                    Lugar incrível! O chalé é exatamente como nas fotos, muito limpo e aconchegante. A Maria foi uma
-                    anfitriã excepcional, sempre disponível para ajudar e deu ótimas dicas de passeios na região.
-                    Recomendo muito e certamente voltarei!
-                  </p>
-                </div>
-
-                <div>
-                  <div className="flex items-start mb-4">
-                    <img
-                      src="/images/tenant-avatar-2.jpg"
-                      alt="Ana Locatária"
-                      className="w-12 h-12 rounded-full mr-4 object-cover"
-                    />
-                    <div>
-                      <h3 className="font-semibold">Ana (Hóspede)</h3>
-                      <p className="text-gray-600 text-sm">Fazenda Histórica • Abril 2023</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center mb-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-4 h-4 ${star <= 5 ? "text-secondary fill-current" : "text-gray-300"}`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-gray-700">
-                    A fazenda é um lugar mágico! Muito bem preservada, com uma decoração que nos transporta para outra
-                    época. A Maria nos recebeu com muito carinho e atenção. O café da manhã é delicioso, com produtos
-                    frescos da região. Experiência inesquecível!
-                  </p>
-                </div>
-              </div>
-            </div>
+            
           </div>
         </div>
       </div>
