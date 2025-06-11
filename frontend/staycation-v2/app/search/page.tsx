@@ -24,17 +24,21 @@ export default function SearchPage() {
   const [cidadeConfirmada, setCidadeConfirmada] = useState(false);
   const [cidadeEditavel, setCidadeEditavel] = useState(false);
   const [cidade, setCidade] = useState('')
+  const [valorMaximo, setValorMaximo] = useState('')
 
 
   // REQUISICAO PARA O BACKEND PARA PEGAR OS IMOVEIS
-  async function buscarImoveis(cidadeEscolhida: string) {
+  async function buscarImoveis(cidadeEscolhida: string, valorMax: string = '') {
     setCidade(cidadeEscolhida);
     
-    // CHAMA A VIEW QUE RETORNA OS IMOVEIS DE ACORDO COM A CIDADE
-    const imoveisFetch = await fetch(
-      `http://localhost:8000/api/imoveis/list/?cidade=${encodeURIComponent(cidadeEscolhida)}`
-    );
+    // CHAMA A VIEW QUE RETORNA OS IMOVEIS DE ACORDO COM A CIDADE E VALOR MÁXIMO
+    const url = new URL('http://localhost:8000/api/imoveis/list/');
+    url.searchParams.append('cidade', cidadeEscolhida);
+    if (valorMax) {
+      url.searchParams.append('valor_maximo', valorMax);
+    }
 
+    const imoveisFetch = await fetch(url.toString());
     const imoveisData = await imoveisFetch.json();
     setImoveis(imoveisData);
   }
@@ -88,53 +92,50 @@ export default function SearchPage() {
       <div className="container mx-auto px-4">
         {/* Search Bar */}
         <section className="bg-white rounded-xl shadow-lg p-6 mb-8 sticky top-4 z-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative">
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 <input
                   type="text"
                   placeholder="Para onde você vai?"
+                  value={cidade}
+                  onChange={(e) => setCidade(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                 />
               </div>
             </div>
             <div className="relative">
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
                 <input
-                  type="date"
+                  type="number"
+                  placeholder="Valor máximo por diária"
+                  value={valorMaximo}
+                  onChange={(e) => setValorMaximo(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                 />
-              </div>
-            </div>
-            <div className="relative">
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  type="date"
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                />
-              </div>
-            </div>
-            <div className="relative">
-              <div className="relative">
-                <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                <select className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary appearance-none">
-                  <option>1 hóspede</option>
-                  <option>2 hóspedes</option>
-                  <option>3 hóspedes</option>
-                  <option>4+ hóspedes</option>
-                </select>
               </div>
             </div>
           </div>
-          <div className="mt-4 flex justify-between items-center">
-            <button className="border border-gray-300 hover:bg-gray-50 font-medium py-2 px-4 rounded-lg inline-flex items-center">
-              <Filter size={16} className="mr-2" />
-              Filtros
-            </button>
-            <button className="bg-primary hover:bg-primary/90 text-white font-semibold py-2 px-6 rounded-lg inline-flex items-center">
+          <div className="mt-4 flex justify-end">
+            <button 
+              onClick={() => buscarImoveis(cidade, valorMaximo)}
+              className="bg-primary hover:bg-primary/90 text-white font-semibold py-2 px-6 rounded-lg inline-flex items-center"
+            >
               <Search size={18} className="mr-2" />
               Buscar
             </button>
@@ -155,12 +156,6 @@ export default function SearchPage() {
                 className="bg-primary text-white px-4 py-1 rounded"
               >
                 Sim, confirmar
-              </button>
-              <button
-                onClick={() => setCidadeEditavel(true)}
-                className="border border-primary text-primary px-4 py-1 rounded"
-              >
-                Alterar cidade
               </button>
             </div>
           </div>
@@ -192,20 +187,11 @@ export default function SearchPage() {
 
         {/* Filter Pills */}
         <section className="mb-6 flex flex-wrap gap-2">
-          <button className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm font-medium">
-            Preço: R$50-R$200
-          </button>
           <button className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm font-medium">Piscina</button>
           <button className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm font-medium">
             Churrasqueira
           </button>
-          <button className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm font-medium">
-            Aceita pets
-          </button>
           <button className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm font-medium">Wi-Fi</button>
-          <button className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm font-medium">
-            Próximo ao lago
-          </button>
         </section>
 
         {/* Results Count */}

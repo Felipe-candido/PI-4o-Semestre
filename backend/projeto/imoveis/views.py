@@ -104,9 +104,17 @@ class imovel_list_cidade(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         cidade = self.request.query_params.get('cidade')
+        valor_maximo = self.request.query_params.get('valor_maximo')
 
         if cidade:
             queryset = queryset.filter(endereco__cidade__iexact=cidade)
+        
+        if valor_maximo:
+            try:
+                valor_maximo = float(valor_maximo)
+                queryset = queryset.filter(preco__lte=valor_maximo)
+            except ValueError:
+                pass
 
         return queryset
     
