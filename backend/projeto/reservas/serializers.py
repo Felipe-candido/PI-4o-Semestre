@@ -9,13 +9,13 @@ Usuario = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ['id', 'nome', 'email', 'first_name', 'last_name']
+        fields = ['id', 'nome', 'email', 'telefone']
 
 
 class ImovelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Imovel
-        fields = '__all__'
+        fields = ['id', 'titulo', 'preco']
 
 
 class ReservaSerializer(serializers.ModelSerializer):
@@ -54,7 +54,8 @@ class ReservaSerializer(serializers.ModelSerializer):
     
 
 class ReservaReadSerializer(serializers.ModelSerializer):
-    Imovel = ImovelSerializer()  
+    usuario = UserSerializer()
+    Imovel = ImovelSerializer()
 
     class Meta:
         model = Reserva

@@ -131,4 +131,25 @@ class ReservaViewSet(viewsets.ModelViewSet):
             return Response({'status': 'Reserva já está confirmada'})
         reserva.status = 'CONFIRMADA'
         reserva.save()
-        return Response({'status': 'Reserva confirmada com sucesso'}) 
+        return Response({'status': 'Reserva confirmada com sucesso'})
+
+class ReservasProprietarioView(APIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            # Busca todas as reservas dos imóveis do proprietário
+            reservas = Reserva.objects.filter(
+                Imovel__proprietario=request.user
+            ).select_related('usuario', 'Imovel').order_by('-criado_em')
+            
+            # Serializa as reservas
+            serializer = ReservaReadSerializer(reservas, many=True)
+            
+            return Response(serializer.data)
+        except Exception as e:
+            return Response(
+                {'error': f'Erro ao buscar reservas: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            ) 

@@ -8,5 +8,6 @@ router.register(r'confirma', views.ReservaViewSet, basename='confirma')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('reserva/', views.buscar_reserva.as_view())
+    path('reserva/', views.buscar_reserva.as_view()),
+    path('proprietario/', views.ReservasProprietarioView.as_view(), name='reservas-proprietario')
 ] 
