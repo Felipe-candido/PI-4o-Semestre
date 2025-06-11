@@ -39,13 +39,22 @@ class imovel_serializer(serializers.ModelSerializer):
     endereco = EnderecoImovelSerializer()
     comodidades = ComodidadeField(required=False)
     imagens = ImagemImovelSerializer(many=True, required=False)
+    proprietario_nome = serializers.SerializerMethodField()
+    proprietario_telefone = serializers.SerializerMethodField()
 
     class Meta:
         model = Imovel
         fields = [
             'id', 'titulo', 'descricao', 'preco',
-            'numero_hospedes', 'regras', 'comodidades', 'endereco', 'imagens', 'logo', 'id_reserva'
+            'numero_hospedes', 'regras', 'comodidades', 'endereco', 'imagens', 'logo', 'id_reserva',
+            'proprietario_nome', 'proprietario_telefone'
         ]
+
+    def get_proprietario_nome(self, obj):
+        return obj.proprietario.nome if obj.proprietario else None
+
+    def get_proprietario_telefone(self, obj):
+        return obj.proprietario.telefone if obj.proprietario else None
 
     def create(self, validated_data):
         try:

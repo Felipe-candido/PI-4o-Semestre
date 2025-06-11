@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'imoveis',
     'reservas',
     'pagamentos',
+    'comentarios',
 ]
 
 
