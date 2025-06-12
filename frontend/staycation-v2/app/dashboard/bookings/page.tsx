@@ -182,9 +182,6 @@ export default function Bookings() {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ações
-                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -257,27 +254,6 @@ export default function Bookings() {
                         >
                           {reserva.status}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <Link href={`/dashboard/bookings/${reserva.id}`} className="text-primary hover:text-primary/80 mr-3">
-                          Ver
-                        </Link>
-                        {reserva.status === "PENDENTE" && (
-                          <>
-                            <button 
-                              onClick={() => handleStatusChange(reserva.id, 'CONFIRMADA')}
-                              className="text-green-600 hover:text-green-900 mr-3"
-                            >
-                              Aceitar
-                            </button>
-                            <button 
-                              onClick={() => handleStatusChange(reserva.id, 'CANCELADA')}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              Recusar
-                            </button>
-                          </>
-                        )}
                       </td>
                     </tr>
                   ))

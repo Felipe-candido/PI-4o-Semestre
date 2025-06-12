@@ -90,3 +90,37 @@ class imovel_serializer(serializers.ModelSerializer):
         except Exception as e:
             logger.error(f"Erro na criação do imóvel: {str(e)}", exc_info=True)
             raise serializers.ValidationError(f"Erro ao criar imóvel: {str(e)}")
+
+
+class imovel_destaque_serializer(serializers.ModelSerializer):
+    proprietario_nome = serializers.CharField(source='proprietario.nome', read_only=True)
+    endereco_cidade = serializers.CharField(source='endereco.cidade', read_only=True)
+    endereco_estado = serializers.CharField(source='endereco.estado', read_only=True)
+    imagem_principal = serializers.SerializerMethodField()
+    media_avaliacoes = serializers.FloatField(read_only=True)
+    total_avaliacoes = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Imovel
+        fields = [
+            'id',
+            'titulo',
+            'descricao',
+            'valor_diaria',
+            'proprietario_nome',
+            'endereco_cidade',
+            'endereco_estado',
+            'imagem_principal',
+            'media_avaliacoes',
+            'total_avaliacoes'
+        ]
+
+    def get_imagem_principal(self, obj):
+        imagem = obj.imagens.first()
+        if imagem:
+            return {
+                'id': imagem.id,
+                'imagem': imagem.imagem.url,
+                'legenda': imagem.legenda
+            }
+        return None

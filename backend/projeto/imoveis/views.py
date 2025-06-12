@@ -4,15 +4,17 @@ from dateutil.parser import parse
 from reservas.services import GoogleCalendarService
 from .models import Imovel, Comodidade, imagem_imovel
 from rest_framework.response import Response
-from .serializers import imovel_serializer, ComodidadeSerializer
+from .serializers import imovel_serializer, ComodidadeSerializer, imovel_destaque_serializer
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from django.contrib.auth import get_user_model
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from projeto.services import CookieJWTAuthentication
 import logging
 from rest_framework.views import APIView
 from rest_framework.exceptions import APIException
+from django.db.models import Avg, Count
+from comentarios.models import Comentario
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +107,12 @@ class imovel_list_cidade(viewsets.ReadOnlyModelViewSet):
         queryset = super().get_queryset()
         cidade = self.request.query_params.get('cidade')
         valor_maximo = self.request.query_params.get('valor_maximo')
+        avaliacao_minima = self.request.query_params.get('avaliacao_maxima')
+
+        # Anota a média das avaliações para cada imóvel
+        queryset = queryset.annotate(
+            media_avaliacoes=Avg('comentarios__avaliacao')
+        )
 
         if cidade:
             queryset = queryset.filter(endereco__cidade__iexact=cidade)
@@ -113,6 +121,13 @@ class imovel_list_cidade(viewsets.ReadOnlyModelViewSet):
             try:
                 valor_maximo = float(valor_maximo)
                 queryset = queryset.filter(preco__lte=valor_maximo)
+            except ValueError:
+                pass
+
+        if avaliacao_minima:
+            try:
+                avaliacao_minima = float(avaliacao_minima)
+                queryset = queryset.filter(media_avaliacoes__gte=avaliacao_minima)
             except ValueError:
                 pass
 
@@ -321,6 +336,57 @@ class ImoveisUsuarioView(APIView):
                 {'erro': f'Erro ao buscar imóveis: {str(e)}'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+
+
+class imoveis_destaque(viewsets.ReadOnlyModelViewSet):
+    queryset = Imovel.objects.all().select_related('endereco').prefetch_related('imagens', 'comodidades')
+    serializer_class = imovel_serializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Anota a média das avaliações e a contagem de avaliações para cada imóvel
+        queryset = queryset.annotate(
+            media_avaliacoes=Avg('comentarios__avaliacao'),
+            total_avaliacoes=Count('comentarios')
+        ).filter(
+            total_avaliacoes__gt=0  # Filtra apenas imóveis que têm avaliações
+        ).order_by(
+            '-total_avaliacoes',  # Ordena primeiro pelo número de avaliações
+            '-media_avaliacoes'   # Depois pela média das avaliações
+        )[:4]  # Limita aos 4 primeiros resultados
+
+        return queryset
+
+
+
+
+class ImoveisDestaqueView(viewsets.ReadOnlyModelViewSet):
+    serializer_class = imovel_destaque_serializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        queryset = Imovel.objects.filter(
+            comentarios__isnull=False
+        ).annotate(
+            total_avaliacoes=Count('comentarios'),
+            media_avaliacoes=Avg('comentarios__avaliacao')
+        ).filter(
+            total_avaliacoes__gt=0
+        ).order_by(
+            '-total_avaliacoes',
+            '-media_avaliacoes'
+        )[:4]
+
+        return queryset.select_related(
+            'proprietario',
+            'endereco'
+        ).prefetch_related(
+            'imagens',
+            'comentarios'
+        )
 
 
 

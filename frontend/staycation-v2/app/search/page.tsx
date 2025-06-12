@@ -25,10 +25,11 @@ export default function SearchPage() {
   const [cidadeEditavel, setCidadeEditavel] = useState(false);
   const [cidade, setCidade] = useState('')
   const [valorMaximo, setValorMaximo] = useState('')
+  const [avaliacaoMaxima, setAvaliacaoMaxima] = useState('')
 
 
   // REQUISICAO PARA O BACKEND PARA PEGAR OS IMOVEIS
-  async function buscarImoveis(cidadeEscolhida: string, valorMax: string = '') {
+  async function buscarImoveis(cidadeEscolhida: string, valorMax: string = '', avaliacaoMax: string = '') {
     setCidade(cidadeEscolhida);
     
     // CHAMA A VIEW QUE RETORNA OS IMOVEIS DE ACORDO COM A CIDADE E VALOR MÁXIMO
@@ -36,6 +37,9 @@ export default function SearchPage() {
     url.searchParams.append('cidade', cidadeEscolhida);
     if (valorMax) {
       url.searchParams.append('valor_maximo', valorMax);
+    }
+    if (avaliacaoMax) {
+      url.searchParams.append('avaliacao_maxima', avaliacaoMax);
     }
 
     const imoveisFetch = await fetch(url.toString());
@@ -92,7 +96,7 @@ export default function SearchPage() {
       <div className="container mx-auto px-4">
         {/* Search Bar */}
         <section className="bg-white rounded-xl shadow-lg p-6 mb-8 sticky top-4 z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="relative">
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -130,10 +134,25 @@ export default function SearchPage() {
                 />
               </div>
             </div>
+            <div className="relative">
+              <div className="relative">
+                <Star className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="number"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  placeholder="Avaliação mínima"
+                  value={avaliacaoMaxima}
+                  onChange={(e) => setAvaliacaoMaxima(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                />
+              </div>
+            </div>
           </div>
           <div className="mt-4 flex justify-end">
             <button 
-              onClick={() => buscarImoveis(cidade, valorMaximo)}
+              onClick={() => buscarImoveis(cidade, valorMaximo, avaliacaoMaxima)}
               className="bg-primary hover:bg-primary/90 text-white font-semibold py-2 px-6 rounded-lg inline-flex items-center"
             >
               <Search size={18} className="mr-2" />

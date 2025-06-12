@@ -101,7 +101,7 @@ export default function Navbar() {
         { name: "Meus Imóveis", path: "/dashboard/properties", icon: <Home size={20} /> },
         { name: "Criar Anúncio", path: "/dashboard/properties/new", icon: <PlusCircle size={20} /> },
         {
-          name: "Reservas",
+          name: "Imoveis reservados",
           path: "/dashboard/bookings",
           icon: <Calendar size={20} />,
         },

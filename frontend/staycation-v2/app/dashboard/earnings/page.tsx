@@ -73,7 +73,6 @@ export default function MinhasReservas() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-out</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detalhes</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -109,12 +108,6 @@ export default function MinhasReservas() {
                         }`}>
                           {reserva.status}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button className="text-primary hover:text-primary/80 font-medium flex items-center">
-                          <Info className="ml-1 h-4 w-4" />
-                          <span className="ml-1">Ver detalhes</span>
-                        </button>
                       </td>
                     </tr>
                   ))

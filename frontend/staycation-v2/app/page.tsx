@@ -1,7 +1,11 @@
+"use client"
+
 import Link from "next/link"
 import { Search, MapPin, Calendar, Users } from "lucide-react"
 import MainLayout from "@/components/layout/MainLayout"
 import { apiFetch } from '@/lib/api'
+import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 
 interface UserData {
   id: string
@@ -11,7 +15,78 @@ interface UserData {
   avatar?: string
 }
 
+interface Imovel {
+  id: number
+  titulo: string
+  descricao: string
+  preco: number
+  endereco: {
+    cidade: string
+    estado: string
+  }
+  imagens: Array<{
+    id: number
+    imagem: string
+    legenda: string
+  }>
+  media_avaliacoes: number
+  total_avaliacoes: number
+  proprietario_nome: string
+}
+
 export default function Home() {
+  const router = useRouter()
+  const [cidade, setCidade] = useState('')
+  const [valorMaximo, setValorMaximo] = useState('')
+  const [imoveisDestaque, setImoveisDestaque] = useState<Imovel[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchImoveisDestaque = async () => {
+      try {
+        console.log('Iniciando busca de imóveis em destaque...')
+        const response = await apiFetch('/api/imoveis/destaque/')
+        console.log('Resposta da API:', response)
+        
+        if (!response) {
+          console.error('Resposta da API é undefined')
+          return
+        }
+
+        // Verifica se a resposta é um objeto Response
+        if (response instanceof Response) {
+          if (response.ok) {
+            const data = await response.json()
+            console.log('Dados recebidos da API:', data)
+            setImoveisDestaque(data)
+          } else {
+            console.error('Erro na resposta da API:', {
+              status: response.status,
+              statusText: response.statusText
+            })
+          }
+        } else {
+          // Se a resposta não for um objeto Response, assume que é o dado direto
+          console.log('Dados recebidos da API:', response)
+          setImoveisDestaque(response)
+        }
+      } catch (error) {
+        console.error('Erro ao buscar imóveis em destaque:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchImoveisDestaque()
+  }, [])
+
+  const handleSearch = () => {
+    const searchParams = new URLSearchParams()
+    if (cidade) searchParams.append('cidade', cidade)
+    if (valorMaximo) searchParams.append('valor_maximo', valorMaximo)
+    router.push(`/search?${searchParams.toString()}`)
+  }
+
   // In a real app, you would get the user data from your auth context
   const userRole = "visitor"
   const userName = "Visitante"
@@ -27,171 +102,101 @@ export default function Home() {
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
               Encontre seu lugar <br /> perfeito para descansar
             </h1>
-            <p className="text-xl text-white mb-8 max-w-md">
-              Descubra e reserve casas de campo, fazendas e retiros rurais únicos para suas próximas férias.
+            <p className="text-xl text-white/90 mb-8 max-w-2xl">
+              Descubra acomodações únicas em todo o Brasil. De casas de campo a chacaras e edículas na cidade, encontre o lugar ideal para sua próxima aventura.
             </p>
             <Link
               href="/search"
-              className="bg-secondary hover:bg-secondary/90 text-white font-semibold py-3 px-6 rounded-lg inline-block w-fit"
+              className="bg-secondary hover:bg-secondary/90 text-white text-xl font-semibold py-4 px-8 rounded-lg inline-block w-fit transition-all duration-300 hover:scale-105"
             >
               Explorar Propriedades
             </Link>
           </div>
         </section>
 
-        {/* Search Bar */}
-        <section className="bg-white rounded-xl shadow-lg p-6 mb-12 -mt-24 relative z-10 mx-auto max-w-5xl">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Localização</label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  type="text"
-                  placeholder="Para onde você vai?"
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                />
-              </div>
-            </div>
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Check-in</label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  type="date"
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                />
-              </div>
-            </div>
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Check-out</label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  type="date"
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                />
-              </div>
-            </div>
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Hóspedes</label>
-              <div className="relative">
-                <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                <select className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary appearance-none">
-                  <option>1 hóspede</option>
-                  <option>2 hóspedes</option>
-                  <option>3 hóspedes</option>
-                  <option>4+ hóspedes</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 flex justify-center md:justify-end">
-            <Link
-              href="/search"
-              className="bg-secondary hover:bg-secondary/90 text-white font-semibold py-2 px-6 rounded-lg inline-flex items-center"
-            >
-              <Search size={18} className="mr-2" />
-              Buscar
-            </Link>
-          </div>
-        </section>
+        {/* Search Section */}
+       
 
         {/* Featured Properties */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 text-primary">Propriedades em Destaque</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[
-              {
-                id: 1,
-                title: "Chalé na Montanha",
-                location: "Serra da Mantiqueira, SP",
-                image: "/images/property-1.jpg",
-                price: 180,
-              },
-              {
-                id: 2,
-                title: "Fazenda Histórica",
-                location: "Campos do Jordão, SP",
-                image: "/images/property-2.jpg",
-                price: 250,
-              },
-              {
-                id: 3,
-                title: "Casa de Campo",
-                location: "Atibaia, SP",
-                image: "/images/property-3.jpg",
-                price: 150,
-              },
-              {
-                id: 4,
-                title: "Cabana Rústica",
-                location: "Monte Verde, MG",
-                image: "/images/property-4.jpg",
-                price: 120,
-              },
-            ].map((property) => (
-              <Link href={`/properties/${property.id}`} key={property.id} className="group">
-                <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow">
-                  <div className="relative h-64">
-                    <img
-                      src={property.image || "/placeholder.svg"}
-                      alt={property.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute top-3 right-3 bg-white rounded-full p-1.5 shadow">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                        className="w-5 h-5 text-gray-600 hover:text-secondary"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-semibold text-lg mb-1">{property.title}</h3>
-                        <p className="text-gray-600 text-sm mb-2">{property.location}</p>
-                      </div>
-                      <div className="flex items-center">
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-4 text-gray-600">Carregando propriedades em destaque...</p>
+            </div>
+          ) : imoveisDestaque.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600">Nenhuma propriedade em destaque no momento.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {imoveisDestaque.map((imovel) => (
+                <Link href={`/properties/${imovel.id}`} key={imovel.id} className="group">
+                  <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+                    <div className="relative h-64">
+                      <img
+                        src={imovel.imagens[0]?.imagem || "/placeholder.svg"}
+                        alt={imovel.titulo}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute top-3 right-3 bg-white rounded-full p-1.5 shadow">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
                           viewBox="0 0 24 24"
-                          fill="currentColor"
-                          className="w-4 h-4 text-secondary"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="w-5 h-5 text-gray-600 hover:text-secondary"
                         >
                           <path
-                            fillRule="evenodd"
-                            d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
-                            clipRule="evenodd"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
                           />
                         </svg>
-                        <span className="text-sm font-medium ml-1">4.9</span>
                       </div>
                     </div>
-                    <p className="text-gray-600 text-sm mb-3">
-                      Casa de campo tranquila com vistas incríveis e atividades ao ar livre.
-                    </p>
-                    <div className="flex justify-between items-center">
-                      <p className="font-semibold">
-                        R${property.price} <span className="text-gray-600 font-normal text-sm">noite</span>
-                      </p>
-                      <span className="text-xs text-gray-600">Disponível agora</span>
+                    <div className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold text-lg mb-1">{imovel.titulo}</h3>
+                          <p className="text-gray-600 text-sm mb-2">{imovel.endereco.cidade}, {imovel.endereco.estado}</p>
+                        </div>
+                        <div className="flex items-center">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            className="w-4 h-4 text-secondary"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <svg
+                            className="w-4 h-4 text-yellow-400"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <p className="font-semibold">
+                          R${imovel.preco} <span className="text-gray-600 font-normal text-sm">noite</span>
+                        </p>
+                        <span className="text-xs text-gray-600">Disponível agora</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          )}
           <div className="mt-8 text-center">
             <Link
               href="/search"

@@ -43,6 +43,8 @@ export default function TenantProfile() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editedUser, setEditedUser] = useState<UserData | null>(null)
   const [editedEndereco, setEditedEndereco] = useState<Endereco | null>(null)
+  const [reservas, setReservas] = useState<Reserva[]>([])
+  const [loading, setLoading] = useState(true)
 
   const router = useRouter()
 
@@ -523,62 +525,7 @@ export default function TenantProfile() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-2xl font-bold mb-6 text-primary">Avaliações Recentes</h2>
-              <div className="space-y-6">
-                <div className="border-b border-gray-200 pb-6">
-                  <div className="flex items-start mb-4">
-                    <img
-                      src="/images/owner-avatar.jpg"
-                      alt="Maria Proprietária"
-                      className="w-12 h-12 rounded-full mr-4 object-cover"
-                    />
-                    <div>
-                      <h3 className="font-semibold">Maria (Proprietária)</h3>
-                      <p className="text-gray-600 text-sm">Chalé na Montanha • Janeiro 2023</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center mb-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-4 h-4 ${star <= 5 ? "text-secondary fill-current" : "text-gray-300"}`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-gray-700">
-                    João foi um hóspede excelente! Deixou o chalé muito limpo e seguiu todas as regras da casa.
-                    Comunicação fácil e agradável. Recomendo fortemente e será sempre bem-vindo novamente!
-                  </p>
-                </div>
-
-                <div>
-                  <div className="flex items-start mb-4">
-                    <img
-                      src="/images/owner-avatar-2.jpg"
-                      alt="Carlos Proprietário"
-                      className="w-12 h-12 rounded-full mr-4 object-cover"
-                    />
-                    <div>
-                      <h3 className="font-semibold">Carlos (Proprietário)</h3>
-                      <p className="text-gray-600 text-sm">Fazenda Histórica • Dezembro 2022</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center mb-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-4 h-4 ${star <= 5 ? "text-secondary fill-current" : "text-gray-300"}`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-gray-700">
-                    Foi um prazer receber João e sua família. Eles cuidaram muito bem da propriedade e foram muito
-                    respeitosos com os funcionários. Comunicação clara e direta. Recomendo a todos os anfitriões!
-                  </p>
-                </div>
-              </div>
-            </div>
+            
           </div>
         </div>
       </div>
