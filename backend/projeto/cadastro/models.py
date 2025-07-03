@@ -5,6 +5,8 @@ from django.core.validators import RegexValidator
 
 
 
+
+
 # testando git
 # Create your models here.
 
@@ -35,7 +37,6 @@ class customUserManager(BaseUserManager):
 class usuario(AbstractBaseUser, PermissionsMixin):
     class TipoUsuario(models.TextChoices):
         ADMIN = 'admin', 'Administrador'
-        VISITANTE = 'visitante', 'Visitante'
         LOCATARIO = 'locatario', 'Locatario'
         PROPRIETARIO = 'proprietario', 'proprietario'
 
@@ -52,7 +53,7 @@ class usuario(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(default=now)
     tipo = models.CharField(max_length=13,
                             choices=TipoUsuario.choices,
-                            default=TipoUsuario.VISITANTE)
+                            default=TipoUsuario.LOCATARIO)
     
     class meta:
         constraints = [

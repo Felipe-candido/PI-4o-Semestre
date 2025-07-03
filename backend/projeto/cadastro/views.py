@@ -2,16 +2,30 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status, viewsets
 from .models import Endereco_usuario
-from .serializers import EnderecoSerializer, registroSerializer, loginSerializer, UserSerializer, edit_user_serializer
+from .serializers import EnderecoSerializer, registroSerializer, loginSerializer, UserSerializer, edit_user_serializer, RegistroSerializer
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from .services import UserService
 
 user = get_user_model()
 
 
-# Create your views here.
+class Registro(APIView):
+    def post(self, request):
+        dados = request.data.copy()
+        serializer = RegistroSerializer(data=dados)
+        if serializer.is_valid():
+            user = UserService.registrar_usuario(serializer.validated_data) 
+            return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+        
+        print("❌ Erros de validação:", serializer.errors)  # <-- Aqui
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
 
 class view_registro(viewsets.ModelViewSet):
     queryset = user.objects.all()

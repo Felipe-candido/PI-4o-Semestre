@@ -5,6 +5,20 @@ from .models import Endereco_usuario
 usuario = get_user_model()
 
 
+class RegistroSerializer(serializers.Serializer):
+    nome = serializers.CharField()
+    sobrenome = serializers.CharField()
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+
+
+
+
+
+
+
+
 class registroSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 

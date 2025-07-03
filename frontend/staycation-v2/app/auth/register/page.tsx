@@ -61,7 +61,7 @@ export default function RegisterForm({ onLoginClick, onRegistrationSuccess }: Re
       const { confirmaSenha, ...registerData} = data
 
       //URL DO BACKEND DJANGO
-      const response = await fetch("http://localhost:8000/api/registrar/", {
+      const response = await fetch("http://localhost:8000/api/registrando/", {
         method: "post",
         headers: {
           "Content-Type": "application/json",
