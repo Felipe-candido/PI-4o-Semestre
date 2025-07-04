@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
-
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from .repositories import UserRepository
 
 class UserService:
@@ -24,7 +24,23 @@ class UserService:
             raise ValidationError("Credenciais invalidas")
         
         return user
+    
+    @staticmethod
+    def get_endereco(usuario):
+        return UserRepository.get_endereco(usuario)
         
+
+
+class CookieJWTAuthentication(JWTAuthentication):
+    def authenticate(self, request):
+        # Tenta pegar o token do cookie
+        token = request.COOKIES.get('access_token')
+        
+        if token is None:
+            return None
+            
+        validated_token = self.get_validated_token(token)
+        return self.get_user(validated_token), validated_token
 
 
 

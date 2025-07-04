@@ -2,17 +2,17 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status, viewsets
 from .models import Endereco_usuario
-from .serializers import EnderecoSerializer, registroSerializer, loginSerializer, UserSerializer, edit_user_serializer, RegistroSerializer, LoginSerializer
+from .serializers import EnderecoSerializer, UserSerializer, edit_user_serializer, RegistroSerializer, LoginSerializer
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from .services import UserService
+from .services import UserService, CookieJWTAuthentication
 
 user = get_user_model()
 
 
+# API PARA REGISTRO DE USUARIOS
 class Registro(APIView):
     def post(self, request):
         dados = request.data.copy()
@@ -24,7 +24,7 @@ class Registro(APIView):
         print("Erros de validação:", serializer.errors)  
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-
+# API PARA LOGIN COM GERENCIAMENTO DE TOKEN JWT
 class Login(APIView):
     def post(self, request):
         serializer = LoginSerializer(data = request.data)
@@ -72,74 +72,18 @@ class Login(APIView):
             status = status.HTTP_400_BAD_REQUEST
         )   
         
-
-
-
-class view_registro(viewsets.ModelViewSet):
-    queryset = user.objects.all()
-    serializer_class = registroSerializer
-    http_method_names = ['post', 'options']
-
-    def create(self, request, *args, **kwargs):   
-        dados = request.data.copy()
-        dados['tipo'] = 'locatario'
-        serializer = self.get_serializer(data = dados)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'mensagem': 'Usuario registrado com sucesso!'}, status=status.HTTP_201_CREATED)
+# API PARA DESCONECTAR USUARIO AUTENTICADO
+class viewLogout(viewsets.ViewSet):
+    @action(detail=False, methods=['post'])
+    def logout(self, request):
+        response = Response({'message': 'Logout realizado com sucesso'})
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)   
-
-
-class viewLogin(viewsets.ViewSet):
-    def create(self, request):
+        # Remove os cookies
+        response.delete_cookie('access_token')
+        response.delete_cookie('refresh_token')
         
-        serializer = loginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.validated_data["user"]
-            
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
-
-            response = Response({
-                "id_usuario": user.id, 
-                "email": user.email,
-                "nome": user.nome,
-            })
-
-            response.set_cookie(
-                key='access_token',
-                value=access_token,
-                httponly=True,
-                secure=False,
-                samesite='Lax',
-                domain='localhost',
-                path='/',
-                max_age=60 * 15,
-            )
-
-            response.set_cookie(
-                key='refresh_token',
-                value=refresh_token,
-                httponly=True,
-                secure=False,
-                samesite='Lax',
-                domain='localhost',
-                path='/api/token/refresh',
-                max_age=60 * 60 * 24,
-            )
-
-            
-            print("erros de validacao", serializer.errors),
-            return response
-        
-        print("erros de validacao", serializer.errors),
-        return Response(
-            serializer.errors,
-            status = status.HTTP_400_BAD_REQUEST
-        )
-
+        return response
+    
 
 class RefreshTokenView(viewsets.ViewSet):
     def post(self, request):
@@ -177,28 +121,10 @@ class RefreshTokenView(viewsets.ViewSet):
             )
 
 
-class viewLogout(viewsets.ViewSet):
-    @action(detail=False, methods=['post'])
-    def logout(self, request):
-        response = Response({'message': 'Logout realizado com sucesso'})
-        
-        # Remove os cookies
-        response.delete_cookie('access_token')
-        response.delete_cookie('refresh_token')
-        
-        return response
 
-class CookieJWTAuthentication(JWTAuthentication):
-    def authenticate(self, request):
-        # Tenta pegar o token do cookie
-        token = request.COOKIES.get('access_token')
-        
-        if token is None:
-            return None
-            
-        validated_token = self.get_validated_token(token)
-        return self.get_user(validated_token), validated_token
 
+
+# API PARA PEGAR OS DADOS DO USUARIO AUTENTICADO E SEU ENDERECO
 class UserAuthenticated(viewsets.ViewSet):
     authentication_classes = [CookieJWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -207,17 +133,20 @@ class UserAuthenticated(viewsets.ViewSet):
     def me(self, request):
         user = request.user
         try:
-            endereco = Endereco_usuario.objects.get(user=user)
+            endereco = UserService.get_endereco(user)
+            print("ENDERECO", endereco)
             endereco_serializer = EnderecoSerializer(endereco)
         except Endereco_usuario.DoesNotExist:
             endereco_serializer = None
 
-        user_serializer = UserSerializer(user)
+        serializer = UserSerializer(user)
         
         return Response({
-            'user': user_serializer.data,
+            'user': serializer.data,
             'endereco': endereco_serializer.data if endereco_serializer else None
         })
+    
+
     
 
 class editUsuario(viewsets.ViewSet):
@@ -251,4 +180,7 @@ class editUsuario(viewsets.ViewSet):
             'user': user_serializer.data,
             'endereco': endereco_serializer.data if endereco_serializer else None
         })
+    
+
+
 
