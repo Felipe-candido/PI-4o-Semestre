@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status, viewsets
 from .models import Endereco_usuario
-from .serializers import EnderecoSerializer, registroSerializer, loginSerializer, UserSerializer, edit_user_serializer, RegistroSerializer
+from .serializers import EnderecoSerializer, registroSerializer, loginSerializer, UserSerializer, edit_user_serializer, RegistroSerializer, LoginSerializer
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -21,8 +21,56 @@ class Registro(APIView):
             user = UserService.registrar_usuario(serializer.validated_data) 
             return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
         
-        print("❌ Erros de validação:", serializer.errors)  # <-- Aqui
+        print("Erros de validação:", serializer.errors)  
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class Login(APIView):
+    def post(self, request):
+        serializer = LoginSerializer(data = request.data)
+        if serializer.is_valid():
+            user = UserService.autenticar_usuario(serializer.validated_data)
+            
+            # DEFININDO TOKENS DE AUTENTICACAO
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
+
+            response = Response({
+                "id_usuario": user.id, 
+                "email": user.email,
+                "nome": user.nome,
+            })
+
+            response.set_cookie(
+                key='access_token',
+                value=access_token,
+                httponly=True,
+                secure=False,
+                samesite='Lax',
+                domain='localhost',
+                path='/',
+                max_age=60 * 15,
+            )
+
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh_token,
+                httponly=True,
+                secure=False,
+                samesite='Lax',
+                domain='localhost',
+                path='/api/token/refresh',
+                max_age=60 * 60 * 24,
+            )
+            
+            return response
+        
+        print("erros de validacao", serializer.errors),
+        return Response(
+            serializer.errors,
+            status = status.HTTP_400_BAD_REQUEST
+        )   
         
 
 
@@ -47,7 +95,7 @@ class viewLogin(viewsets.ViewSet):
     def create(self, request):
         
         serializer = loginSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
+        if serializer.is_valid():
             user = serializer.validated_data["user"]
             
             refresh = RefreshToken.for_user(user)
@@ -82,8 +130,11 @@ class viewLogin(viewsets.ViewSet):
                 max_age=60 * 60 * 24,
             )
 
+            
+            print("erros de validacao", serializer.errors),
             return response
         
+        print("erros de validacao", serializer.errors),
         return Response(
             serializer.errors,
             status = status.HTTP_400_BAD_REQUEST
