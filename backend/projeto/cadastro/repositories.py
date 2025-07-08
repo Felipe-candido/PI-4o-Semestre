@@ -13,11 +13,18 @@ class UserRepository:
         return Usuario.objects.create_user(**usuario_data)
     
     @staticmethod
+    def edit_user(usuario_data):
+        return Usuario.objects.update(**usuario_data)
+    
+    @staticmethod
     def get_all_users():
         return Usuario.objects.all()
     
     @staticmethod
     def get_endereco(usuario):
         return Endereco_usuario.objects.filter(user=usuario).first()
+    
+
+    
     
 

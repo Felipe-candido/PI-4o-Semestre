@@ -6,6 +6,7 @@ from .repositories import UserRepository
 
 class UserService:
 
+    # VERIFICA SE USUARIO JA EXISTE PELO EMAIL E LOGO EM SEGUIDA SALVA O USUARIO NO BANCO DE DADOS
     @staticmethod
     def registrar_usuario(usuario_data):
         if UserRepository.get_by_email(usuario_data['email']):
@@ -14,6 +15,7 @@ class UserService:
         validate_password(usuario_data['password'])
         return UserRepository.save_user(usuario_data)
     
+    # VERIFICA SE EMAIL E SENHA SAO CREDENCIAIS CORRETAS DE UM USUARIO
     @staticmethod
     def autenticar_usuario(usuario_data):
         email = usuario_data['email']
@@ -25,9 +27,18 @@ class UserService:
         
         return user
     
+
     @staticmethod
     def get_endereco(usuario):
         return UserRepository.get_endereco(usuario)
+    
+    # EDITA USUARIO E SALVA NOVAMENTE NO BANCO DE DADOS
+    @staticmethod
+    def update(self, user, validated_data):
+        endereco_data = validated_data.pop('endereco', None)
+
+        for attr, value in validated_data.items():
+            setattr(user, attr, value)
         
 
 
