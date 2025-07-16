@@ -155,31 +155,42 @@ class editUsuario(viewsets.ViewSet):
 
     @action(detail=False, methods=['patch'])
     def edit(self, request):
+
+        # PEGANDO E FORMATANDO OS DADOS PARA MANDAR AO SERVICE E SALVAR NO BANCO
         user = request.user
-        data = request.data
+        request_data = request.data.copy()
+        new_data = request_data.get('user', {})
+        endereco_data = request_data.get('endereco', {})
 
         user.tipo = 'proprietario'
-        # ATUALIZA OS DADOS DO USUARIO
-        user_serializer = UserSerializer(user, data=data.get('user', {}), partial=True)
-        user_serializer.is_valid(raise_exception=True)
-        user_serializer.save()
+
+        result = UserService.update(user, new_data, endereco_data)
+
+        return Response(result, status=status.HTTP_201_CREATED)
+
+
         
-        # ATUALIZA OU CRIA UM ENDERECO
-        endereco_data = data.get('endereco', {})
-        if endereco_data:
-            endereco, created = Endereco_usuario.objects.update_or_create(
-                user=user,
-                defaults=endereco_data
-            )
-            endereco_serializer = EnderecoSerializer(endereco)
-        else:
-            endereco_serializer = None
+        # user.tipo = 'proprietario'
+        # # ATUALIZA OS DADOS DO USUARIO
+        # user_serializer = UserSerializer(user, data=data.get('user', {}), partial=True)
+        # user_serializer.is_valid(raise_exception=True)
+        # user_serializer.save()
         
-        print(endereco_serializer.data)
-        return Response({
-            'user': user_serializer.data,
-            'endereco': endereco_serializer.data if endereco_serializer else None
-        })
+        # # ATUALIZA OU CRIA UM ENDERECO
+        # if endereco_data:
+        #     endereco = Endereco_usuario.objects.update_or_create(
+        #         user=user,
+        #         defaults=endereco_data
+        #     )
+        #     endereco_serializer = EnderecoSerializer(endereco)
+        # else:
+        #     endereco_serializer = None
+        
+        # print(endereco_serializer.data)
+        # return Response({
+        #     'user': user_serializer.data,
+        #     'endereco': endereco_serializer.data if endereco_serializer else None
+        # })
     
 
 

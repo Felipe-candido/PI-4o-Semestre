@@ -24,6 +24,10 @@ class UserRepository:
     def get_endereco(usuario):
         return Endereco_usuario.objects.filter(user=usuario).first()
     
+    @staticmethod
+    def get_or_create_endereco(usuario, endereco):
+        return Endereco_usuario.objects.get_or_create(user=usuario,
+                                                      defaults=endereco)
 
     
     

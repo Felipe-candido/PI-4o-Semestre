@@ -38,20 +38,4 @@ class edit_user_serializer(serializers.ModelSerializer):
         fields =  ['email', 'nome', 'cpf', 'telefone', 'endereco', 'dataNascimento']
         read_only_fields = ['id', 'email']  
 
-    def update(self, instance, validated_data):
-        endereco_data = validated_data.pop('endereco', None)
-
-        # ATUALIZA OS CAMPOS DO USUARIO
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-
-        # ATUALZIA OU CRIA O ENDERECO
-        if endereco_data:
-            endereco, _ = Endereco_usuario.objects.get_or_create(usuario=instance)
-            for attr, value in endereco_data.items():
-                setattr(endereco, attr, value)
-            endereco.save()
-
-        return instance
         
