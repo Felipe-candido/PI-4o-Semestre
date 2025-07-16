@@ -170,27 +170,7 @@ class editUsuario(viewsets.ViewSet):
 
 
         
-        # user.tipo = 'proprietario'
-        # # ATUALIZA OS DADOS DO USUARIO
-        # user_serializer = UserSerializer(user, data=data.get('user', {}), partial=True)
-        # user_serializer.is_valid(raise_exception=True)
-        # user_serializer.save()
-        
-        # # ATUALIZA OU CRIA UM ENDERECO
-        # if endereco_data:
-        #     endereco = Endereco_usuario.objects.update_or_create(
-        #         user=user,
-        #         defaults=endereco_data
-        #     )
-        #     endereco_serializer = EnderecoSerializer(endereco)
-        # else:
-        #     endereco_serializer = None
-        
-        # print(endereco_serializer.data)
-        # return Response({
-        #     'user': user_serializer.data,
-        #     'endereco': endereco_serializer.data if endereco_serializer else None
-        # })
+
     
 
 

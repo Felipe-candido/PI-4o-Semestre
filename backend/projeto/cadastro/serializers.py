@@ -30,12 +30,4 @@ class EnderecoSerializer(serializers.ModelSerializer):
         fields = ['rua', 'cidade', 'estado', 'cep', 'pais', 'numero']
 
 
-class edit_user_serializer(serializers.ModelSerializer):
-    endereco = EnderecoSerializer(required=False)
-    
-    class Meta:
-        model = usuario
-        fields =  ['email', 'nome', 'cpf', 'telefone', 'endereco', 'dataNascimento']
-        read_only_fields = ['id', 'email']  
-
         

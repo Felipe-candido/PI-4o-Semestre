@@ -40,8 +40,6 @@ class UserService:
     @staticmethod
     def update(user, validated_data, endereco_data=None):
 
-
-        
         serializer = UserSerializer(user, data=validated_data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
