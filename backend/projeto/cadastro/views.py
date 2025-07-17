@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status, viewsets
 from .models import Endereco_usuario
-from .serializers import EnderecoSerializer, UserSerializer, edit_user_serializer, RegistroSerializer, LoginSerializer
+from .serializers import EnderecoSerializer, UserSerializer, RegistroSerializer, LoginSerializer
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
@@ -50,7 +50,7 @@ class Login(APIView):
                 samesite='Lax',
                 domain='localhost',
                 path='/',
-                max_age=60 * 15,
+                max_age=60 * 60 * 24,
             )
 
             response.set_cookie(
