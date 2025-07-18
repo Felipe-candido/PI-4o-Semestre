@@ -59,8 +59,6 @@ class imovel_serializer(serializers.ModelSerializer):
             'id_reserva': {'required': False} 
         }
 
-
-
     def get_proprietario_nome(self, obj):
         return obj.proprietario.nome if obj.proprietario else None
 
