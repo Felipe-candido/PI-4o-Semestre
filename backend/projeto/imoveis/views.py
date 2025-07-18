@@ -16,6 +16,7 @@ from django.db.models import Avg, Count
 from comentarios.models import Comentario
 from .services import ImovelService
 import json
+from .repositories import ImovelRepository
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +87,7 @@ class cadastro_imovel(viewsets.ModelViewSet):
 
 
 class imovel_list_cidade(viewsets.ReadOnlyModelViewSet):
-    queryset = Imovel.objects.all().select_related('endereco').prefetch_related('imagens', 'comodidades')
+    queryset = ImovelRepository.get_all_imoveis()
     serializer_class = imovel_serializer
 
     def get_queryset(self):

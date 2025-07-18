@@ -13,4 +13,8 @@ class ImovelRepository:
     def save_imagens(imagem, imovel):
         return imagem_imovel.objects.create(imovel=imovel,
                                             imagem=imagem,
-                                            legenda=imagem.name )
+                                            legenda=imagem.name)
+    
+    @staticmethod
+    def get_all_imoveis():
+        return Imovel.objects.all().select_related('endereco').prefetch_related('imagens', 'comodidades')
