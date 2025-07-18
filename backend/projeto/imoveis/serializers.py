@@ -1,6 +1,8 @@
 from .models import Imovel, Endereco_imovel, Comodidade, imagem_imovel
 from rest_framework import serializers
 import logging
+from .repositories import ImovelRepository
+from .services import ImovelService
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +40,9 @@ class ComodidadeField(serializers.Field):
 class imovel_serializer(serializers.ModelSerializer):
     endereco = EnderecoImovelSerializer()
     comodidades = ComodidadeField(required=False)
-    imagens = ImagemImovelSerializer(many=True, required=False)
+    logo = serializers.ImageField(required=False)
+    imagens = ImagemImovelSerializer(many=True, read_only=True)
+    
     proprietario_nome = serializers.SerializerMethodField()
     proprietario_telefone = serializers.SerializerMethodField()
 
@@ -46,51 +50,60 @@ class imovel_serializer(serializers.ModelSerializer):
         model = Imovel
         fields = [
             'id', 'titulo', 'descricao', 'preco',
-            'numero_hospedes', 'regras', 'comodidades', 'endereco', 'imagens', 'logo', 'id_reserva',
+            'numero_hospedes', 'regras', 'comodidades', 'imagens', 'endereco', 'logo', 'id_reserva',
             'proprietario_nome', 'proprietario_telefone'
         ]
+
+        extra_kwargs = {
+            'proprietario': {'write_only': True, 'required': False}, 
+            'id_reserva': {'required': False} 
+        }
+
+
 
     def get_proprietario_nome(self, obj):
         return obj.proprietario.nome if obj.proprietario else None
 
     def get_proprietario_telefone(self, obj):
         return obj.proprietario.telefone if obj.proprietario else None
-
+        
     def create(self, validated_data):
-        try:
+        # EXTRAI OS DADOS DE ENDERECO E COMODIDADES DO VALIDATED_DATA
+        endereco_data = validated_data.pop('endereco')
+        comodidades_data = validated_data.pop('comodidades', [])\
 
-            endereco_data = validated_data.pop('endereco')
-            comodidades_data = validated_data.pop('comodidades', [])
-            imagens_data = validated_data.pop('imagens', [])
+        imovel = ImovelService.cadastrar_imovel(validated_data, comodidades_data, endereco_data)
+        
+        return imovel
 
-            # Adiciona o proprietário manualmente
-            user = self.context['request'].user
-            validated_data['proprietario'] = user
+        
+    def update(self, instance, validated_data):
+        # EXTRAI OS DADOS DE ENDERECO E COMODIDADES DO VALIDATED_DATA
+        endereco_data = validated_data.pop('endereco', None)
+        comodidades_list = validated_data.pop('comodidades', None)
 
-         
-            imovel = Imovel.objects.create(**validated_data)
-         
+        # ATUALIZA OS CAMPOS DIRETO DO IMOVEL
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
 
-            # CRIA O ENDEREÇO DO IMÓVEL
-            Endereco_imovel.objects.create(imovel=imovel, **endereco_data)
-            logger.info("Endereço criado com sucesso")
+        # ATUALIZA O ENDERECO ANINHADO
+        if endereco_data:
+            # Obtém a instância do endereço relacionada ao imóvel
+            endereco_instance = instance.endereco
+                
+            # Atualiza a instância do endereço. 
+            for addr_attr, addr_value in endereco_data.items():
+                setattr(endereco_instance, addr_attr, addr_value)
+            endereco_instance.save()
 
-            # ADICIONA AS COMODIDADES AO IMÓVEL
-            if comodidades_data:
-                imovel.comodidades.set(comodidades_data)
-                logger.info(f"Comodidades adicionadas: {[c.nome for c in comodidades_data]}")
+        # Atualiza as comodidades (se fornecidas)
+        if comodidades_list is not None:
+            instance.comodidades.set(comodidades_list) # Substitui todas as comodidades
 
-            # ADICIONA AS IMAGENS AO IMÓVEL
-            for imagem_data in imagens_data:
-                imagem_imovel.objects.create(imovel=imovel, **imagem_data)
-                logger.info(f"Imagem adicionada: {imagem_data.get('legenda', '')}")
+        instance.save() # Salva o imóvel com as alterações
+        return instance
 
-            return imovel
-
-        except Exception as e:
-            logger.error(f"Erro na criação do imóvel: {str(e)}", exc_info=True)
-            raise serializers.ValidationError(f"Erro ao criar imóvel: {str(e)}")
-
+    
 
 class imovel_destaque_serializer(serializers.ModelSerializer):
     proprietario_nome = serializers.CharField(source='proprietario.nome', read_only=True)

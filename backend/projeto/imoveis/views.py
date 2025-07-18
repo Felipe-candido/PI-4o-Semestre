@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from django.shortcuts import render
 from dateutil.parser import parse
 from reservas.services import GoogleCalendarService
 from .models import Imovel, Comodidade, imagem_imovel
@@ -15,6 +14,8 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import APIException
 from django.db.models import Avg, Count
 from comentarios.models import Comentario
+from .services import ImovelService
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -31,16 +32,12 @@ class cadastro_imovel(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs): 
         try:
-            logger.info("Iniciando criação de imóvel")
-            logger.info(f"Dados recebidos: {request.data}")
-            logger.info(f"Arquivos recebidos: {request.FILES}")
-
             dados_imovel = request.data.get("imovel", {})
             dados_endereco = request.data.get("endereco", {})
             imagens = request.FILES.getlist("imagens", [])
+            logo = request.FILES.get('logo')
 
             if not dados_imovel or not dados_endereco:
-                logger.error("Dados do imóvel ou endereço não fornecidos")
                 return Response(
                     {'erro': 'Dados do imóvel ou endereço não fornecidos'}, 
                     status=status.HTTP_400_BAD_REQUEST
@@ -48,53 +45,42 @@ class cadastro_imovel(viewsets.ModelViewSet):
 
             # Converte string JSON para dicionário se necessário
             if isinstance(dados_imovel, str):
-                import json
                 dados_imovel = json.loads(dados_imovel)
             if isinstance(dados_endereco, str):
-                import json
                 dados_endereco = json.loads(dados_endereco)
 
-            # Adiciona o endereço aos dados do imóvel
-            dados_imovel["endereco"] = dados_endereco
+            # JUNTA OS DADOS DE ENDERECO E AS IMAGENS NO MESMO DICIONARIO PARA SEREM SERIALIZADOS TUDO JUNTO
+            serializer = {
+                **dados_imovel,
+                'endereco': dados_endereco,
+                'logo': logo,
+            }
 
-            logger.info(f"Dados processados: {dados_imovel}")
-        
-            serializer = self.get_serializer(data=dados_imovel, context={'request': request})
-            if not serializer.is_valid():
-                logger.error(f"Erros de validação: {serializer.errors}")
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            
+            # PEGA OS DADOS DA API DE INTEGRACAO DO GOOGLE CALENDAR
             calendar_service = GoogleCalendarService()
             calendar_id = calendar_service.criar_calendario_chacara(dados_imovel.get('titulo', 'Novo Imóvel'))
+            serializer['id_reserva'] = calendar_id
             
+            # VALIDA OS DADOS E LOGO APOS SALVA NO SERIALIZER
+            serializer = self.get_serializer(data=serializer)
+            if not serializer.is_valid():
+                print('erros:', serializer.errors)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+            imovel_criado = serializer.save(proprietario=self.request.user)
 
-            imovel = serializer.save(id_reserva=calendar_id)
-            logger.info(f"Imóvel criado com sucesso: {imovel.id}")
-
-            
-            # Processa o logo se existir
-            logo = request.FILES.get('logo')
-            if logo:
-                logger.info(f"Processando logo: {logo.name}")
-                imovel.logo = logo
-                imovel.save()
-                logger.info("Logo adicionado com sucesso")
-
-            # Processa as imagens
-            for imagem in imagens:
-                logger.info(f"Processando imagem: {imagem.name}")
-                imagem_imovel.objects.create(
-                    imovel=imovel,
-                    imagem=imagem,
-                    legenda=imagem.name
-                )
+            # TRATAMENTO DAS IMAGENS
+            if imagens:
+                ImovelService.cadastrar_imagens(imagens, imovel_criado)
 
             return Response({'mensagem': 'Imovel registrado com sucesso!'}, status=status.HTTP_201_CREATED)
+        
+
         except Exception as e:
-            logger.error(f"Erro ao registrar imóvel: {str(e)}", exc_info=True)
+            print('peido pesado', str(e))
             return Response(
                 {'erro': f'Erro ao registrar imóvel: {str(e)}'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_400_BAD_REQUEST
             )
 
 

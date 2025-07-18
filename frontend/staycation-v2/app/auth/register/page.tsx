@@ -82,7 +82,7 @@ export default function RegisterForm({ onLoginClick, onRegistrationSuccess }: Re
       
       // REDIRECIONAR PARA O LOGIN
       router.push('/auth/login'); 
-      
+       
       onRegistrationSuccess?.();
       if (onLoginClick) onLoginClick();
       
