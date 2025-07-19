@@ -96,27 +96,7 @@ class imovel_list_cidade(viewsets.ReadOnlyModelViewSet):
         valor_maximo = self.request.query_params.get('valor_maximo')
         avaliacao_minima = self.request.query_params.get('avaliacao_maxima')
 
-        # Anota a média das avaliações para cada imóvel
-        queryset = queryset.annotate(
-            media_avaliacoes=Avg('comentarios__avaliacao')
-        )
-
-        if cidade:
-            queryset = queryset.filter(endereco__cidade__iexact=cidade)
-        
-        if valor_maximo:
-            try:
-                valor_maximo = float(valor_maximo)
-                queryset = queryset.filter(preco__lte=valor_maximo)
-            except ValueError:
-                pass
-
-        if avaliacao_minima:
-            try:
-                avaliacao_minima = float(avaliacao_minima)
-                queryset = queryset.filter(media_avaliacoes__gte=avaliacao_minima)
-            except ValueError:
-                pass
+        queryset = ImovelService.filtrar_imovel(queryset, cidade, valor_maximo, avaliacao_minima)
 
         return queryset
     
