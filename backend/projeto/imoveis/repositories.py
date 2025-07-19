@@ -18,3 +18,7 @@ class ImovelRepository:
     @staticmethod
     def get_all_imoveis():
         return Imovel.objects.all().select_related('endereco').prefetch_related('imagens', 'comodidades')
+    
+    @staticmethod
+    def get_by_id(imovel_id):
+        return Imovel.objects.select_related('endereco').prefetch_related('imagens', 'comodidades').get(id=imovel_id)

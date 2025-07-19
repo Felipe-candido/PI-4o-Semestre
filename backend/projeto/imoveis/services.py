@@ -7,7 +7,6 @@ class ImovelService:
     
     @staticmethod
     def cadastrar_imovel(imovel_data, comodidades_data, endereco_data):
-        
         try:
             # SALVA OS DADOS PRINCIPAIS DO IMOVEL    
             imovel = ImovelRepository.save_imovel(imovel_data)
@@ -66,6 +65,8 @@ class ImovelService:
                 pass
            
         return queryset
+    
+    
 
 
         

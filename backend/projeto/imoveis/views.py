@@ -108,7 +108,7 @@ class imovel_por_id(APIView):
             return Response({'error': 'ID não fornecido'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            imovel = Imovel.objects.select_related('endereco').prefetch_related('imagens', 'comodidades').get(id=imovel_id)
+            imovel = ImovelRepository.get_by_id(imovel_id)
             serializer = imovel_serializer(imovel)
             return Response(serializer.data)
         except Imovel.DoesNotExist:
