@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import MainLayout from "@/components/layout/MainLayout"
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
 // Define um tipo para a imagem no estado
 interface ImageState {
@@ -30,7 +31,7 @@ export default function EditImovelPage() {
   useEffect(() => {
     async function fetchImovel() {
       try {
-        const res = await fetch(`http://localhost:8000/api/imoveis/propriedade/?id=${id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/imoveis/propriedade/?id=${id}`, {
           credentials: "include",
         })
         if (!res.ok) throw new Error("Erro ao buscar imóvel")
@@ -49,8 +50,8 @@ export default function EditImovelPage() {
         // --- INICIALIZAÇÃO DAS IMAGENS EXISTENTES ---
         if (data.imagens && Array.isArray(data.imagens)) {
           const loadedImages: ImageState[] = data.imagens.map((img: any) => ({
-            id: img.id, // Supondo que o backend retorna o ID da imagem
-            url: img.imagem, // Supondo que 'imagem' é a URL da imagem
+            id: img.id,
+            url: `${API_BASE_URL}/${img.imagem}`, 
             file: undefined, // Não há objeto File para imagens existentes
           }));
           setImagensState(loadedImages);
@@ -307,9 +308,10 @@ export default function EditImovelPage() {
             <div className="flex flex-wrap gap-4 mt-4">
               {imagensState.map((imageObj, index) => (
                 <div key={imageObj.id || index} className="w-24 h-24 overflow-hidden rounded border border-gray-300 relative group">
+                
                   <img
                     src={imageObj.url}
-                    alt={`Imagem ${index + 1}`}
+                    alt={imageObj.url}
                     className="object-cover w-full h-full"
                   />
                   {/* Botão de Remover */}

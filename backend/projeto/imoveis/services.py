@@ -94,21 +94,20 @@ class ImovelService:
     
         if images_to_delete_ids:
             # Filtra as imagens do imóvel que correspondem aos IDs para deletar
-            # e as deleta. O .delete() do QuerySet também remove os arquivos físicos.
+            # e as deleta. 
             try:
                 # Garante que as imagens a serem deletadas realmente pertencem ao imóvel
                 # para evitar que um usuário mal-intencionado delete imagens de outros imóveis.
                 imovel.imagens.filter(id__in=images_to_delete_ids).delete()
             
             except Exception as e:
-                logger.error(f"Erro ao deletar imagens com IDs {images_to_delete_ids} para o imóvel {imovel.id}: {str(e)}")
-                # Você pode escolher levantar uma exceção aqui ou apenas logar
-                # dependendo da robustez que precisa.
+                raise Exception(f"Erro ao deletar imagens: {str(e)}")
+
 
         # SALVA AS ALTERACOES
         imovel.save()
 
-        # ALTERA AS IMAGENS ENVIADAS NA EDICAO
+        # SALVA AS NOVAS IMAGENS ENVIADAS NA EDICAO
         for imagem in imagens:
             ImovelRepository.save_imagens(imagem, imovel)
 
