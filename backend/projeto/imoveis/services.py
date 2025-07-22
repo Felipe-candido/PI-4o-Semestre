@@ -111,6 +111,22 @@ class ImovelService:
         for imagem in imagens:
             ImovelRepository.save_imagens(imagem, imovel)
 
+
+    @staticmethod
+    def filtro_destaque(imoveis):
+        imoveis = imoveis.annotate(
+            # Anota a média das avaliações e a contagem de avaliações para cada imóvel em uma nova coluna
+            media_avaliacoes=Avg('comentarios__avaliacao'),
+            total_avaliacoes=Count('comentarios')
+        ).filter(
+            total_avaliacoes__gt=0  # Filtra apenas imóveis que têm avaliações
+        ).order_by(
+            '-total_avaliacoes',  # Ordena primeiro pelo número de avaliações
+            '-media_avaliacoes'   # Depois pela média das avaliações
+        )[:4]  # Limita aos 4 primeiros resultados
+        
+        return imoveis
+
    
 
 

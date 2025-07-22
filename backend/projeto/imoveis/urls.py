@@ -21,5 +21,4 @@ urlpatterns = [
     path('propriedade/', views.imovel_por_id.as_view()),
     path('editar/<int:id>/', views.EditarImovelView.as_view()),
     path('usuario/', views.ImoveisUsuarioView.as_view()),
-    path('destaque/', views.ImoveisDestaqueView.as_view({'get': 'list'}), name='imoveis-destaque'),
 ]

@@ -231,7 +231,7 @@ class EditarImovelView(APIView):
             
             # Verifica se o imóvel existe e pertence ao usuário
             try:
-                imovel = Imovel.objects.get(id=id, proprietario=request.user)
+                imovel = ImovelRepository.get_imovel_by_id_and_owner(id, request.user)
             except Imovel.DoesNotExist:
                 return Response(
                     {'erro': 'Imóvel não encontrado ou você não tem permissão para excluí-lo'}, 
@@ -278,52 +278,18 @@ class ImoveisUsuarioView(APIView):
 
 
 class imoveis_destaque(viewsets.ReadOnlyModelViewSet):
-    queryset = Imovel.objects.all().select_related('endereco').prefetch_related('imagens', 'comodidades')
+    queryset = ImovelRepository.get_all_imoveis()
     serializer_class = imovel_serializer
 
     def get_queryset(self):
         queryset = super().get_queryset()
         
-        # Anota a média das avaliações e a contagem de avaliações para cada imóvel
-        queryset = queryset.annotate(
-            media_avaliacoes=Avg('comentarios__avaliacao'),
-            total_avaliacoes=Count('comentarios')
-        ).filter(
-            total_avaliacoes__gt=0  # Filtra apenas imóveis que têm avaliações
-        ).order_by(
-            '-total_avaliacoes',  # Ordena primeiro pelo número de avaliações
-            '-media_avaliacoes'   # Depois pela média das avaliações
-        )[:4]  # Limita aos 4 primeiros resultados
+        queryset = ImovelService.filtro_destaque(queryset)
 
         return queryset
 
 
 
-
-class ImoveisDestaqueView(viewsets.ReadOnlyModelViewSet):
-    serializer_class = imovel_destaque_serializer
-    permission_classes = [AllowAny]
-
-    def get_queryset(self):
-        queryset = Imovel.objects.filter(
-            comentarios__isnull=False
-        ).annotate(
-            total_avaliacoes=Count('comentarios'),
-            media_avaliacoes=Avg('comentarios__avaliacao')
-        ).filter(
-            total_avaliacoes__gt=0
-        ).order_by(
-            '-total_avaliacoes',
-            '-media_avaliacoes'
-        )[:4]
-
-        return queryset.select_related(
-            'proprietario',
-            'endereco'
-        ).prefetch_related(
-            'imagens',
-            'comentarios'
-        )
 
 
 
