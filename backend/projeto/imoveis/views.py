@@ -275,8 +275,6 @@ class ImoveisUsuarioView(APIView):
             )
 
 
-
-
 class imoveis_destaque(viewsets.ReadOnlyModelViewSet):
     queryset = ImovelRepository.get_all_imoveis()
     serializer_class = imovel_serializer

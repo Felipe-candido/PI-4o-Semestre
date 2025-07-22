@@ -7,6 +7,8 @@ from django.db.models import Avg
 from .models import Comentario
 from .serializers import ComentarioSerializer
 from projeto.services import CookieJWTAuthentication
+from .repositories import ComentariosRepository
+from .services import ComentariosService
 
 # Create your views here.
 
@@ -21,9 +23,7 @@ class ComentarioViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         imovel_id = self.request.query_params.get('imovel_id')
-        if imovel_id:
-            return Comentario.objects.filter(imovel_id=imovel_id).order_by('-data_criacao')
-        return Comentario.objects.none()
+        return ComentariosRepository.get_by_id(imovel_id)
 
     @action(detail=False, methods=['get'])
     def media_avaliacoes(self, request):
@@ -31,18 +31,15 @@ class ComentarioViewSet(viewsets.ModelViewSet):
         if not imovel_id:
             return Response({'error': 'imovel_id é obrigatório'}, status=status.HTTP_400_BAD_REQUEST)
         
-        media = Comentario.objects.filter(imovel_id=imovel_id).aggregate(
-            media=Avg('avaliacao')
-        )
+        media = ComentariosRepository.avg_avaliacoes(imovel_id)
         
         return Response({
             'media': round(media['media'] or 0, 2),
-            'total_avaliacoes': Comentario.objects.filter(imovel_id=imovel_id).count()
+            'total_avaliacoes': ComentariosRepository.total_avaliacoes(imovel_id)
         })
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        comentario = ComentariosService.save_comentario(request.data, request.user)
+        self.perform_create(comentario)
+        headers = self.get_success_headers(comentario.data)
+        return Response(comentario.data, status=status.HTTP_201_CREATED, headers=headers)
