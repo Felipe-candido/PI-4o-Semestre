@@ -1,6 +1,9 @@
+from venv import logger
 from .repositories import ImovelRepository
 from reservas.services import GoogleCalendarService
 from django.db.models import Avg, Count
+import json
+from .models import Comodidade
 
 
 class ImovelService:
@@ -67,6 +70,50 @@ class ImovelService:
         return queryset
     
     
+    @staticmethod
+    def editar_imovel(imovel, dados_editados, logo, comodidades, imagens):
+        
+        # ATUALIZA OS CAMPOS BASE DO IMOVEL
+        for field in ['titulo', 'descricao', 'preco', 'numero_hospedes', 'regras']:
+                if field in dados_editados:
+                    setattr(imovel, field, dados_editados[field])
+
+        # ATUALIZA A LOGO SE EXISTIR
+        if logo:
+            imovel.logo = logo
+
+        # ATUALIZA AS COMODIDADES
+        if comodidades:
+                imovel.comodidades.clear()
+                for nome in comodidades:
+                    comodidade, _ = Comodidade.objects.get_or_create(nome=nome)
+                    imovel.comodidades.add(comodidade)
+
+
+        images_to_delete_ids = dados_editados.get('images_to_delete', [])
+    
+        if images_to_delete_ids:
+            # Filtra as imagens do imóvel que correspondem aos IDs para deletar
+            # e as deleta. O .delete() do QuerySet também remove os arquivos físicos.
+            try:
+                # Garante que as imagens a serem deletadas realmente pertencem ao imóvel
+                # para evitar que um usuário mal-intencionado delete imagens de outros imóveis.
+                imovel.imagens.filter(id__in=images_to_delete_ids).delete()
+            
+            except Exception as e:
+                logger.error(f"Erro ao deletar imagens com IDs {images_to_delete_ids} para o imóvel {imovel.id}: {str(e)}")
+                # Você pode escolher levantar uma exceção aqui ou apenas logar
+                # dependendo da robustez que precisa.
+
+        # SALVA AS ALTERACOES
+        imovel.save()
+
+        # ALTERA AS IMAGENS ENVIADAS NA EDICAO
+        for imagem in imagens:
+            ImovelRepository.save_imagens(imagem, imovel)
+
+   
+
 
 
         

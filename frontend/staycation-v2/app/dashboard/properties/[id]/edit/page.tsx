@@ -4,6 +4,14 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import MainLayout from "@/components/layout/MainLayout"
 
+
+// Define um tipo para a imagem no estado
+interface ImageState {
+  id?: number; // Para imagens existentes do backend
+  url: string; // URL para preview (seja de File ou do backend)
+  file?: File; // O objeto File se for uma imagem nova
+}
+
 export default function EditImovelPage() {
   const { id } = useParams()
   const router = useRouter()
@@ -13,7 +21,9 @@ export default function EditImovelPage() {
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState<any>({})
   const [comodidade, setComodidade] = useState("")
-  const [imagens, setImagens] = useState<File[]>([])
+  const [imagensState, setImagensState] = useState<ImageState[]>([])
+  // NOVO ESTADO: para IDs das imagens a serem removidas
+  const [imagesToDelete, setImagesToDelete] = useState<number[]>([])
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
@@ -35,6 +45,18 @@ export default function EditImovelPage() {
           comodidades: data.comodidades || [],
           logo: data.logo || null,
         })
+
+        // --- INICIALIZAÇÃO DAS IMAGENS EXISTENTES ---
+        if (data.imagens && Array.isArray(data.imagens)) {
+          const loadedImages: ImageState[] = data.imagens.map((img: any) => ({
+            id: img.id, // Supondo que o backend retorna o ID da imagem
+            url: img.imagem, // Supondo que 'imagem' é a URL da imagem
+            file: undefined, // Não há objeto File para imagens existentes
+          }));
+          setImagensState(loadedImages);
+        }
+        // ---------------------------------------------
+
       } catch (err: any) {
         setError(err.message)
       } finally {
@@ -43,6 +65,7 @@ export default function EditImovelPage() {
     }
     fetchImovel()
   }, [id])
+
 
   function handleChange(e: any) {
     const { name, value } = e.target
@@ -64,12 +87,41 @@ export default function EditImovelPage() {
     setForm((prev: any) => ({ ...prev, comodidades: prev.comodidades.filter((c: string) => c !== item) }))
   }
 
-  function handleFileChange(e: any) {
+  // --- LÓGICA PARA ADICIONAR NOVAS IMAGENS ---
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.files) {
-      const arquivos = Array.from(e.target.files)
-      setImagens((prev: File[]) => [...prev, ...arquivos as File[]])
+      const newFiles = Array.from(e.target.files) as File[];
+      const newImageStates: ImageState[] = newFiles.map(file => ({
+        url: URL.createObjectURL(file), // Cria uma URL temporária para pré-visualização
+        file: file, // Armazena o objeto File
+      }));
+      setImagensState((prev: ImageState[]) => [...prev, ...newImageStates]);
+      // Limpar o input para permitir selecionar o mesmo arquivo novamente, se necessário
+      e.target.value = ''; 
     }
   }
+
+  // --- LÓGICA PARA REMOVER IMAGENS ---
+  // ATUALIZAÇÃO: Adiciona IDs de imagens a serem deletadas
+  function handleRemoveImage(indexToRemove: number) {
+    setImagensState((prev: ImageState[]) => {
+      const updatedImages = prev.filter((imageObj, index) => {
+        if (index === indexToRemove) {
+          // Se a imagem tiver um ID, adicione-o à lista de exclusão
+          if (imageObj.id) {
+            setImagesToDelete((prevIds) => [...prevIds, imageObj.id!]); // ! para afirmar que id não é undefined
+          } else if (imageObj.file) {
+            // Revogar URL para imagens novas que não foram salvas
+            URL.revokeObjectURL(imageObj.url);
+          }
+          return false; // Remove esta imagem do estado
+        }
+        return true; // Mantém as outras imagens
+      });
+      return updatedImages;
+    });
+  }
+
 
   async function handleSubmit(e: any) {
     e.preventDefault()
@@ -85,7 +137,8 @@ export default function EditImovelPage() {
         preco: form.preco,
         numero_hospedes: form.numero_hospedes,
         regras: form.regras,
-        comodidades: form.comodidades
+        comodidades: form.comodidades,
+        images_to_delete: imagesToDelete,
       }
       
       // Adiciona os dados do imóvel como JSON
@@ -96,9 +149,11 @@ export default function EditImovelPage() {
         formData.append("logo", form.logo)
       }
       
-      // Adiciona as imagens
-      imagens.forEach((imagem) => {
-        formData.append("imagens", imagem)
+      // --- ADICIONA APENAS OS NOVOS ARQUIVOS DE IMAGEM ---
+      imagensState.forEach((imageObj) => {
+        if (imageObj.file) { // Só anexa se for um objeto File (nova imagem)
+          formData.append("imagens", imageObj.file);
+        }
       })
 
       const res = await fetch(`http://localhost:8000/api/imoveis/editar/${id}/`, {
@@ -250,17 +305,27 @@ export default function EditImovelPage() {
               onChange={handleFileChange}
             />
             <div className="flex flex-wrap gap-4 mt-4">
-              {imagens.map((img, index) => (
-                <div key={index} className="w-24 h-24 overflow-hidden rounded border border-gray-300">
+              {imagensState.map((imageObj, index) => (
+                <div key={imageObj.id || index} className="w-24 h-24 overflow-hidden rounded border border-gray-300 relative group">
                   <img
-                    src={URL.createObjectURL(img)}
+                    src={imageObj.url}
                     alt={`Imagem ${index + 1}`}
                     className="object-cover w-full h-full"
                   />
+                  {/* Botão de Remover */}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Remover imagem"
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
             </div>
           </div>
+
           <button type="submit" className="bg-primary text-white px-6 py-2 rounded" disabled={saving}>{saving ? "Salvando..." : "Salvar alterações"}</button>
           {error && <div className="text-red-500 mt-2">{error}</div>}
         </form>

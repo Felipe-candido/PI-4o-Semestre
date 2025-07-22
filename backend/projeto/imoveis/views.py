@@ -118,7 +118,7 @@ class imovel_por_id(APIView):
 
 
 class ChacaraViewSet(viewsets.ModelViewSet):
-    queryset = Imovel.objects.all()
+    queryset = ImovelRepository.get_all_imoveis()
     serializer_class = imovel_serializer
     
     @action(detail=True, methods=['get'])
@@ -180,17 +180,6 @@ class ChacaraViewSet(viewsets.ModelViewSet):
 
 
 
-
-class ComodidadeViewSet(viewsets.ModelViewSet):
-    authentication_classes = [CookieJWTAuthentication]
-    permission_classes = [IsAuthenticated]
-    queryset = Comodidade.objects.all()
-    serializer_class = ComodidadeSerializer
-    http_method_names = ['get', 'post', 'options']
-
-
-
-
 class EditarImovelView(APIView):
     authentication_classes = [CookieJWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -201,9 +190,9 @@ class EditarImovelView(APIView):
             logger.info(f"Dados recebidos: {request.data}")
             logger.info(f"Arquivos recebidos: {request.FILES}")
 
-            # Verifica se o imóvel existe e pertence ao usuário
+            # VERIFICA SE O IMOVEL EXISTE E PERTENCE AO USUARIO LOGADO
             try:
-                imovel = Imovel.objects.get(id=id, proprietario=request.user)
+                imovel = ImovelRepository.get_imovel_by_id_and_owner(id, request.user)             
             except Imovel.DoesNotExist:
                 return Response(
                     {'erro': 'Imóvel não encontrado ou você não tem permissão para editá-lo'}, 
@@ -213,38 +202,19 @@ class EditarImovelView(APIView):
             # Processa os dados do imóvel
             dados_imovel = request.data.get("imovel", {})
             if isinstance(dados_imovel, str):
-                import json
                 dados_imovel = json.loads(dados_imovel)
-
-            # Atualiza os campos básicos do imóvel
-            for field in ['titulo', 'descricao', 'preco', 'numero_hospedes', 'regras']:
-                if field in dados_imovel:
-                    setattr(imovel, field, dados_imovel[field])
-
+            
             # Processa o logo se existir
             logo = request.FILES.get('logo')
-            if logo:
-                imovel.logo = logo
 
             # Processa as comodidades
             comodidades = dados_imovel.get('comodidades', [])
-            if comodidades:
-                imovel.comodidades.clear()
-                for nome in comodidades:
-                    comodidade, _ = Comodidade.objects.get_or_create(nome=nome)
-                    imovel.comodidades.add(comodidade)
-
-            # Salva as alterações
-            imovel.save()
-
+            
             # Processa as novas imagens
             imagens = request.FILES.getlist("imagens", [])
-            for imagem in imagens:
-                imagem_imovel.objects.create(
-                    imovel=imovel,
-                    imagem=imagem,
-                    legenda=imagem.name
-                )
+            
+            # PROCESSA OS DADOS RECEBIDOS E ATUALIZA O IMOVEL
+            ImovelService.editar_imovel(imovel, dados_imovel, logo, comodidades, imagens)
 
             return Response({'mensagem': 'Imóvel atualizado com sucesso!'}, status=status.HTTP_200_OK)
 
