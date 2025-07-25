@@ -1,6 +1,5 @@
 from .models import Comentario
 from django.db.models import Avg
-from .serializers import ComentarioSerializer
 
 
 class ComentariosRepository:

@@ -1,4 +1,3 @@
-from .models import Comentario
 from .serializers import ComentarioSerializer
 from rest_framework.request import Request
 from django.contrib.auth import get_user_model

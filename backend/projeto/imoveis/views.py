@@ -1,19 +1,15 @@
-from datetime import datetime, timezone
+from datetime import timezone
 from dateutil.parser import parse
 from reservas.services import GoogleCalendarService
-from .models import Imovel, Comodidade, imagem_imovel
+from .models import Imovel
 from rest_framework.response import Response
-from .serializers import imovel_serializer, ComodidadeSerializer, imovel_destaque_serializer
+from .serializers import imovel_serializer
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from django.contrib.auth import get_user_model
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from projeto.services import CookieJWTAuthentication
 import logging
 from rest_framework.views import APIView
-from rest_framework.exceptions import APIException
-from django.db.models import Avg, Count
-from comentarios.models import Comentario
 from .services import ImovelService
 import json
 from .repositories import ImovelRepository

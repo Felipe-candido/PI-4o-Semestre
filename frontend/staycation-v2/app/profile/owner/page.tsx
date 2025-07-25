@@ -71,6 +71,8 @@ export default function OwnerProfile() {
   const userTelefone = user?.telefone || ""
   const userData = user?.dataNascimento || ""
   const userCpf = user?.cpf || ""
+
+
   
   useEffect(() => {
     // FUNCAO PARA CARREGAR OS DADOS DO USUARIO AUTENTICADO
@@ -97,6 +99,7 @@ export default function OwnerProfile() {
       }
     }
 
+    // FUNCAO PARA CARREGAR OS IMÓVEIS DO USUARIO
     async function fetchImoveis() {
       try {
         setLoadingImoveis(true)
@@ -119,12 +122,12 @@ export default function OwnerProfile() {
     fetchImoveis()
   }, [])
 
+
   const handleEdit = () => {
     setIsModalOpen(true)
   }
 
- 
-
+  // FUNCAO PARA ATUALIZAR OS DADOS DO USUARIO
   const handleSave = async () => {
     try {
 
@@ -146,6 +149,7 @@ export default function OwnerProfile() {
         }
       };
 
+      // REQUISICAO PARA ATUALIZAR O PERFIL NO BACKEND
       const response = await apiFetch("/api/editar-perfil/edit/", {
         method: "PATCH",
         credentials: 'include',
@@ -169,7 +173,6 @@ export default function OwnerProfile() {
       
       window.location.reload();
       
-      
       toast({
         title: "Sucesso",
         description: "Perfil atualizado com sucesso",
@@ -183,6 +186,7 @@ export default function OwnerProfile() {
     }
   }
 
+  // FUNCAO PARA FORMATAR O ENDEREÇO
   const formatAddress = () => {
     if (!endereco) return "Não informado"
     const parts = [
@@ -199,6 +203,44 @@ export default function OwnerProfile() {
   const getImageUrl = (path: string | null) => {
     if (!path) return "/placeholder-property.jpg"
     return `http://localhost:8000${path}`
+  }
+
+  // FUNCAO PARA CONECTAR COM O MERCADOPAGO
+  const handleConnectMP = async () => {
+    try {
+      const response = await apiFetch("/api/pagamentos/mercadopago/connect/", {
+        method: "GET",
+        credentials: 'include', // Isso é para cookies
+        headers: {
+          'Content-Type': 'application/json' // Boa prática
+        }
+      })
+
+      console.log("Resposta bruta da API:", response); // Log da resposta completa
+
+      if(response.ok){
+        const data = await response.json()
+        console.log("data", data)
+
+        const authUrl = data.redirect_url
+        window.location.href = authUrl
+      }
+      else{
+       
+        console.log("response", response)
+        const redirect_url = response['redirect_url']
+        console.log("redirect_url", redirect_url)
+        window.location.href = redirect_url
+      } 
+
+    } catch (error) {
+      console.log('CAGOU AQUI')
+      toast({
+        title: "Erro",
+        description: "Não foi possível conectar com o Mercado Pago",
+        variant: "destructive",
+      })
+    }
   }
 
   return (
@@ -248,6 +290,7 @@ export default function OwnerProfile() {
                     Minhas reservas
                   </Link>
 
+                  <Button onClick={handleConnectMP}>Conectar com Mercado Pago</Button>
                 </nav>
               </div>
             </div>

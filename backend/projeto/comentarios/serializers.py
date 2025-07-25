@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from .models import Comentario
-from django.contrib.auth import get_user_model
 
 class ComentarioSerializer(serializers.ModelSerializer):
     usuario_nome = serializers.SerializerMethodField()

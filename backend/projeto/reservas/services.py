@@ -84,3 +84,5 @@ class GoogleCalendarService:
         except Exception as e:
             logger.error(f"Erro ao verificar disponibilidade: {str(e)}")
             raise ValueError(f"Erro ao verificar disponibilidade: {str(e)}")
+        
+

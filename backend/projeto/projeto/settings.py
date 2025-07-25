@@ -32,8 +32,19 @@ SECRET_KEY = 'django-insecure-1#d5ck9p8c*e72cg7jp3%w_y((*8&of3w&c7sx&n0fpis6*k26
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
 
+
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'dc6f0513eef0.ngrok-free.app', 
+]
+
+SESSION_COOKIE_DOMAIN = '.ngrok-free.app'
+CSRF_COOKIE_DOMAIN = '.ngrok-free.app'
+
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 # Application definition
 
@@ -188,10 +199,13 @@ load_dotenv(BASE_DIR / 'tokens.env')
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
+
 GOOGLE_REDIRECT_URI = 'http://localhost:8000/api/reservas/google-calendar/callback/'
 
 
 # Mercado Pago Settings
 MERCADO_PAGO_PUBLIC_KEY = os.getenv("MERCADO_PAGO_PUBLIC_KEY")
 MERCADO_PAGO_ACCESS_TOKEN = os.getenv("MERCADO_PAGO_ACCESS_TOKEN")
+MP_CLIENT_ID = os.getenv("MP_CLIENT_ID")
+MP_CLIENT_SECRET = os.getenv("MP_CLIENT_SECRET")
 FRONTEND_URL = 'http://localhost:3000' 
