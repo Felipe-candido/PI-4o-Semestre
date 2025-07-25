@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.conf import settings
 from reservas.models import Reserva
+from imoveis.models import Imovel
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Conta_MP
@@ -132,77 +133,57 @@ class callback_MP(APIView):
         return redirect(settings.FRONTEND_URL)
 
 
-@api_view(['POST'])
-def criar_preferencia(self, request):
-    reserva_id = None
-    try:
-        # BUSCAR RESERVA
-        reserva_id = request.data.get('reserva_id')
-        reserva = Reserva.objects.get(id=reserva_id)
-        print("🔍 reserva_id recebido:", reserva_id)
+class criar_preferencia(APIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsAuthenticated] 
 
-        if not hasattr(reserva.imovel.proprietario, 'mp_conta') or not reserva.imovel.proprietario.mp_conta.conectado_mp:
+    def post(self, request):
+        reserva_id = None
+        try:
+            # BUSCAR RESERVA
+            reserva_id = request.data.get('reserva_id')
+            reserva = Reserva.objects.get(id=reserva_id)
+            print("🔍 reserva_id recebido:", reserva_id)
+            id_proprietario = reserva.Imovel.proprietario_id
+
+            conta_mp = Conta_MP.objects.get(proprietario_id=id_proprietario)
+            print(conta_mp.conectado_mp)
+            if not conta_mp.conectado_mp:
+                print('TROCO')
                 return Response(
                     {"error": "Proprietário do imóvel não conectado ao Mercado Pago."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-        
-        valor_total = request.data.get('valor')
-        taxa_plataforma = valor_total * 0.7
-        descricao = request.data.get('descricao')
-        referencia = f"reserva-{reserva.id}"
-        payer_email = request.user.email
+            
+            valor_total = request.data.get('valor')
+            taxa_plataforma = valor_total * 0.07
+            descricao = request.data.get('descricao')
+            referencia = f"reserva-{reserva.id}"
+            payer_email = request.user.email
 
-        pagamento_info = PagamentoMPService.criar_preferencia_pagamento(
-            imovel_id=reserva.imovel.id,
-            valor_total=valor_total,
-            comissao_plataforma=taxa_plataforma,
-            external_reference=referencia,
-            payer_email=payer_email
-        )
-        
-        
-        print("🔗 FRONTEND_URL:", settings.FRONTEND_URL)
-        print("✅ back_urls['success']:", f"{settings.FRONTEND_URL}/payment/{reserva_id}/confirmacao")
-        success_url = f"{settings.FRONTEND_URL}/payment/{reserva_id}/confirmacao"
-        print("✅ Success URL:", repr(success_url))
+            pagamento_info = PagamentoMPService.criar_preferencia_pagamento(
+                imovel_id=reserva.Imovel.id,
+                valor_total=valor_total,
+                comissao_plataforma=taxa_plataforma,
+                external_reference=referencia,
+                payer_email=payer_email
+            )
+            
+            
+            print("🔗 FRONTEND_URL:", settings.FRONTEND_URL)
+            print("✅ back_urls['success']:", f"{settings.FRONTEND_URL}/payment/{reserva_id}/confirmacao")
+            success_url = f"{settings.FRONTEND_URL}/payment/{reserva_id}/confirmacao"
+            print("✅ Success URL:", repr(success_url))
+
+            return Response(pagamento_info, status=status.HTTP_200_OK)
 
 
-
-        # Criar preferência no Mercado Pago
-        preference_data = {
-            "items": [
-                {
-                    "title": descricao,
-                    "quantity": 1,
-                    "currency_id": "BRL",
-                    "unit_price": float(valor_total)
-                }
-            ],
-            "back_urls": {
-                "success": "https://dcad-177-128-8-150.ngrok-free.app/payment/{reserva_id}/confirmacao",
-                "failure": f"https://dcad-177-128-8-150.ngrok-free.app/payment/{reserva_id}",
-                "pending": f"https://dcad-177-128-8-150.ngrok-free.app/payment/{reserva_id}"
-            },
-            "auto_return": "approved",
-            "external_reference": str(reserva_id)
-        }
-
-        print("📦 Preference Data:", json.dumps(preference_data, indent=2))
-
-        preference_response = sdk.preference().create(preference_data)
-        print("🧾 Resposta do Mercado Pago:", preference_response)
-        preference = preference_response["response"]
-
-        return Response({
-            "id": preference["id"],
-            "init_point": preference["init_point"]
-        })
-
-    except Reserva.DoesNotExist:
-        return Response({"error": "Reserva não encontrada"}, status=404)
-    except Exception as e:
-        return Response({"error": str(e)}, status=400)
+        except Reserva.DoesNotExist:
+            print('MERDA')
+            return Response({"error": "Reserva não encontrada"}, status=404)
+        except Exception as e:
+            print('BOSTA', str(e))
+            return Response({"error": str(e)}, status=400)
 
 
 @api_view(['POST'])

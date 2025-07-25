@@ -14,12 +14,16 @@ class PagamentoMPService:
             
             imovel = Imovel.objects.get(id=imovel_id)
             proprietario = imovel.proprietario
+            id_proprietario = imovel.proprietario_id
             
             # VERIFICA SE O PROPRIETARIA ESTA AUTENTICADO TAMBEM NO MERCADOPAGO
-            if not hasattr(proprietario, 'mp_conta') or not proprietario.mp_conta.conectado_mp:
+            conta_mp = Conta_MP.objects.get(proprietario_id=id_proprietario)
+            print(conta_mp.conectado_mp)
+            if not conta_mp.conectado_mp:
                 raise Exception("Proprietário do imóvel não está conectado ao Mercado Pago.")
+                
             
-            mp_user_id_proprietario = proprietario.mp_conta.mp_user_id
+            mp_user_id_proprietario = conta_mp.conta_MP_id
             
             # ----- Ponto Chave para o Repasse -----
             # O Mercado Pago Connect associa o pagamento ao vendedor através da sua aplicação.
@@ -43,9 +47,9 @@ class PagamentoMPService:
                 "marketplace_fee": float(comissao_plataforma), # Sua comissão
                 "external_reference": external_reference, # Seu ID de referência da reserva
                 "back_urls": {
-                "success": "https://dcad-177-128-8-150.ngrok-free.app/payment/{reserva_id}/confirmacao",
-                "failure": f"https://dcad-177-128-8-150.ngrok-free.app/payment/{reserva_id}",
-                "pending": f"https://dcad-177-128-8-150.ngrok-free.app/payment/{reserva_id}"
+                "success": "https://9613301afd3f.ngrok-free.app/payment/{reserva_id}/confirmacao",
+                "failure": "https://9613301afd3f.ngrok-free.app/payment/{reserva_id}",
+                "pending": "https://9613301afd3f.ngrok-free.app/payment/{reserva_id}"
                 },
             }
 
@@ -61,4 +65,4 @@ class PagamentoMPService:
         except Imovel.DoesNotExist:
             raise Exception("Imóvel não encontrado.")
         except Exception as e:
-            raise Exception(f"Erro ao criar preferência de pagamento: {e}")
+            raise Exception(f"Erro ao criar preferência de pagamento2: {e}")
