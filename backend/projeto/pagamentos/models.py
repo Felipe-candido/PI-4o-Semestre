@@ -11,3 +11,40 @@ class Conta_MP(models.Model):
     conta_MP_id = models.CharField(max_length=255, blank= True, unique=True)
     conectado_mp = models.BooleanField(default=False)
     data_conexao = models.DateTimeField(auto_now_add=True)
+
+
+
+
+# Model para controle de pagamentos
+class PagamentoReserva(models.Model):
+    STATUS_CHOICES = [
+        ('PENDENTE', 'Pendente'),
+        ('PAGO', 'Pago'),
+        ('RETIDO', 'Retido (Aguardando Check-in)'),
+        ('LIBERADO', 'Liberado para Proprietário'),
+        ('ESTORNADO', 'Estornado'),
+        ('CANCELADO', 'Cancelado'),
+    ]
+    
+    reserva = models.OneToOneField(Reserva, on_delete=models.CASCADE, related_name='pagamento')
+    payment_id = models.CharField(max_length=255, blank=True, null=True)  # ID do Mercado Pago
+    preference_id = models.CharField(max_length=255, blank=True, null=True)  # ID da preferência MP
+    
+    # Valores
+    valor_total = models.DecimalField(max_digits=10, decimal_places=2)
+    taxa_plataforma = models.DecimalField(max_digits=10, decimal_places=2)
+    valor_proprietario = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Status e controle
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDENTE')
+    
+    # Split payment - será preenchido quando split for executado
+    split_payment_id = models.CharField(max_length=255, blank=True, null=True)
+    
+    # Datas de controle
+    data_pagamento = models.DateTimeField(blank=True, null=True)
+    data_checkin_confirmado = models.DateTimeField(blank=True, null=True)
+    data_split_executado = models.DateTimeField(blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

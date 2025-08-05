@@ -15,15 +15,11 @@ import { useRouter } from "next/navigation"
 
 const registerSchema = z
   .object({
-    nome: z.string().min(3, "O nome deve ter no mínimo 3 letras"),
-    sobrenome: z.string().min(3, "O sobrenome deve ter no mínimo 3 letras"),
+    nome: z.string(),
+    sobrenome: z.string(),
     email: z.string().email("Por favor digite um email válido"),
-    password: z.string().min(3, "A senha deve ter no mínimo 3 dígitos"),
-    confirmaSenha: z.string().min(3, "A senha deve ter no mínimo 3 dígitos"),
-  })
-  .refine((data) => data.password === data.confirmaSenha, {
-    message: "As senhas nao coincidem",
-    path: ["confirmaSenha"],
+    password: z.string().min(3, "A senha deve ter no mínimo 8 dígitos"),
+    confirmaSenha: z.string().min(3, "A senha deve ter no mínimo 8 dígitos"),
   })
 
 type RegisterFormValues = z.infer<typeof registerSchema>
@@ -58,22 +54,64 @@ export default function RegisterForm({ onLoginClick, onRegistrationSuccess }: Re
     setIsLoading(true)
 
     try {
-      const { confirmaSenha, ...registerData} = data
-
       //URL DO BACKEND DJANGO
       const response = await fetch("http://localhost:8000/api/registrando/", {
         method: "post",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(registerData)
+        body: JSON.stringify(data)
       })
 
       const result = await response.json()
 
       if (!response.ok){
-        throw new Error (result.detail || "Falha no registro")
-      }
+        // PRIMEIRA MUDANÇA: Verifica se o erro é específico do campo 'email'
+        if (result.email && Array.isArray(result.email) && result.email.length > 0) {
+            form.setError('email', {
+                type: 'manual',
+                message: result.email[0] // Pega a primeira mensagem do array
+            });
+        } 
+        // SEGUNDA MUDANÇA: Verifica se o erro é um 'detail' genérico
+        else if (result.detail) {
+            toast({
+                title: "Falha no registro",
+                description: result.detail, // Usa a mensagem do 'detail'
+                variant: "destructive"
+            });
+        } 
+        // TERCEIRA MUDANÇA: Erros de validação do formulário DRF (ex: "password": ["This field is required."])
+        // O `serializer.errors` do DRF pode retornar vários erros de campo.
+        else if (Object.keys(result).length > 0) {
+            // Itera sobre os erros retornados pelo backend e os define no formulário
+            for (const fieldName in result) {
+                if (form.getValues(fieldName as keyof RegisterFormValues) !== undefined) { // Verifica se o campo existe no nosso formulário
+                    form.setError(fieldName as keyof RegisterFormValues, {
+                        type: 'manual',
+                        message: Array.isArray(result[fieldName]) ? result[fieldName][0] : result[fieldName]
+                    });
+                } else {
+                    // Se for um campo que não mapeamos ou um erro inesperado, exibe um toast genérico
+                    toast({
+                        title: `Erro no campo: ${fieldName}`,
+                        description: Array.isArray(result[fieldName]) ? result[fieldName][0] : result[fieldName],
+                        variant: "destructive"
+                    });
+                }
+            }
+        }
+        else {
+            // Erro genérico se não for nenhum dos casos acima
+            toast({
+                title: "Falha no registro",
+                description: "Algo deu errado e não foi possível identificar o erro.",
+                variant: "destructive"
+            });
+        }
+        return; // Importante para parar a execução após lidar com o erro
+      } 
+        
 
       toast({
         title: "Registrado com sucesso",
@@ -86,13 +124,15 @@ export default function RegisterForm({ onLoginClick, onRegistrationSuccess }: Re
       onRegistrationSuccess?.();
       if (onLoginClick) onLoginClick();
       
-    } catch (error) {
-        console.error("Erro no registro:", error)
-        toast({
-          title: "Falha no registro",
-          description: error instanceof Error ? error.message : "Algo deu errado",
+    } 
+    
+    catch (error) {
+      console.error("Erro no registro:", error)
+      toast({
+        title: "Falha no registro",
+        description: error instanceof Error ? error.message : "Algo deu errado",
           variant: "destructive"
-        })
+      })
     } finally{
       setIsLoading(false)
     }
@@ -162,8 +202,8 @@ export default function RegisterForm({ onLoginClick, onRegistrationSuccess }: Re
                           placeholder="exemplo@mail.com"
                           {...field}
                         />
-                      </FormControl>
-                      <FormMessage className="text-xs text-red-500" />
+                      </FormControl>  
+                      <FormMessage className="text-xs text-red-500" />                                              
                     </FormItem>
                   )}
                 />
