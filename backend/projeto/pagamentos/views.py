@@ -2,7 +2,7 @@ import json
 from django.shortcuts import redirect
 import mercadopago
 import requests
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from django.conf import settings
 from reservas.models import Reserva
@@ -133,7 +133,9 @@ class callback_MP(APIView):
 
 
 @api_view(['POST'])
-def criar_preferencia(self, request):
+@authentication_classes([CookieJWTAuthentication]) 
+@permission_classes([IsAuthenticated]) 
+def criar_preferencia(request):
     reserva_id = None
     try:
         # BUSCAR RESERVA
@@ -141,20 +143,32 @@ def criar_preferencia(self, request):
         reserva = Reserva.objects.get(id=reserva_id)
         print("🔍 reserva_id recebido:", reserva_id)
 
-        if not hasattr(reserva.imovel.proprietario, 'mp_conta') or not reserva.imovel.proprietario.mp_conta.conectado_mp:
-                return Response(
-                    {"error": "Proprietário do imóvel não conectado ao Mercado Pago."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+        # if not hasattr(reserva.Imovel.proprietario, 'mp_conta') or not reserva.Imovel.proprietario.mp_conta.conectado_mp:
+        #         return Response(
+        #             {"error": "Proprietário do imóvel não conectado ao Mercado Pago."},
+        #             status=status.HTTP_400_BAD_REQUEST
+        #         )
         
-        valor_total = request.data.get('valor')
-        taxa_plataforma = valor_total * 0.7
+        
+        try:
+            valor_total = float(request.data.get('valor'))
+        except (ValueError, TypeError):
+            return Response(
+                {"error": "Valor total da reserva inválido."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        
+        taxa_plataforma = valor_total * 0.07 
+        
         descricao = request.data.get('descricao')
         referencia = f"reserva-{reserva.id}"
         payer_email = request.user.email
 
+        # Chama a função de serviço com os valores convertidos
         pagamento_info = PagamentoMPService.criar_preferencia_pagamento(
-            imovel_id=reserva.imovel.id,
+            reserva_id=reserva.id,
+            imovel_id=reserva.Imovel.id,
             valor_total=valor_total,
             comissao_plataforma=taxa_plataforma,
             external_reference=referencia,
@@ -170,33 +184,33 @@ def criar_preferencia(self, request):
 
 
         # Criar preferência no Mercado Pago
-        preference_data = {
-            "items": [
-                {
-                    "title": descricao,
-                    "quantity": 1,
-                    "currency_id": "BRL",
-                    "unit_price": float(valor_total)
-                }
-            ],
-            "back_urls": {
-                "success": "https://dcad-177-128-8-150.ngrok-free.app/payment/{reserva_id}/confirmacao",
-                "failure": f"https://dcad-177-128-8-150.ngrok-free.app/payment/{reserva_id}",
-                "pending": f"https://dcad-177-128-8-150.ngrok-free.app/payment/{reserva_id}"
-            },
-            "auto_return": "approved",
-            "external_reference": str(reserva_id)
-        }
+        # preference_data = {
+        #     "items": [
+        #         {
+        #             "title": descricao,
+        #             "quantity": 1,
+        #             "currency_id": "BRL",
+        #             "unit_price": float(valor_total)
+        #         }
+        #     ],
+        #     "back_urls": {
+        #         "success": "https://dcad-177-128-8-150.ngrok-free.app/payment/{reserva_id}/confirmacao",
+        #         "failure": f"https://dcad-177-128-8-150.ngrok-free.app/payment/{reserva_id}",
+        #         "pending": f"https://dcad-177-128-8-150.ngrok-free.app/payment/{reserva_id}"
+        #     },
+        #     "auto_return": "approved",
+        #     "external_reference": str(reserva_id)
+        # }
 
-        print("📦 Preference Data:", json.dumps(preference_data, indent=2))
+        # print("📦 Preference Data:", json.dumps(preference_data, indent=2))
 
-        preference_response = sdk.preference().create(preference_data)
-        print("🧾 Resposta do Mercado Pago:", preference_response)
-        preference = preference_response["response"]
+        # preference_response = sdk.preference().create(preference_data)
+        # print("🧾 Resposta do Mercado Pago:", preference_response)
+        # preference = preference_response["response"]
 
         return Response({
-            "id": preference["id"],
-            "init_point": preference["init_point"]
+            "id": pagamento_info["preference_id"],
+            "init_point": pagamento_info["sandbox_init_point"]
         })
 
     except Reserva.DoesNotExist:
