@@ -16,6 +16,7 @@ class Conta_MP(models.Model):
 
 
 
+
 # Model para controle de pagamentos
 class PagamentoReserva(models.Model):
     STATUS_CHOICES = [
@@ -53,7 +54,7 @@ class PagamentoReserva(models.Model):
     
     def __str__(self):
         return f"Pagamento Reserva #{self.reserva.id} - {self.status}"
-    
+
 
 class CheckIn(models.Model):
     STATUS_CHOICES = [
@@ -80,3 +81,4 @@ class CheckIn(models.Model):
     
     def __str__(self):
         return f"Check-in Reserva #{self.reserva.id} - {self.status}" 
+

@@ -12,6 +12,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 # SDK do Mercado Pago
 mp_sdk = mercadopago.SDK(settings.MERCADO_PAGO_ACCESS_TOKEN)
 
@@ -203,8 +204,8 @@ class PagamentoMPService:
             logger.error(f"Erro ao processar webhook: {str(e)}")
             raise
 
-
-
+            
+            
     @staticmethod
     def money_transfer(pagamento_id):
         """
@@ -311,5 +312,4 @@ class PagamentoMPService:
         except Exception as e:
             logger.error(f"Erro ao confirmar check-in: {str(e)}")
             raise
-
 

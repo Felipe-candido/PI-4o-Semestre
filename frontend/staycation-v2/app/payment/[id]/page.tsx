@@ -111,8 +111,10 @@ export default function PaymentPage() {
           headers: {
             'Content-Type': 'application/json',
           },
+
           body: JSON.stringify(preferencePayload)
         });
+
         
         if (!preferenceResponse.ok) {
           // Se a resposta for 401, redireciona para login

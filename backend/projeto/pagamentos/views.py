@@ -3,7 +3,7 @@ from venv import logger
 from django.shortcuts import redirect
 import mercadopago
 import requests
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from django.conf import settings
 from reservas.models import Reserva
@@ -134,6 +134,7 @@ class callback_MP(APIView):
         return redirect(settings.FRONTEND_URL)
 
 
+
 # class criar_preferencia(APIView):
 #     authentication_classes = [CookieJWTAuthentication]
 #     permission_classes = [IsAuthenticated] 
@@ -175,6 +176,7 @@ class callback_MP(APIView):
 #             success_url = f"{settings.FRONTEND_URL}/payment/{reserva_id}/confirmacao"
 #             print("✅ Success URL:", repr(success_url))
 
+
 #             return Response(pagamento_info, status=status.HTTP_200_OK)
 
 
@@ -188,6 +190,7 @@ class callback_MP(APIView):
 class criar_preferencia(APIView):
     authentication_classes = [CookieJWTAuthentication]
     permission_classes = [IsAuthenticated]
+
 
     def post(self, request):
         """
