@@ -191,7 +191,7 @@ SIMPLE_JWT = {
 AUTH_USER_MODEL = 'cadastro.usuario'
 
 
-
+BASE_URL = 'http://localhost:8000'
 
 # Carrega o .env da raiz
 load_dotenv(BASE_DIR / 'tokens.env')
