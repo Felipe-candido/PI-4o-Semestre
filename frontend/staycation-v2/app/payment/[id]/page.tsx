@@ -66,7 +66,8 @@ export default function PaymentPage() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(preferencePayload)
+          body: JSON.stringify(preferencePayload),
+          credentials: 'include'
         })
         
         // 👇 Verifica se a resposta deu erro HTTP
