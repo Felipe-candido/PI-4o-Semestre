@@ -8,6 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from .services import UserService, CookieJWTAuthentication
+ 
 
 user = get_user_model()
 
@@ -18,8 +19,13 @@ class Registro(APIView):
         dados = request.data.copy()
         serializer = RegistroSerializer(data=dados)
         if serializer.is_valid():
-            user = UserService.registrar_usuario(serializer.validated_data) 
-            return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+            try:    
+                print("toba")
+                user = serializer.save() 
+                return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+                     
+            except Exception as e:
+                return Response({'detail': 'Ocorreu um erro inesperado'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         print("Erros de validação:", serializer.errors)  
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

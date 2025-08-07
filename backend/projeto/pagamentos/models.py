@@ -14,6 +14,10 @@ class Conta_MP(models.Model):
     data_conexao = models.DateTimeField(auto_now_add=True)
 
 
+
+
+
+# Model para controle de pagamentos
 class PagamentoReserva(models.Model):
     STATUS_CHOICES = [
         ('PENDENTE', 'Pendente'),
@@ -41,7 +45,7 @@ class PagamentoReserva(models.Model):
     data_split_executado = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     def save(self, *args, **kwargs):
         if not self.valor_proprietario:
             # Calcula automaticamente valor do proprietário (valor total - taxa plataforma)
@@ -76,4 +80,5 @@ class CheckIn(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f"Check-in Reserva #{self.reserva.id} - {self.status}"
+        return f"Check-in Reserva #{self.reserva.id} - {self.status}" 
+

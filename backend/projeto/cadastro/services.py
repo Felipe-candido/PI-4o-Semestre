@@ -1,4 +1,4 @@
-from django.core.exceptions import ValidationError
+from rest_framework.validators import ValidationError
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -12,12 +12,10 @@ class UserService:
         return UserRepository.get_endereco(usuario)
     
 
-    # VERIFICA SE USUARIO JA EXISTE PELO EMAIL E LOGO EM SEGUIDA SALVA O USUARIO NO BANCO DE DADOS
+    # SALVA O USUARIO NO BANCO DE DADOS
     @staticmethod
     def registrar_usuario(usuario_data):
-        if UserRepository.get_by_email(usuario_data['email']):
-            raise ValidationError("Email ja cadastrado")
-        
+
         validate_password(usuario_data['password'])
         return UserRepository.save_user(usuario_data)
 

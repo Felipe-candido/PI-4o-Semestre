@@ -48,6 +48,7 @@ class usuario(AbstractBaseUser, PermissionsMixin):
     nome = models.CharField(max_length=255)
     telefone = models.CharField(null=True, max_length=20, blank=True)
     sobrenome = models.CharField(max_length=255, blank=True, null=True)
+    confirmaSenha = models.CharField(max_length=255, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=now)

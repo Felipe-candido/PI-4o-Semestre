@@ -191,7 +191,7 @@ SIMPLE_JWT = {
 AUTH_USER_MODEL = 'cadastro.usuario'
 
 
-
+BASE_URL = 'http://localhost:8000'
 
 # Carrega o .env da raiz
 load_dotenv(BASE_DIR / 'tokens.env')
@@ -209,3 +209,5 @@ MERCADO_PAGO_ACCESS_TOKEN = os.getenv("MERCADO_PAGO_ACCESS_TOKEN")
 MP_CLIENT_ID = os.getenv("MP_CLIENT_ID")
 MP_CLIENT_SECRET = os.getenv("MP_CLIENT_SECRET")
 FRONTEND_URL = 'http://localhost:3000' 
+
+MP_SANDBOX = True
