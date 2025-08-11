@@ -10,7 +10,7 @@ from reservas.models import Reserva
 from imoveis.models import Imovel
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Conta_MP
+from .models import Conta_MP, PagamentoReserva
 from rest_framework import status
 from .services import PagamentoMPService
 from django.contrib.auth import get_user_model
@@ -47,7 +47,7 @@ class autenticar_mercadopago(APIView):
 
             request.session.save()
             
-            redirect_uri = "https://dc6f0513eef0.ngrok-free.app/api/pagamentos/mercadopago/callback/"
+            redirect_uri = "https://486bde5ab8ff.ngrok-free.app/api/pagamentos/mercadopago/callback/"
             auth_url = (
                 f"https://auth.mercadopago.com/authorization"
                 f"?client_id={settings.MP_CLIENT_ID}"
@@ -97,7 +97,7 @@ class callback_MP(APIView):
             "client_id": settings.MP_CLIENT_ID,
             "client_secret": settings.MP_CLIENT_SECRET,
             "code": code,
-            "redirect_uri": "https://dc6f0513eef0.ngrok-free.app/api/pagamentos/mercadopago/callback/",
+            "redirect_uri": "https://486bde5ab8ff.ngrok-free.app/api/pagamentos/mercadopago/callback/",
             "grant_type": "authorization_code"
         }
 
@@ -267,20 +267,12 @@ class criar_preferencia(APIView):
 def webhook(request):
     try:
         payment_data = request.data
-        
-        if payment_data["type"] == "payment":
-            payment_id = payment_data["data"]["id"]
-            payment = sdk.payment().get(payment_id)
-            
-            if payment["status"] == 200:
-                payment_info = payment["response"]
-                reserva_id = payment_info["external_reference"]
-                
-                if payment_info["status"] == "approved":
-                    reserva = Reserva.objects.get(id=reserva_id)
-                    reserva.status = "PAGO"
-                    reserva.save()
-        
+        payment_id = payment_data["data"]["id"]
+
+        pagamento = PagamentoMPService.processar_webhook(payment_id)
+
+        print(pagamento)
+  
         return Response({"status": "OK"})
     
     except Exception as e:
