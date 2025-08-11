@@ -37,7 +37,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'dc6f0513eef0.ngrok-free.app', 
+    'a97152e5315d.ngrok-free.app', 
 ]
 
 SESSION_COOKIE_DOMAIN = '.ngrok-free.app'

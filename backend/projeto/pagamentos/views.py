@@ -47,7 +47,7 @@ class autenticar_mercadopago(APIView):
 
             request.session.save()
             
-            redirect_uri = "https://486bde5ab8ff.ngrok-free.app/api/pagamentos/mercadopago/callback/"
+            redirect_uri = "https://a97152e5315d.ngrok-free.app/api/pagamentos/mercadopago/callback/"
             auth_url = (
                 f"https://auth.mercadopago.com/authorization"
                 f"?client_id={settings.MP_CLIENT_ID}"
@@ -97,7 +97,7 @@ class callback_MP(APIView):
             "client_id": settings.MP_CLIENT_ID,
             "client_secret": settings.MP_CLIENT_SECRET,
             "code": code,
-            "redirect_uri": "https://486bde5ab8ff.ngrok-free.app/api/pagamentos/mercadopago/callback/",
+            "redirect_uri": "https://a97152e5315d.ngrok-free.app/api/pagamentos/mercadopago/callback/",
             "grant_type": "authorization_code"
         }
 
