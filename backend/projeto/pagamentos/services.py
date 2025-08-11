@@ -141,7 +141,7 @@ class PagamentoMPService:
 
 
     @staticmethod
-    def processar_webhook(payment_id, external_reference):
+    def processar_webhook(payment_id):
         """
         Processa webhook do Mercado Pago quando pagamento é aprovado
         """
@@ -224,40 +224,35 @@ class PagamentoMPService:
                 raise Exception("ID do pagamento original não encontrado.")
 
             # --- AQUI VOCÊ FAZ A CHAMADA À API DE LIBERAÇÃO DE FUNDOS ---
-            # Este é o trecho que você precisa confirmar com o Mercado Pago.
-            # É uma API específica de "releases" para marketplaces.
             
-            # Exemplo teórico de como a requisição poderia ser:
-            api_url = f"https://api.mercadopago.com/v1/payments/{payment_id}/releases"
-            
-            release_data = {
+            transfer_data = {
                 "amount": float(pagamento.valor_proprietario),
-                "external_reference": f"liberacao_{pagamento.id}",
-                "recipient_id": conta_mp_prorpietario,
+                "receiver_id": conta_mp_prorpietario,
             }
             
-            headers = {
-                'Authorization': f'Bearer {settings.MERCADO_PAGO_ACCESS_TOKEN}',
-                'Content-Type': 'application/json'
-            }
+            transfer_response = mp_sdk.payment().transfers(payment_id, transfer_data)
             
-            response = requests.post(api_url, json=release_data, headers=headers)
-            result = response.json()
-            
-            if response.status_code == 200:
-                logger.info(f"Fundos liberados para o proprietário com sucesso. Pagamento ID: {pagamento_id}")
-                pagamento.status = 'LIBERADO'
+            if transfer_response.get('status') == 201:
+                print(f"Dinheiro liberado com sucesso. Pagamento ID: {payment_id}")
+                pagamento.status = "LIBERADO"
                 pagamento.save()
-                print(response.json())
+
+                result = transfer_response.get('response')
+                print(result)
+
                 return {
-                    'split_id': result.get('id'),
+                    'id': result.get('id'),
                     'status': result.get('status')
                 }
             
             
             else:
-                logger.error(f"Erro ao liberar fundos: {response.text}")
-                raise Exception(f"Erro ao liberar fundos: {response.text}")
+                error_details = transfer_response.get('response', {})
+
+                logger.error(f"Erro ao liberar fundos: {error_details}")
+
+                print(error_details)
+                raise Exception(f"Erro ao liberar fundos: {error_details}")
                 
         except PagamentoReserva.DoesNotExist:
             logger.error(f"Pagamento de reserva não encontrado: {pagamento_id}")
