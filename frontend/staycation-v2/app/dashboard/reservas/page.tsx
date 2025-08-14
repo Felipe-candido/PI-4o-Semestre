@@ -3,6 +3,8 @@
 import MainLayout from "@/components/layout/MainLayout"
 import { DollarSign, Download, Calendar, ArrowUpRight, TrendingUp, Star, Info } from "lucide-react"
 import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useRouter } from 'next/navigation'
 
 export default function MinhasReservas() {
   const userRole = "owner"
@@ -12,6 +14,8 @@ export default function MinhasReservas() {
   const [reservas, setReservas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+
+  const router = useRouter()
 
   useEffect(() => {
     async function fetchReservas() {
@@ -84,30 +88,42 @@ export default function MinhasReservas() {
                   reservas.map((reserva, index) => (
                     <tr key={index}>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{reserva.id}</div>
+                        <Link href={`/reserva/${reserva.id}`} key={reserva.id} className="group">
+                          <div className="text-sm font-medium text-gray-900">{reserva.id}</div>
+                        </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{reserva.Imovel?.titulo || '-'}</div>
+                        <Link href={`/reserva/${reserva.id}`} key={reserva.id} className="group">
+                          <div className="text-sm text-gray-900">{reserva.Imovel?.titulo || '-'}</div>
+                        </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{reserva.data_inicio ? new Date(reserva.data_inicio).toLocaleDateString() : '-'}</div>
+                        <Link href={`/reserva/${reserva.id}`} key={reserva.id} className="group">
+                          <div className="text-sm text-gray-900">{reserva.data_inicio ? new Date(reserva.data_inicio).toLocaleDateString() : '-'}</div>
+                        </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{reserva.data_fim ? new Date(reserva.data_fim).toLocaleDateString() : '-'}</div>
+                        <Link href={`/reserva/${reserva.id}`} key={reserva.id} className="group">
+                          <div className="text-sm text-gray-900">{reserva.data_fim ? new Date(reserva.data_fim).toLocaleDateString() : '-'}</div>
+                        </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">R$ {reserva.valor_total}</div>
+                        <Link href={`/reserva/${reserva.id}`} key={reserva.id} className="group">
+                          <div className="text-sm font-medium text-gray-900">R$ {reserva.valor_total}</div>
+                        </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          reserva.status === "CONFIRMADA"
-                            ? "bg-green-100 text-green-800"
-                            : reserva.status === "PENDENTE"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-red-100 text-red-800"
-                        }`}>
-                          {reserva.status}
-                        </span>
+                        <Link href={`/reserva/${reserva.id}`} key={reserva.id} className="group">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            reserva.status === "CONFIRMADA"
+                              ? "bg-green-100 text-green-800"
+                              : reserva.status === "PENDENTE"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-red-100 text-red-800"
+                          }`}>
+                            {reserva.status}
+                          </span>
+                        </Link>
                       </td>
                     </tr>
                   ))

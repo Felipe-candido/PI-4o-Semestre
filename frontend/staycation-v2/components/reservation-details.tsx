@@ -8,51 +8,50 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Calendar, Users, MapPin, CheckCircle, XCircle, ExternalLink } from "lucide-react"
 import { CancelReservationModal } from "./cancel-reservation-modal"
+import { useParams, useRouter } from 'next/navigation'
 
-interface Reservation {
-  id: string
-  property: {
-    name: string
-    address: string
-    image: string
+
+interface Imovel {
+  id: number
+  titulo: string
+  descricao: string
+  regras?: string
+  proprietario_nome?: string
+  proprietario_telefone?: string
+  endereco: {
+    cidade: string
+    estado: string
+    numero: number
+    bairro: string
   }
+  logo?: string
+  imagens: { imagem: string; legenda: string }[]
+}
+
+
+interface Reserva {
+  id: string
   dates: {
     checkIn: string
     checkOut: string
   }
-  guests: number
-  pricing: {
-    nightlyRate: number
-    nights: number
-    subtotal: number
-    cleaningFee: number
-    serviceFee: number
-    total: number
-  }
-  amenities: Array<{
-    name: string
-    icon: string
-  }>
-  host: {
-    name: string
-    avatar: string
-  }
-  location: {
-    lat: number
-    lng: number
-  }
+  hospedes: number
+  valor: number
   canCheckIn: boolean
 }
 
 interface ReservationDetailsProps {
-  reservation: Reservation
+  Reserva: Reserva
 }
 
-export function ReservationDetails({ reservation }: ReservationDetailsProps) {
+export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
   const [showCancelModal, setShowCancelModal] = useState(false)
+  const [imovel, setImovel] = useState<Imovel | null>(null)
+  const [reserva, setReserva] = useState<Imovel | null>(null)
+  const { id } = useParams()
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString("pt-BR", {
       weekday: "long",
       year: "numeric",
       month: "long",
@@ -62,12 +61,12 @@ export function ReservationDetails({ reservation }: ReservationDetailsProps) {
 
   const handleCheckIn = () => {
     // Handle check-in logic
-    console.log("Check-in confirmed for reservation:", reservation.id)
+    console.log("Check-in confirmed for reservation:", Reserva.id)
   }
 
   const handleCancel = () => {
     // Handle cancellation logic
-    console.log("Reservation cancelled:", reservation.id)
+    console.log("Reservation cancelled:", Reserva.id)
     setShowCancelModal(false)
   }
 
@@ -139,21 +138,6 @@ export function ReservationDetails({ reservation }: ReservationDetailsProps) {
               <CardTitle>Additional Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Amenities */}
-              <div>
-                <h4 className="font-medium mb-3">Amenities</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {reservation.amenities.map((amenity, index) => (
-                    <Badge key={index} variant="secondary" className="justify-start gap-2 py-2">
-                      <span>{amenity.icon}</span>
-                      {amenity.name}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <Separator />
-
               {/* Host Information */}
               <div>
                 <h4 className="font-medium mb-3">Your Host</h4>
