@@ -35,6 +35,8 @@ interface Imovel {
   comodidades: Comodidade[]
 }
 
+
+
 interface Comentario {
   id: number
   usuario_nome: string

@@ -105,7 +105,7 @@ export default function Navbar() {
           path: "/dashboard/bookings",
           icon: <Calendar size={20} />,
         },
-        { name: "Minhas reservas", path: "/dashboard/earnings", icon: <DollarSign size={20} /> },
+        { name: "Minhas reservas", path: "/dashboard/reservas", icon: <DollarSign size={20} /> },
         { name: "Perfil", path: "/profile/owner", icon: <User size={20} /> },
       ]
     }
