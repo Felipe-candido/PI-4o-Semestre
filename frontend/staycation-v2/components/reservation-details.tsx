@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { Calendar, Users, MapPin, CheckCircle, XCircle, ExternalLink } from "lucide-react"
 import { CancelReservationModal } from "./cancel-reservation-modal"
 import { useParams, useRouter } from 'next/navigation'
-
+import { apiFetch } from "@/lib/api"
 
 interface Imovel {
   id: number
@@ -18,6 +18,7 @@ interface Imovel {
   regras?: string
   proprietario_nome?: string
   proprietario_telefone?: string
+  proprietario_foto?: string
   endereco: {
     cidade: string
     estado: string
@@ -30,14 +31,12 @@ interface Imovel {
 
 
 interface Reserva {
-  id: string
-  dates: {
-    checkIn: string
-    checkOut: string
-  }
-  hospedes: number
+  id: number
+  checkIn: string
+  checkOut: string
+  numero_hospedes: number
   valor: number
-  canCheckIn: boolean
+  status: string
 }
 
 interface ReservationDetailsProps {
@@ -47,7 +46,7 @@ interface ReservationDetailsProps {
 export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [imovel, setImovel] = useState<Imovel | null>(null)
-  const [reserva, setReserva] = useState<Imovel | null>(null)
+  const [reserva, setReserva] = useState<Reserva | null>(null)
   const { id } = useParams()
 
   const formatDate = (dateString: string) => {
@@ -58,6 +57,31 @@ export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
       day: "numeric",
     })
   }
+
+  useEffect(() => {
+
+    async function fetchImovel() {
+      try{
+        const res = await apiFetch(`/api/imoveis/propriedade/?id=${id}`)
+
+        const data_imovel = await res.json()
+
+        setImovel(data_imovel)
+        console.log(data_imovel)
+      }
+      catch(error){
+        console.log('erro ao buscar imovel', error)
+      }
+    }
+
+    
+
+    if(id){
+      fetchImovel()
+    }
+  })
+
+
 
   const handleCheckIn = () => {
     // Handle check-in logic
@@ -92,16 +116,16 @@ export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
             <CardContent className="space-y-4">
               <div className="aspect-video relative overflow-hidden rounded-lg">
                 <img
-                  src={reservation.property.image || "/placeholder.svg"}
-                  alt={reservation.property.name}
+                  src={imovel?.logo || "/placeholder.svg"}
+                  alt={imovel?.titulo}
                   className="w-full h-full object-cover"
                 />
               </div>
               <div>
-                <h3 className="text-xl font-semibold mb-1">{reservation.property.name}</h3>
+                <h3 className="text-xl font-semibold mb-1">{imovel?.titulo}</h3>
                 <p className="text-muted-foreground flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
-                  {reservation.property.address}
+                  {imovel?.endereco.cidade}
                 </p>
               </div>
 
@@ -110,14 +134,14 @@ export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
                   <Calendar className="h-5 w-5 text-primary" />
                   <div>
                     <p className="text-sm font-medium">Check-in</p>
-                    <p className="text-sm text-muted-foreground">{formatDate(reservation.dates.checkIn)}</p>
+                    <p className="text-sm text-muted-foreground">{formatDate(reserva?.checkIn ?? "")}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                   <Calendar className="h-5 w-5 text-primary" />
                   <div>
                     <p className="text-sm font-medium">Check-out</p>
-                    <p className="text-sm text-muted-foreground">{formatDate(reservation.dates.checkOut)}</p>
+                    <p className="text-sm text-muted-foreground">{formatDate(reserva?.checkOut ?? "")}</p>
                   </div>
                 </div>
               </div>
@@ -126,7 +150,7 @@ export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
                 <Users className="h-5 w-5 text-primary" />
                 <div>
                   <p className="text-sm font-medium">Guests</p>
-                  <p className="text-sm text-muted-foreground">{reservation.guests} guests</p>
+                  <p className="text-sm text-muted-foreground">{reserva?.numero_hospedes} Hospedes</p>
                 </div>
               </div>
             </CardContent>
@@ -143,17 +167,15 @@ export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
                 <h4 className="font-medium mb-3">Your Host</h4>
                 <div className="flex items-center gap-3">
                   <Avatar>
-                    <AvatarImage src={reservation.host.avatar || "/placeholder.svg"} alt={reservation.host.name} />
+                    <AvatarImage src={imovel?.proprietario_foto || "/placeholder.svg"} alt={imovel?.proprietario_nome
+                    } />
                     <AvatarFallback>
-                      {reservation.host.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
+                      {imovel?.proprietario_nome}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium">{reservation.host.name}</p>
-                    <p className="text-sm text-muted-foreground">Property Host</p>
+                    <p className="font-medium">{imovel?.proprietario_nome}</p>
+                    <p className="text-sm text-muted-foreground">Anfitriao da propriedade</p>
                   </div>
                 </div>
               </div>
@@ -178,9 +200,9 @@ export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
               <Separator />
 
               {/* Reservation ID */}
-              <div>
-                <h4 className="font-medium mb-2">Reservation ID</h4>
-                <code className="bg-muted px-2 py-1 rounded text-sm">{reservation.id}</code>
+              <div> 
+                <h4 className="font-medium mb-2">ID da reserva</h4>
+                <code className="bg-muted px-2 py-1 rounded text-sm">{reserva?.id}</code>
               </div>
             </CardContent>
           </Card>
@@ -196,22 +218,22 @@ export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span>
-                    ${reservation.pricing.nightlyRate} × {reservation.pricing.nights} nights
+                    ${reserva?.valor} × {reserva?.valor} nights
                   </span>
-                  <span>${reservation.pricing.subtotal}</span>
+                  <span>${reserva?.valor}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Cleaning fee</span>
-                  <span>${reservation.pricing.cleaningFee}</span>
+                  <span>${reserva?.valor}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Service fee</span>
-                  <span>${reservation.pricing.serviceFee}</span>
+                  <span>${reserva?.valor}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>${reservation.pricing.total}</span>
+                  <span>${reserva?.valor}</span>
                 </div>
               </div>
             </CardContent>
@@ -222,9 +244,9 @@ export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
               <CardTitle>Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button onClick={handleCheckIn} disabled={!reservation.canCheckIn} className="w-full gap-2" size="lg">
+              <Button onClick={handleCheckIn} disabled={reserva?.status == "CONFIRMADA"} className="w-full gap-2" size="lg">
                 <CheckCircle className="h-4 w-4" />
-                {reservation.canCheckIn ? "Confirm Check-in" : "Check-in Not Available"}
+                {reserva?.checkIn ? "Confirm Check-in" : "Checkin confirmado"}
               </Button>
 
               <Button variant="destructive" onClick={() => setShowCancelModal(true)} className="w-full gap-2" size="lg">
@@ -240,7 +262,7 @@ export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
         open={showCancelModal}
         onOpenChange={setShowCancelModal}
         onConfirm={handleCancel}
-        reservationId={reservation.id}
+        reservationId={reserva?.id}
       />
     </div>
   )
