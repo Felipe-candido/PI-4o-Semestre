@@ -13,6 +13,8 @@ try {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  trailingSlash: true,
+
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -26,6 +28,15 @@ const nextConfig = {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
+  },
+
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://127.0.0.1:8000/api/:path*', // Faz o proxy para o Django
+      },
+    ]
   },
 }
 

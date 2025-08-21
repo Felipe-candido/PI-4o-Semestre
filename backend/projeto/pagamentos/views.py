@@ -16,6 +16,8 @@ from .services import PagamentoMPService
 from django.contrib.auth import get_user_model
 import secrets # Para gerar um token seguro para o 'state'
 from cadastro.services import CookieJWTAuthentication
+from django.views.decorators.csrf import csrf_exempt
+
 
 
 sdk = mercadopago.SDK(settings.MERCADO_PAGO_ACCESS_TOKEN)
@@ -249,6 +251,7 @@ class criar_preferencia(APIView):
             
             logger.info(f"✅ Preferência criada: {resultado['preference_id']}")
             
+            
             return Response({
                 "preference_id": resultado['preference_id'],
                 "init_point": resultado['init_point'],
@@ -264,16 +267,73 @@ class criar_preferencia(APIView):
 
 
 @api_view(['POST'])
+@csrf_exempt # Garante que o Django não vai bloquear o webhook por falta de token CSRF
 def webhook(request):
     try:
-        payment_data = request.data
-        payment_id = payment_data["data"]["id"]
+        notification = request.data
+        logger.info(f"Webhook recebido: {notification}")
 
-        pagamento = PagamentoMPService.processar_webhook(payment_id)
+        # O Mercado Pago pode enviar dois tipos de notificação.
+        # Vamos checar qual é.
+        
+        notification_type = notification.get("type") or notification.get("topic")
 
-        print(pagamento)
-  
+        if notification_type == "payment":
+            payment_id = notification.get("data", {}).get("id")
+            if payment_id:
+                logger.info(f"Processando notificação 'payment' com ID: {payment_id}")
+                # Chama sua função de serviço que já sabe como processar um pagamento
+                PagamentoMPService.processar_pagamento(str(payment_id))
+
+        elif notification_type == "merchant_order":
+            # Pega o ID da merchant_order, que geralmente vem nos query_params
+            # mas vamos checar o corpo também por segurança.
+            merchant_order_id = request.query_params.get("id") or notification.get("resource", "").split('/')[-1]
+            if not merchant_order_id:
+                logger.error("Webhook 'merchant_order' sem ID.")
+                return Response({"status": "Erro"}, status=400)
+
+            logger.info(f"Processando 'merchant_order' ID: {merchant_order_id}")
+            # Aqui você precisaria buscar a ordem e depois o pagamento, como na versão anterior.
+            # Vamos focar no 'payment' que é o que o MP está enviando agora.
+            order_response = sdk.merchant_order().get(merchant_order_id)
+            if order_response["status"] != 200:
+                logger.error(f"Erro ao buscar merchant_order {merchant_order_id} na API.")
+                return Response({"status": "Erro"}, status=500)
+            
+            order_data = order_response["response"]
+            
+            # 3. Pega os pagamentos de dentro da ordem
+            pagamentos_da_ordem = order_data.get("payments", [])
+            
+            for pagamento_info in pagamentos_da_ordem:
+                # Verificamos se o pagamento está aprovado ANTES de processar
+                if pagamento_info.get("status") == "approved":
+                    payment_id = pagamento_info.get("id")
+                    logger.info(f"Pagamento {payment_id} encontrado na ordem e APROVADO. Processando...")
+                    
+                    # 4. Chama a nossa função de serviço com o ID do pagamento
+                    PagamentoMPService.processar_pagamento(payment_id)
+
+        else:
+            logger.warning(f"Webhook com tipo desconhecido ou ausente: '{notification_type}'.")
+
+        # Sempre responda 200 OK para o Mercado Pago saber que você recebeu.
         return Response({"status": "OK"})
     
     except Exception as e:
-        return Response({"error": str(e)}, status=400) 
+        logger.error(f"Erro CRÍTICO no processamento do webhook: {e}")
+        # Retornar 500 faz o Mercado Pago tentar reenviar a notificação mais tarde.
+        return Response({"error": str(e)}, status=500)
+
+
+
+
+
+from django.http import JsonResponse
+
+# Adicione esta função de teste
+def teste_ngrok(request):
+    # Se a requisição chegar aqui, este print aparecerá no terminal do Django
+    print("✅✅✅ A REQUISIÇÃO DE TESTE CHEGOU NO DJANGO! ✅✅✅")
+    return JsonResponse({"status": "Olá do Django, a conexão funcionou!"})

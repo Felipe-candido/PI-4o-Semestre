@@ -10,6 +10,7 @@ from reservas.models import Reserva
 from django.db import transaction
 import logging
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -111,6 +112,8 @@ class PagamentoMPService:
             }
             
             logger.info(f"Criando preferência no MP com dados: {preference_data}")
+            print(f"Criando preferência no MP com dados: {preference_data}")
+            
             preference_response = mp_sdk.preference().create(preference_data)
             
             if preference_response.get("status") != 201:
@@ -146,6 +149,7 @@ class PagamentoMPService:
         Processa webhook do Mercado Pago quando pagamento é aprovado
         """
         try:
+            print("teste 1 ###########")
             # Buscar dados do pagamento no MP
             payment_response = mp_sdk.payment().get(payment_id)
             
@@ -160,46 +164,65 @@ class PagamentoMPService:
                 return
             
             reserva_id = external_reference.replace("reserva_", "")
+            print("teste 2 ###########")
             
-            # Buscar pagamento na base
-            pagamento = PagamentoReserva.objects.select_related('reserva').get(
-                reserva_id=reserva_id,
-                preference_id=payment_data.get("preference_id")
-            )
-            
-            if payment_data["status"] == "approved":
-                # Pagamento aprovado - dinheiro fica retido até check-in
-                pagamento.payment_id = payment_id
-                pagamento.status = 'RETIDO'
-                pagamento.data_pagamento = timezone.now()
-                pagamento.save()
+            with transaction.atomic():
+                try:
+                    # Buscar pagamento na base
+                    pagamento = PagamentoReserva.objects.select_for_update().get(reserva_id=reserva_id)
                 
-                # Atualizar status da reserva
-                pagamento.reserva.status = 'CONFIRMADA'
-                pagamento.reserva.save()
+                except PagamentoReserva.DoesNotExist:
+                    logger.error(f"Webhook - Pagamento para reserva {reserva_id} não encontrado no banco.")
+                    return
                 
-                # Criar registro de check-in
-                CheckIn.objects.get_or_create(
-                    reserva=pagamento.reserva,
-                    defaults={
-                        'data_prevista': pagamento.reserva.data_inicio,
-                        'status': 'PENDENTE'
-                    }
-                )
+                # VERIFICA SE JA ESTA PAGO
+                if pagamento.status != 'PENDENTE':
+                    logger.info(f"Webhook - Pagamento para reserva {reserva_id} já processado. Status atual: {pagamento.status}. Ignorando.")
+                    return pagamento
                 
-                logger.info(f"Pagamento aprovado e retido para reserva {reserva_id}")
-                
-            elif payment_data["status"] == "cancelled":
-                pagamento.status = 'CANCELADO'
-                pagamento.save()
-                
-                pagamento.reserva.status = 'CANCELADA'
-                pagamento.reserva.save()
-                
+                payment_status_mp = payment_data.get("status")
+                reserva = pagamento.reserva # Acessa a reserva através do pagamento
+
+                if payment_status_mp == "approved":
+                    logger.info(f"Webhook - Pagamento para reserva {reserva_id} APROVADO.")
+
+                    # Pagamento aprovado - dinheiro fica retido até check-in
+                    pagamento.payment_id = payment_id
+                    pagamento.status = 'RETIDO'
+                    pagamento.data_pagamento = timezone.now()
+                    pagamento.save()
+                    
+                    # Atualizar status da reserva
+                    reserva.status = "CONFIRMADA"
+                    reserva.save()
+                    
+                    # Criar registro de check-in
+                    CheckIn.objects.get_or_create(
+                        reserva=pagamento.reserva,
+                        defaults={
+                            'data_prevista': pagamento.reserva.data_inicio,
+                            'status': 'PENDENTE'
+                        }
+                    )
+                    
+                    logger.info(f"Pagamento aprovado e retido para reserva {reserva_id}")
+                    
+                elif payment_status_mp in ["cancelled", "rejected", "refunded"]:
+                    logger.info(f"Webhook - Pagamento para reserva {reserva_id} foi {payment_status_mp}.")
+                    
+                    pagamento.status = 'CANCELADO'
+                    reserva.status = 'CANCELADA'
+                    
+                    pagamento.save()
+                    reserva.save()
+
+                else:
+                # Para outros status (como 'pending', 'in_process'), não fazemos nada
+                # e apenas registramos o log.
+                    logger.info(f"Webhook - Recebido status '{payment_status_mp}' para reserva {reserva_id}. Nenhuma ação necessária.")
+                    
             return pagamento
             
-        except PagamentoReserva.DoesNotExist:
-            logger.error(f"Pagamento não encontrado para payment_id: {payment_id}")
         except Exception as e:
             logger.error(f"Erro ao processar webhook: {str(e)}")
             raise
