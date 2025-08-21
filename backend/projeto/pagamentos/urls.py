@@ -7,4 +7,5 @@ urlpatterns = [
     path('webhook/', views.webhook, name='webhook'),
     path('mercadopago/connect/', autenticar_mercadopago.as_view(), name='mp_connect'),
     path('mercadopago/callback/', callback_MP.as_view(), name='mp_callback'),
+    path('teste/', views.teste_ngrok, name='teste_ngrok'),
 ] 

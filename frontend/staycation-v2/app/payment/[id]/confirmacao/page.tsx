@@ -9,22 +9,10 @@ export default function ConfirmacaoPagamento() {
   const reservaId = params.id
 
   useEffect(() => {
-    // Chama o backend para confirmar a reserva
-    async function confirmarReserva() {
-      try {
-        await fetch(`http://localhost:8000/api/reservas/confirma/${reservaId}/confirmar/`, {
-          method: "POST",
-          credentials: "include",
-        })
-      } catch (e) {
-        // Se quiser, trate o erro aqui
-      }
-    }
-    confirmarReserva()
 
     // Aguarda 2 segundos e redireciona para as reservas
     const timer = setTimeout(() => {
-      router.push("/dashboard/earnings")
+      router.push("/dashboard/reservas")
     }, 2000)
     return () => clearTimeout(timer)
   }, [router, reservaId])
