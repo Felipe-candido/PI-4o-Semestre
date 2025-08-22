@@ -333,6 +333,7 @@ def webhook(request):
 from django.http import JsonResponse
 
 # Adicione esta função de teste
+@csrf_exempt
 def teste_ngrok(request):
     # Se a requisição chegar aqui, este print aparecerá no terminal do Django
     print("✅✅✅ A REQUISIÇÃO DE TESTE CHEGOU NO DJANGO! ✅✅✅")

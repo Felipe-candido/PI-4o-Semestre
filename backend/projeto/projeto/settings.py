@@ -37,7 +37,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'felipe-mercadopago.ultrahook.com', 
+    '879f6a4f4cbf.ngrok-free.app', 
 ]
 
 # SESSION_COOKIE_DOMAIN = '.ngrok-free.app'
@@ -175,14 +175,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://felipe-mercadopago.ultrahook.com", 
+    "https://879f6a4f4cbf.ngrok-free.app", 
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
 # Diga ao Django para confiar em requisições POST vindas deste domínio
 CSRF_TRUSTED_ORIGINS = [
-    'https://felipe-mercadopago.ultrahook.com',
+    'https://879f6a4f4cbf.ngrok-free.app',
 ]
 
 SIMPLE_JWT = {
@@ -198,7 +198,7 @@ SIMPLE_JWT = {
 AUTH_USER_MODEL = 'cadastro.usuario'
 
 
-BASE_URL = 'https://felipe-mercadopago.ultrahook.com'
+BASE_URL = 'https://879f6a4f4cbf.ngrok-free.app'
 
 # Carrega o .env da raiz
 load_dotenv(BASE_DIR / 'tokens.env')
@@ -215,6 +215,8 @@ MERCADO_PAGO_PUBLIC_KEY = os.getenv("MERCADO_PAGO_PUBLIC_KEY")
 MERCADO_PAGO_ACCESS_TOKEN = os.getenv("MERCADO_PAGO_ACCESS_TOKEN")
 MP_CLIENT_ID = os.getenv("MP_CLIENT_ID")
 MP_CLIENT_SECRET = os.getenv("MP_CLIENT_SECRET")
-FRONTEND_URL = 'https://felipe-mercadopago.ultrahook.com' 
+FRONTEND_URL = 'https://879f6a4f4cbf.ngrok-free.app' 
 
 MP_SANDBOX = True
+
+APPEND_SLASH = False
