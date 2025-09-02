@@ -94,10 +94,6 @@ class PagamentoMPService:
                         "unit_price": float(valores['valor_total'])
                     }
                 ],
-                "payer": {
-                    "email": reserva.usuario.email,
-                    "name": reserva.usuario.nome
-                },
                 "external_reference": f"reserva_{reserva.id}",
                 "notification_url": f"{settings.BASE_URL}/api/pagamentos/webhook/",
                 "back_urls": {
