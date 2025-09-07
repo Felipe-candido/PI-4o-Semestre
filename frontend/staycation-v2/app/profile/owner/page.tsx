@@ -78,7 +78,7 @@ export default function OwnerProfile() {
     // FUNCAO PARA CARREGAR OS DADOS DO USUARIO AUTENTICADO
     async function fetchUsuario() {
       try {
-        const response = await apiFetch("/api/me", {
+        const response = await apiFetch("/api/me/", {
           credentials: 'include'
         })
         // CRIA UMA INSTANCIA PARA EXIBICAO
