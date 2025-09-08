@@ -1,4 +1,4 @@
-from datetime import timezone
+from django.utils import timezone
 from decimal import Decimal
 from venv import logger
 import mercadopago
@@ -103,7 +103,7 @@ class PagamentoMPService:
                 },
                 "metadata": {
                     "reserva_id": reserva.id,
-                    "tipo_pagamento": "reserva_inicial"
+                    "tipo_pagamento": "reserva_inicial" 
                 }
             }
             

@@ -217,23 +217,7 @@ class criar_preferencia(APIView):
                     {"error": "Reserva não encontrada"}, 
                     status=status.HTTP_404_NOT_FOUND
                 )
-            
-            # Verificar se já existe pagamento
-            # if hasattr(reserva, 'pagamento'):
-            #     pagamento = reserva.pagamento
-            #     logger.info(f"⚠️ Pagamento já existe com status: {pagamento.status}")
-                
-            #     if pagamento.status == 'PENDENTE' and pagamento.preference_id:
-            #         # Retornar preferência existente
-            #         return Response({
-            #             "id": pagamento.preference_id,
-            #             "init_point": f"https://www.mercadopago.com.br/checkout/v1/redirect?pref_id={pagamento.preference_id}"
-            #         })
-            #     elif pagamento.status in ['PAGO', 'RETIDO', 'LIBERADO']:
-            #         return Response(
-            #             {"error": "Pagamento já foi processado"}, 
-            #             status=status.HTTP_400_BAD_REQUEST
-            #         )
+        
             
             # Verificar se proprietário tem conta MP
             proprietario = reserva.Imovel.proprietario
@@ -283,7 +267,7 @@ def webhook(request):
             if payment_id:
                 logger.info(f"Processando notificação 'payment' com ID: {payment_id}")
                 # Chama sua função de serviço que já sabe como processar um pagamento
-                PagamentoMPService.processar_pagamento(str(payment_id))
+                PagamentoMPService.processar_webhook(str(payment_id))
 
         elif notification_type == "merchant_order":
             # Pega o ID da merchant_order, que geralmente vem nos query_params
@@ -313,7 +297,7 @@ def webhook(request):
                     logger.info(f"Pagamento {payment_id} encontrado na ordem e APROVADO. Processando...")
                     
                     # 4. Chama a nossa função de serviço com o ID do pagamento
-                    PagamentoMPService.processar_pagamento(payment_id)
+                    PagamentoMPService.processar_webhook(payment_id)
 
         else:
             logger.warning(f"Webhook com tipo desconhecido ou ausente: '{notification_type}'.")
