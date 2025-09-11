@@ -52,9 +52,8 @@ class Login(APIView):
                 key='access_token',
                 value=access_token,
                 httponly=True,
-                secure=False,
-                samesite='Lax',
-                domain='localhost',
+                secure=True,
+                samesite='None',
                 path='/',
                 max_age=60 * 60 * 24,
             )
@@ -63,9 +62,8 @@ class Login(APIView):
                 key='refresh_token',
                 value=refresh_token,
                 httponly=True,
-                secure=False,
-                samesite='Lax',
-                domain='localhost',
+                secure=True,
+                samesite='None',
                 path='/api/token/refresh',
                 max_age=60 * 60 * 24,
             )
@@ -111,8 +109,8 @@ class RefreshTokenView(viewsets.ViewSet):
                 key='access_token',
                 value=new_access_token,
                 httponly=True,
-                secure=False,
-                samesite='Lax',
+                secure=True,
+                samesite='None',
                 max_age=60 * 15,
             )
 
