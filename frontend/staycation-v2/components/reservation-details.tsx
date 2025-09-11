@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { Calendar, Users, MapPin, CheckCircle, XCircle, ExternalLink } from "lucide-react"
 import { CancelReservationModal } from "./cancel-reservation-modal"
 import { useParams, useRouter } from 'next/navigation'
-import { apiFetch } from "@/lib/api"
+import { apiFetch, apiFetch2 } from "@/lib/api"
 
 interface Imovel {
   id: number
@@ -32,10 +32,19 @@ interface Imovel {
 
 interface Reserva {
   id: number
-  checkIn: string
-  checkOut: string
+  usuario: {
+    id: number
+    nome: string
+    email: string
+  }
+  Imovel: {
+    id: number
+    titulo: string
+  }
+  data_inicio: string
+  data_fim: string
   numero_hospedes: number
-  valor: number
+  valor_total: number
   status: string
 }
 
@@ -60,9 +69,30 @@ export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
 
   useEffect(() => {
 
-    async function fetchImovel() {
+    async function fetchReserva() {
       try{
-        const res = await apiFetch(`/api/imoveis/propriedade/?id=${id}`)
+        const res = await apiFetch2(`/api/reservas/reserva/?id=${id}`)
+
+        const data_reserva = await res.json()
+
+        setReserva(data_reserva)
+        console.log(data_reserva)
+      }
+      catch(error){
+        console.log('erro ao buscar reserva', error)
+      }
+    }
+    
+    if(id){
+      fetchReserva()
+    }
+
+  }, [id])
+
+  useEffect(() => {
+    async function fetchImovel(){
+      try{
+        const res = await apiFetch2(`/api/imoveis/propriedade/?id=${reserva?.Imovel.id}`)
 
         const data_imovel = await res.json()
 
@@ -74,12 +104,10 @@ export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
       }
     }
 
-    
-
-    if(id){
+    if(reserva?.Imovel.id){
       fetchImovel()
     }
-  })
+  }, [reserva?.Imovel.id])
 
 
 
@@ -218,17 +246,17 @@ export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span>
-                    ${reserva?.valor} × {reserva?.valor} nights
+                    ${reserva?.valor_total} × {reserva?.valor_total} nights
                   </span>
-                  <span>${reserva?.valor}</span>
+                  <span>${reserva?.valor_total}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Cleaning fee</span>
-                  <span>${reserva?.valor}</span>
+                  <span>${reserva?.valor_total}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Service fee</span>
-                  <span>${reserva?.valor}</span>
+                  <span>${reserva?.valor_total}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-semibold text-lg">
