@@ -37,7 +37,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    '2a2c7129d274.ngrok-free.app', 
+    '57ca2b5e1d5f.ngrok-free.appp', 
 ]
 
 # SESSION_COOKIE_DOMAIN = '.ngrok-free.app'
@@ -175,14 +175,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://2a2c7129d274.ngrok-free.app", 
+    "https://57ca2b5e1d5f.ngrok-free.app", 
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
 # Diga ao Django para confiar em requisições POST vindas deste domínio
 CSRF_TRUSTED_ORIGINS = [
-    'https://2a2c7129d274.ngrok-free.app',
+    'https://57ca2b5e1d5f.ngrok-free.app',
 ]
 
 SIMPLE_JWT = {
@@ -198,7 +198,7 @@ SIMPLE_JWT = {
 AUTH_USER_MODEL = 'cadastro.usuario'
 
 
-BASE_URL = 'https://2a2c7129d274.ngrok-free.app'
+BASE_URL = 'https://57ca2b5e1d5f.ngrok-free.app'
 
 # Carrega o .env da raiz
 load_dotenv(BASE_DIR / 'tokens.env')
@@ -215,7 +215,7 @@ MERCADO_PAGO_PUBLIC_KEY = os.getenv("MERCADO_PAGO_PUBLIC_KEY")
 MERCADO_PAGO_ACCESS_TOKEN = os.getenv("MERCADO_PAGO_ACCESS_TOKEN")
 MP_CLIENT_ID = os.getenv("MP_CLIENT_ID")
 MP_CLIENT_SECRET = os.getenv("MP_CLIENT_SECRET")
-FRONTEND_URL = 'https://2a2c7129d274.ngrok-free.app'
+FRONTEND_URL = 'https://57ca2b5e1d5f.ngrok-free.app'
 
 MP_SANDBOX = True
 

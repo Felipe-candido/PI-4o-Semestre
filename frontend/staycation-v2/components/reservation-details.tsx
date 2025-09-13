@@ -58,6 +58,8 @@ export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
   const [reserva, setReserva] = useState<Reserva | null>(null)
   const { id } = useParams()
 
+  const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("pt-BR", {
       weekday: "long",
@@ -144,7 +146,7 @@ export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
             <CardContent className="space-y-4">
               <div className="aspect-video relative overflow-hidden rounded-lg">
                 <img
-                  src={imovel?.logo || "/placeholder.svg"}
+                  src={imovel?.logo ? `${baseURL}${imovel.logo}` : "/placeholder.svg"}
                   alt={imovel?.titulo}
                   className="w-full h-full object-cover"
                 />
@@ -162,14 +164,14 @@ export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
                   <Calendar className="h-5 w-5 text-primary" />
                   <div>
                     <p className="text-sm font-medium">Check-in</p>
-                    <p className="text-sm text-muted-foreground">{formatDate(reserva?.checkIn ?? "")}</p>
+                    <p className="text-sm text-muted-foreground">{formatDate(reserva?.data_inicio ?? "")}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                   <Calendar className="h-5 w-5 text-primary" />
                   <div>
                     <p className="text-sm font-medium">Check-out</p>
-                    <p className="text-sm text-muted-foreground">{formatDate(reserva?.checkOut ?? "")}</p>
+                    <p className="text-sm text-muted-foreground">{formatDate(reserva?.data_fim ?? "")}</p>
                   </div>
                 </div>
               </div>
@@ -261,7 +263,7 @@ export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
                 <Separator />
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>${reserva?.valor}</span>
+                  <span>${reserva?.valor_total}</span>
                 </div>
               </div>
             </CardContent>
@@ -274,7 +276,7 @@ export function ReservationDetails({ Reserva }: ReservationDetailsProps) {
             <CardContent className="space-y-3">
               <Button onClick={handleCheckIn} disabled={reserva?.status == "CONFIRMADA"} className="w-full gap-2" size="lg">
                 <CheckCircle className="h-4 w-4" />
-                {reserva?.checkIn ? "Confirm Check-in" : "Checkin confirmado"}
+                {reserva?.data_inicio ? "Confirm Check-in" : "Checkin confirmado"}
               </Button>
 
               <Button variant="destructive" onClick={() => setShowCancelModal(true)} className="w-full gap-2" size="lg">
