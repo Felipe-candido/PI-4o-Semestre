@@ -62,11 +62,21 @@ class CookieJWTAuthentication(JWTAuthentication):
         # Tenta pegar o token do cookie
         token = request.COOKIES.get('access_token')
         
+        print(f"🔐 CookieJWTAuthentication - Token recebido: {token[:20] if token else 'None'}...")
+        print(f"🍪 Todos os cookies: {dict(request.COOKIES)}")
+        
         if token is None:
+            print("❌ Nenhum token encontrado nos cookies")
             return None
             
-        validated_token = self.get_validated_token(token)
-        return self.get_user(validated_token), validated_token
+        try:
+            validated_token = self.get_validated_token(token)
+            user = self.get_user(validated_token)
+            print(f"✅ Usuário autenticado: {user.email}")
+            return user, validated_token
+        except Exception as e:
+            print(f"❌ Erro na validação do token: {e}")
+            return None
 
 
 

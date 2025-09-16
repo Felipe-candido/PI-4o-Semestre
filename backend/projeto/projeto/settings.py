@@ -37,14 +37,15 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    '57ca2b5e1d5f.ngrok-free.appp', 
+    '9b63e1766156.ngrok-free.app', 
 ]
 
+# Configurações de cookies para ngrok (comentadas para funcionar com proxy)
 # SESSION_COOKIE_DOMAIN = '.ngrok-free.app'
 # CSRF_COOKIE_DOMAIN = '.ngrok-free.app'
 
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 # Application definition
 
@@ -75,7 +76,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
+    'cadastro.middleware.CookieProxyMiddleware',  # Middleware personalizado para cookies
 ]
 
 
@@ -175,14 +176,54 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://57ca2b5e1d5f.ngrok-free.app", 
+    "https://9b63e1766156.ngrok-free.app", 
 ]
+
+# Para desenvolvimento, permitir todas as origens
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
 
 # Diga ao Django para confiar em requisições POST vindas deste domínio
 CSRF_TRUSTED_ORIGINS = [
-    'https://57ca2b5e1d5f.ngrok-free.app',
+    'https://9b63e1766156.ngrok-free.app',
+    'http://localhost:3000',
+]
+
+# Configurações adicionais para ngrok
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'x-forwarded-host',
+    'x-forwarded-proto',
+]
+
+# Configurações de sessão para ngrok
+SESSION_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SAMESITE = 'None'
+
+# Configurações adicionais para cookies com ngrok
+CORS_EXPOSE_HEADERS = [
+    'Set-Cookie',
+    'Access-Control-Allow-Credentials',
+]
+
+# Permitir todos os métodos CORS
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
 ]
 
 SIMPLE_JWT = {
@@ -198,7 +239,7 @@ SIMPLE_JWT = {
 AUTH_USER_MODEL = 'cadastro.usuario'
 
 
-BASE_URL = 'https://57ca2b5e1d5f.ngrok-free.app'
+BASE_URL = 'https://9b63e1766156.ngrok-free.app'
 
 # Carrega o .env da raiz
 load_dotenv(BASE_DIR / 'tokens.env')
@@ -215,7 +256,7 @@ MERCADO_PAGO_PUBLIC_KEY = os.getenv("MERCADO_PAGO_PUBLIC_KEY")
 MERCADO_PAGO_ACCESS_TOKEN = os.getenv("MERCADO_PAGO_ACCESS_TOKEN")
 MP_CLIENT_ID = os.getenv("MP_CLIENT_ID")
 MP_CLIENT_SECRET = os.getenv("MP_CLIENT_SECRET")
-FRONTEND_URL = 'https://57ca2b5e1d5f.ngrok-free.app'
+FRONTEND_URL = 'https://9b63e1766156.ngrok-free.app'
 
 MP_SANDBOX = True
 

@@ -38,6 +38,37 @@ const nextConfig = {
       },
     ]
   },
+
+
+  async headers() {
+    // Sempre usar ngrok quando estiver rodando em produção ou quando a variável estiver definida
+    const isNgrok = process.env.NEXT_PUBLIC_NGROK_URL || process.env.NODE_ENV === 'production'
+    const ngrokHost = process.env.NEXT_PUBLIC_NGROK_URL ? 
+      process.env.NEXT_PUBLIC_NGROK_URL.replace('https://', '') : 
+      '9b63e1766156.ngrok-free.app'
+    
+    console.log('🔧 Next.js headers config:', { isNgrok, ngrokHost })
+    
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'X-Forwarded-Host',
+            value: isNgrok ? ngrokHost : 'localhost:3000',
+          },
+          {
+            key: 'X-Forwarded-Proto',
+            value: isNgrok ? 'https' : 'http',
+          },
+          {
+            key: 'X-Forwarded-For',
+            value: '127.0.0.1',
+          },
+        ],
+      },
+    ]
+  },
 }
 
 if (userConfig) {
