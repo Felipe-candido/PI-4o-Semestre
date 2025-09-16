@@ -34,18 +34,6 @@ DEBUG = True
 
 
 
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '57ca2b5e1d5f.ngrok-free.appp', 
-]
-
-# SESSION_COOKIE_DOMAIN = '.ngrok-free.app'
-# CSRF_COOKIE_DOMAIN = '.ngrok-free.app'
-
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -173,12 +161,61 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS_ALLOW_ALL_ORIGINS = True 
 
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000',
+    'https://57ca2b5e1d5f.ngrok-free.app'
+]
+
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '9b63e1766156.ngrok-free.app', 
+]
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_PREFLIGHT_MAX_AGE = 86400
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'x-forwarded-host',
+    'x-forwarded-proto',
+]
+
+
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_DOMAIN = '9b63e1766156.ngrok-free.app'
+CSRF_COOKIE_DOMAIN = '9b63e1766156.ngrok-free.app'
+
+
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://57ca2b5e1d5f.ngrok-free.app", 
+    "https://9b63e1766156.ngrok-free.app", 
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Diga ao Django para confiar em requisições POST vindas deste domínio
 CSRF_TRUSTED_ORIGINS = [
@@ -193,6 +230,9 @@ SIMPLE_JWT = {
     'AUTH_COOKIE_SECURE': True,    # True quando entrar em produção produção com HTTPS
     'AUTH_COOKIE_HTTP_ONLY': True,
     'AUTH_COOKIE_SAMESITE': 'None',  # Ou 'Strict'
+    'AUTH_COOKIE_PATH': '/',
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_COOKIE_DOMAIN': '9b63e1766156.ngrok-free.app',
 }
 
 AUTH_USER_MODEL = 'cadastro.usuario'
@@ -219,4 +259,4 @@ FRONTEND_URL = 'https://57ca2b5e1d5f.ngrok-free.app'
 
 MP_SANDBOX = True
 
-APPEND_SLASH = False
+APPEND_SLASH = True

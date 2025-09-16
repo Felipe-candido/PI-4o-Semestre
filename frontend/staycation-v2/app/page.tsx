@@ -45,7 +45,7 @@ export default function Home() {
     const fetchImoveisDestaque = async () => {
       try {
         console.log('Iniciando busca de imóveis em destaque...')
-        const response = await apiFetch('/api/imoveis/destaque/')
+        const response = await apiFetch('/imoveis/destaque/')
         console.log('Resposta da API:', response)
         
         if (!response) {

@@ -13,6 +13,7 @@ import { useForm, FormProvider, Form } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "@/components/ui/use-toast"
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { apiFetch } from "@/lib/api"
 
 
 const loginSchema = z.object({
@@ -56,7 +57,7 @@ export default function LoginForm({ onRegisterClick, onSuccess}: LoginFormProps)
     setIsLoading(true)
 
     try {
-      const response = await fetch("http://localhost:8000/api/logando/", {
+      const response = await apiFetch("/logando/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
