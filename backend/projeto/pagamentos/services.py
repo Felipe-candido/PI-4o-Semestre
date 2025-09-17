@@ -94,6 +94,7 @@ class PagamentoMPService:
                         "unit_price": float(valores['valor_total'])
                     }
                 ],
+                "marketplace_fee": float(valores['taxa_plataforma']),
                 "external_reference": f"reserva_{reserva.id}",
                 "notification_url": f"{settings.BASE_URL}/api/pagamentos/webhook/",
                 "back_urls": {
