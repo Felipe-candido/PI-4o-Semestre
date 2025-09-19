@@ -17,6 +17,8 @@ from django.contrib.auth import get_user_model
 import secrets # Para gerar um token seguro para o 'state'
 from cadastro.services import CookieJWTAuthentication
 from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
+from django.utils import timezone
 
 
 
@@ -137,58 +139,6 @@ class callback_MP(APIView):
 
 
 
-# class criar_preferencia(APIView):
-#     authentication_classes = [CookieJWTAuthentication]
-#     permission_classes = [IsAuthenticated] 
-
-#     def post(self, request):
-#         reserva_id = None
-#         try:
-#             # BUSCAR RESERVA
-#             reserva_id = request.data.get('reserva_id')
-#             reserva = Reserva.objects.get(id=reserva_id)
-#             print("🔍 reserva_id recebido:", reserva_id)
-#             id_proprietario = reserva.Imovel.proprietario_id
-
-#             conta_mp = Conta_MP.objects.get(proprietario_id=id_proprietario)
-#             print(conta_mp.conectado_mp)
-#             if not conta_mp.conectado_mp:
-#                 print('TROCO')
-#                 return Response(
-#                     {"error": "Proprietário do imóvel não conectado ao Mercado Pago."},
-#                     status=status.HTTP_400_BAD_REQUEST
-#                 )
-            
-#             valor_total = request.data.get('valor')
-#             taxa_plataforma = valor_total * 0.07
-#             descricao = request.data.get('descricao')
-#             payer_email = request.user.email
-
-#             pagamento_info = PagamentoMPService.criar_preferencia_pagamento(
-#                 imovel_id=reserva.Imovel.id,
-#                 valor_total=valor_total,
-#                 comissao_plataforma=taxa_plataforma,
-#                 reserva_id=reserva_id,
-#                 payer_email=payer_email
-#             )
-            
-            
-#             print("🔗 FRONTEND_URL:", settings.FRONTEND_URL)
-#             print("✅ back_urls['success']:", f"{settings.FRONTEND_URL}/payment/{reserva_id}/confirmacao")
-#             success_url = f"{settings.FRONTEND_URL}/payment/{reserva_id}/confirmacao"
-#             print("✅ Success URL:", repr(success_url))
-
-
-#             return Response(pagamento_info, status=status.HTTP_200_OK)
-
-
-#         except Reserva.DoesNotExist:
-#             print('MERDA')
-#             return Response({"error": "Reserva não encontrada"}, status=404)
-#         except Exception as e:
-#             print('BOSTA', str(e))
-#             return Response({"error": str(e)}, status=400)
-
 class criar_preferencia(APIView):
     authentication_classes = [CookieJWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -218,19 +168,19 @@ class criar_preferencia(APIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
         
-            
-            # Verificar se proprietário tem conta MP
             proprietario = reserva.Imovel.proprietario
-            if not hasattr(proprietario, 'conta_mp') or not proprietario.conta_mp.conectado_mp:
-                return Response(
-                    {"error": "Proprietário do imóvel não conectado ao Mercado Pago."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
             
-            logger.info(f"✅ Proprietário conectado ao MP: {proprietario.conta_mp.conectado_mp}")
+            ### Verificar se proprietário tem conta MP
+            # if not hasattr(proprietario, 'conta_mp') or not proprietario.conta_mp.conectado_mp:
+            #     return Response(
+            #         {"error": "Proprietário do imóvel não conectado ao Mercado Pago."},
+            #         status=status.HTTP_400_BAD_REQUEST
+            #     )
+            
+            # logger.info(f"✅ Proprietário conectado ao MP: {proprietario.conta_mp.conectado_mp}")
             
             
-            # Usar o novo serviço de split
+            # CRIA A PREFERENCIA DE PAGAMENTO
             resultado = PagamentoMPService.criar_pagamento_inicial(reserva_id)
             
             logger.info(f"✅ Preferência criada: {resultado['preference_id']}")
@@ -238,8 +188,7 @@ class criar_preferencia(APIView):
             
             return Response({
                 "preference_id": resultado['preference_id'],
-                "init_point": resultado['init_point'],
-                "sandbox_init_point": resultado.get('sandbox_init_point')
+
             })
 
         except Exception as e:
@@ -309,6 +258,137 @@ def webhook(request):
         logger.error(f"Erro CRÍTICO no processamento do webhook: {e}")
         # Retornar 500 faz o Mercado Pago tentar reenviar a notificação mais tarde.
         return Response({"error": str(e)}, status=500)
+
+
+
+class ProcessarPagamentoAPI(APIView):
+    """
+    Endpoint para receber os dados do Checkout Brick e processar o pagamento.
+    """
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            # 1. Obter os dados enviados pelo Brick
+            form_data = request.data
+            logger.info(f"Recebido dados para processamento: {form_data}")
+
+            # 2. Extrair o ID da reserva dos metadados ou de um campo customizado.
+            #    É CRUCIAL buscar a reserva no seu banco para validar o valor
+            #    e associar o pagamento à reserva correta.
+            #    NOTA: Você precisará garantir que o frontend envie o 'reserva_id'.
+            #    A forma mais segura é obter da 'description' ou 'external_reference'
+            #    que você define na criação da preferência.
+            #    Vamos assumir que está na description por agora.
+            
+            # Exemplo de como pegar o reserva_id da descrição: 'reserva_123'
+            description = form_data.get('description')
+            if not description or not description.startswith('reserva_'):
+                raise ValueError("Descrição do pagamento inválida ou ausente.")
+            
+            reserva_id = description.split('_')[1]
+            reserva = Reserva.objects.get(id=reserva_id, usuario=request.user)
+            
+            print(form_data)
+            # 3. VALIDAÇÃO DE SEGURANÇA: Use o valor do seu banco de dados, NUNCA o do frontend.
+            valor_correto_reserva = float(reserva.valor_total)
+
+            valor_recebido_str = form_data.get('transaction_amount')
+            if valor_recebido_str is None:
+                raise ValueError("O campo 'transaction_amount' é obrigatório e não foi recebido do frontend.")
+            
+            valor_recebido = float(valor_recebido_str)
+
+            if valor_correto_reserva != valor_recebido:
+                logger.error(f"TENTATIVA DE FRAUDE! Valor da reserva '{valor_correto_reserva}' diverge do valor pago '{valor_recebido}'.")
+                return Response(
+                    {"error": "Inconsistência no valor do pagamento."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # 4. Construir o payload para a API do Mercado Pago
+            payment_data = {
+                "transaction_amount": valor_recebido,
+                "token": form_data.get('token'),
+                "description": description,
+                "installments": int(form_data.get('installments')),
+                "payment_method_id": form_data.get('payment_method_id'),
+                "payer": {
+                    "email": form_data.get('payer', {}).get('email'),
+                    "identification": {
+                        "type": form_data.get('payer', {}).get('identification', {}).get('type'),
+                        "number": form_data.get('payer', {}).get('identification', {}).get('number')
+                    }
+                }
+            }
+            
+            print(f"Enviando para o Mercado Pago: {payment_data}")
+
+            # 5. Criar o pagamento usando a SDK
+            payment_response = sdk.payment().create(payment_data)
+            payment = payment_response["response"]
+
+            # 6. Lógica de Negócio Pós-Pagamento
+            if payment.get("status") == "approved":
+                print(f"✅ Pagamento APROVADO! ID: {payment.get('id')}")
+                
+                ##ATUALIZE SUA RESERVA AQUI!
+
+                try:
+                    with transaction.atomic():
+                        # 1. Localiza o objeto de pagamento que foi criado como 'PENDENTE'
+                        pagamento_reserva = PagamentoReserva.objects.get(reserva=reserva)
+
+                        # 2. Atualiza os campos necessários
+                        pagamento_reserva.payment_id = payment.get('id')
+                        pagamento_reserva.status = 'APROVADO'  # Ou 'PAGO', como preferir
+                        pagamento_reserva.data_pagamento = timezone.now() # Registra o momento exato
+                        
+                        # 3. Salva as alterações no banco de dados
+                        pagamento_reserva.save()
+
+                        # Opcional: Você pode querer atualizar o status da Reserva também
+                        reserva.status = 'CONFIRMADA'
+                        reserva.save()
+
+                        print(f"💾 Objeto PagamentoReserva ID {pagamento_reserva.id} e Reserva ID {reserva.id} atualizados com sucesso.")
+
+                except PagamentoReserva.DoesNotExist:
+                    logger.error(f"CRÍTICO: Pagamento {payment.get('id')} aprovado, mas o objeto PagamentoReserva para a Reserva {reserva.id} não foi encontrado!")
+                    # Aqui você deveria ter um sistema de alerta (ex: enviar um e-mail para o admin)
+                except Exception as e:
+                    logger.error(f"CRÍTICO: Pagamento {payment.get('id')} aprovado, mas FALHOU ao atualizar o banco de dados: {str(e)}")
+                    # Aqui também, um sistema de alerta é crucial.
+                
+
+            else:
+                logger.warning(f"⚠️ Pagamento NÃO aprovado. Status: {payment.get('status')} - {payment.get('status_detail')}")
+
+            # 7. Retornar a resposta para o frontend
+            return Response(
+                {
+                    "id": payment.get("id"),
+                    "status": payment.get("status"),
+                    "status_detail": payment.get("status_detail")
+                },
+                status=status.HTTP_201_CREATED
+            )
+
+        except Reserva.DoesNotExist:
+            logger.error(f"Reserva não encontrada para o usuário {request.user.id}.")
+            return Response({"error": "Reserva não encontrada."}, status=status.HTTP_404_NOT_FOUND)
+            
+        except ValueError as ve:
+            logger.error(f"Erro de valor nos dados do pagamento: {str(ve)}")
+            return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            logger.error(f"🔥 Erro CRÍTICO ao processar pagamento: {str(e)}")
+            return Response(
+                {"error": "Ocorreu um erro inesperado ao processar seu pagamento."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 

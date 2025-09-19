@@ -42,16 +42,18 @@ class PagamentoMPService:
         try:
             # Buscar reserva com relacionamentos corretos
             reserva = Reserva.objects.select_related('Imovel__proprietario', 'usuario').get(id=reserva_id)
-            logger.info(f"Reserva encontrada: {reserva.id}")
-            
-            # Verificar se proprietário tem conta MP
             proprietario = reserva.Imovel.proprietario
-            if not hasattr(proprietario, 'conta_mp') or not proprietario.conta_mp.conectado_mp:
-                raise Exception("Proprietário não possui conta Mercado Pago vinculada")
+            # logger.info(f"Reserva encontrada: {reserva.id}")
+            print(f"Reserva encontrada: {reserva.id}")
             
-            logger.info(f"Proprietário conectado ao MP: {proprietario.conta_mp.conectado_mp}")
 
-            # Calcular valores
+            ### Verificar se proprietário tem conta MP
+            # if not hasattr(proprietario, 'conta_mp') or not proprietario.conta_mp.conectado_mp:
+            #     raise Exception("Proprietário não possui conta Mercado Pago vinculada")
+            
+            # logger.info(f"Proprietário conectado ao MP: {proprietario.conta_mp.conectado_mp}")
+
+            ### Calcular valores
             valores = PagamentoMPService.calcular_valores(reserva.valor_total, percentual_taxa)
             logger.info(f"Valores calculados: {valores}")
             print(f"Valores calculados: {valores}")
@@ -83,6 +85,8 @@ class PagamentoMPService:
                                 "sandbox_init_point": preference.get("sandbox_init_point"),
                                 "pagamento_id": pagamento_reserva.id
                             }
+
+            pagador = reserva.usuario
             
             # Criar preferência no Mercado Pago
             preference_data = {
@@ -94,17 +98,18 @@ class PagamentoMPService:
                         "unit_price": float(valores['valor_total'])
                     }
                 ],
-                "external_reference": f"reserva_{reserva.id}",
-                "notification_url": f"{settings.BASE_URL}/api/pagamentos/webhook/",
-                "back_urls": {
-                    "success": f"{settings.FRONTEND_URL}/payment/{reserva.id}/confirmacao",
-                    "failure": f"{settings.FRONTEND_URL}/payment/{reserva.id}/failure",
-                    "pending": f"{settings.FRONTEND_URL}/payment/{reserva.id}/pending"
+                "payer": {
+                    "name": pagador.nome,
+                    "email": "test_user_123456@testuser.com",
+                    "identification": {
+                        "type": "CPF",
+                        # Deixe o "number" em branco ou não o envie. 
+                        # O Checkout Pro irá solicitar ao usuário.
+                        # "number": "" 
+                    }
                 },
-                "metadata": {
-                    "reserva_id": reserva.id,
-                    "tipo_pagamento": "reserva_inicial" 
-                }
+                # "external_reference": f"reserva_{reserva.id}",
+                "notification_url": f"{settings.BASE_URL}/api/pagamentos/webhook/",
             }
             
             logger.info(f"Criando preferência no MP com dados: {preference_data}")
@@ -125,8 +130,6 @@ class PagamentoMPService:
             
             return {
                 "preference_id": preference["id"],
-                "init_point": preference["init_point"],
-                "sandbox_init_point": preference.get("sandbox_init_point"),
                 "pagamento_id": pagamento_reserva.id
             }
             
