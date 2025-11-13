@@ -1,0 +1,29 @@
+# k8s/ingress.yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: staycation-ingress
+spec:
+  rules:
+  # Rota para a API
+  - host: "api.seu-dominio-beta.com"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: backend-service # Envia para o serviço do backend
+            port:
+              number: 80
+  # Rota para o App (Frontend)
+  - host: "seu-dominio-beta.com"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-service # Envia para o serviço do frontend
+            port:
+              number: 80

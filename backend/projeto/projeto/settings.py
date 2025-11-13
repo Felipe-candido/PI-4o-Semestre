@@ -13,14 +13,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from dotenv import load_dotenv
 import os
 from pathlib import Path
-
-
 from datetime import timedelta
-from pathlib import Path
-import os
 
-from google.oauth2 import service_account
-from google.cloud import storage
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -164,16 +158,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
+# Configuração será feita na seção de GCS abaixo
 
-STATIC_URL = 'static/'\
-
-MEDIA_URL = '/media/'
-
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -273,37 +259,60 @@ APPEND_SLASH = False
 
 
 # CONFIG GOOGLE STORAGE
-print("🟢 Inicializando Google Cloud Storage...")
+# --- CONFIGURAÇÃO DE ARQUIVOS (Estáticos e Mídia) ---
 
-GS_BUCKET_NAME = "staycation-files2"
-GS_CREDENTIALS_PATH = os.getenv("GS_CREDENTIALS_PATH")
+# O backend do django-storages procura esta variável de ambiente automaticamente.
+# Ela deve conter o CAMINHO para o seu arquivo JSON de credenciais.
+# É ESSA a variável que vamos definir no Kubernetes.
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") 
+GS_BUCKET_NAME = os.getenv("GS_BUCKET_NAME") # Ex: "staycation-files2"
 
-print("Bucket:", GS_BUCKET_NAME)
-print("Credenciais:", GS_CREDENTIALS_PATH)
+# Se a variável de ambiente e o nome do bucket estiverem definidos, use o GCS
+if GOOGLE_APPLICATION_CREDENTIALS and GS_BUCKET_NAME:
+    print(f"✅ GCS configurado. Usando bucket: {GS_BUCKET_NAME}")
 
-if GS_BUCKET_NAME and GS_CREDENTIALS_PATH and os.path.exists(GS_CREDENTIALS_PATH):
-    from google.oauth2 import service_account
-    
-    client = storage.Client.from_service_account_json("gcs-service-account.json")
-    bucket = client.bucket("staycation-files2")
-    blob = bucket.blob("test.txt")
-    blob.upload_from_string("Olá Staycation!")
-    print("✅ Upload feito com sucesso!")
+    STORAGES = {
+        # "default" é usado para MEDIA_ROOT (uploads de usuários)
+        "default": {
+            "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+            "OPTIONS": {
+                "bucket_name": GS_BUCKET_NAME,
+                "file_overwrite": False,
+                "default_acl": "publicRead",
+                # Não é preciso passar credenciais aqui, 
+                # o backend lê a variável GOOGLE_APPLICATION_CREDENTIALS
+            },
+        },
+        # "staticfiles" é usado para STATIC_ROOT (CSS, JS do admin, etc.)
+        "staticfiles": {
+            "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+            "OPTIONS": {
+                "bucket_name": GS_BUCKET_NAME,
+                "location": "static", # Salva arquivos estáticos na pasta /static/
+                "default_acl": "publicRead",
+            },
+        },
+    }
 
-    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(os.path.join(BASE_DIR, "gcs-service-account.json"))
-
-    DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
-    STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
-
-    GS_DEFAULT_ACL = os.getenv("GS_DEFAULT_ACL", "publicRead")
-    GS_QUERYSTRING_AUTH = False
-
+    # URLs do GCS
     STATIC_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/static/"
     MEDIA_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/media/"
+    
+    # Define os backends de armazenamento
+    DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+    STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+    GS_QUERYSTRING_AUTH = False
 
-    print("✅ Django configurado para usar Google Cloud Storage.")
 else:
+    # --- Fallback para Armazenamento Local ---
+    # (Se as variáveis de GCS não estiverem definidas, roda localmente)
+    print("⚠️ GCS não configurado. Usando armazenamento local.")
+    
     STATIC_URL = "/static/"
     MEDIA_URL = "/media/"
     MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-    print("⚠️ GCS não configurado. Usando armazenamento local.")
+    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+    
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+

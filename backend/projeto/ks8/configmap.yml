@@ -1,0 +1,13 @@
+# k8s/configmap.yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: staycation-config
+data:
+  # --- Configs do Backend ---
+  DATABASE_URL: "postgres://postgres:$(POSTGRES_PASSWORD)@IP_PRIVADO_DO_CLOUD_SQL:5432/app_chacaras"
+  ALLOWED_HOSTS: "seu-dominio-beta.com, api.seu-dominio-beta.com" # Domínio que usaremos
+  
+  # --- Configs do Frontend ---
+  # O frontend precisa saber onde está a API
+  NEXT_PUBLIC_API_URL: "https://api.seu-dominio-beta.com"

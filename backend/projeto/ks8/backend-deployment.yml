@@ -1,0 +1,27 @@
+# k8s/backend-deployment.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+spec:
+  replicas: 2 # Rodar 2 cópias do seu app para redundância
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        # A IMAGEM VIRÁ DO SEU REGISTRY (ex: gcr.io/staycation-beta/backend:latest)
+        # O GitHub Actions vai preencher isso
+        image: ENDERECO_DO_SEU_REGISTRY/backend:latest
+        ports:
+        - containerPort: 8000
+        envFrom: # Puxa as variáveis do ConfigMap e Secret
+        - configMapRef:
+            name: staycation-config
+        - secretRef:
+            name: staycation-secrets
