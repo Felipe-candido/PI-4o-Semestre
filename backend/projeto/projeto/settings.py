@@ -19,6 +19,7 @@ from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-TROCAR-EM-PRODUCAO')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -27,15 +28,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-1#d5ck9p8c*e72cg7jp3%w_y((*8&of3w&c7sx&n0fpis6*k26'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 
 
-
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    'ba2bfe523cb1.ngrok-free.app', 
-]
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # Configurações de cookies para ngrok (comentadas para funcionar com proxy)
 # SESSION_COOKIE_DOMAIN = '.ngrok-free.app'

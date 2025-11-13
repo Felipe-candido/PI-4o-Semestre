@@ -27,3 +27,6 @@ A Solução: Usar um serviço de banco de dados gerenciado, como o Google Cloud 
 
 Ação: Nenhuma por enquanto, apenas saiba que não vamos "subir" o serviço db do seu compose. Vamos apontar o Django para um banco de dados externo.
 
+
+==========================================================================================
+## postgresql://staycation_db_user:JVhV8SqYrJmHAtSYYOa1g4tdfEZlECPV@dpg-d4b6iekhg0os73eo7qcg-a/staycation_db
