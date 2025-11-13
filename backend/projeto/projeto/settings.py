@@ -20,6 +20,7 @@ from pathlib import Path
 import os
 
 from google.oauth2 import service_account
+from google.cloud import storage
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -170,6 +171,10 @@ MEDIA_URL = '/media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -268,22 +273,37 @@ APPEND_SLASH = False
 
 
 # CONFIG GOOGLE STORAGE
-GS_BUCKET_NAME = os.getenv('GS_BUCKET_NAME')
-GS_CREDENTIALS_PATH = os.getenv('GS_CREDENTIALS_PATH')
+print("🟢 Inicializando Google Cloud Storage...")
 
-if GS_BUCKET_NAME and GS_CREDENTIALS_PATH:
-    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(GS_CREDENTIALS_PATH)
+GS_BUCKET_NAME = "staycation-files2"
+GS_CREDENTIALS_PATH = os.getenv("GS_CREDENTIALS_PATH")
 
-    DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-    STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+print("Bucket:", GS_BUCKET_NAME)
+print("Credenciais:", GS_CREDENTIALS_PATH)
 
-    GS_DEFAULT_ACL = os.getenv('GS_DEFAULT_ACL', 'publicRead')
-    GS_QUERYSTRING_AUTH = False  # Remove tokens temporários da URL
+if GS_BUCKET_NAME and GS_CREDENTIALS_PATH and os.path.exists(GS_CREDENTIALS_PATH):
+    from google.oauth2 import service_account
+    
+    client = storage.Client.from_service_account_json("gcs-service-account.json")
+    bucket = client.bucket("staycation-files2")
+    blob = bucket.blob("test.txt")
+    blob.upload_from_string("Olá Staycation!")
+    print("✅ Upload feito com sucesso!")
 
-    STATIC_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/static/'
-    MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/media/'
+    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(os.path.join(BASE_DIR, "gcs-service-account.json"))
+
+    DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+    STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+
+    GS_DEFAULT_ACL = os.getenv("GS_DEFAULT_ACL", "publicRead")
+    GS_QUERYSTRING_AUTH = False
+
+    STATIC_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/static/"
+    MEDIA_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/media/"
+
+    print("✅ Django configurado para usar Google Cloud Storage.")
 else:
-    # fallback local (para ambiente de desenvolvimento)
-    STATIC_URL = '/static/'
-    MEDIA_URL = '/media/'
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    STATIC_URL = "/static/"
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+    print("⚠️ GCS não configurado. Usando armazenamento local.")

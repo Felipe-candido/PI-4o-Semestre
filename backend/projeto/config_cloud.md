@@ -1,6 +1,6 @@
 ## ADICIONAR NO TOKENS.ENV
-GS_CREDENTIALS_PATH=/home/felipe/FELIPE/Staycation-Aluguel-chacaras/backend/gcs-service-account.json 
-GS_BUCKET_NAME=staycation-files
+GS_CREDENTIALS_PATH=c/users/felip/Staycation-Aluguel-chacaras/backend/gcs-service-account.json 
+GS_BUCKET_NAME=staycation-files2
 GS_DEFAULT_ACL=publicRead
 
 ## ENVIAR OS ARQUIVOS PARA O BUVKET GCS
