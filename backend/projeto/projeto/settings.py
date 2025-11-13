@@ -19,6 +19,8 @@ from datetime import timedelta
 from pathlib import Path
 import os
 
+from google.oauth2 import service_account
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -64,6 +66,7 @@ INSTALLED_APPS = [
     'reservas',
     'pagamentos',
     'comentarios',
+    'storages',
 ]
 
 
@@ -261,3 +264,26 @@ FRONTEND_URL = 'https://ba2bfe523cb1.ngrok-free.app'
 MP_SANDBOX = True
 
 APPEND_SLASH = False
+
+
+
+# CONFIG GOOGLE STORAGE
+GS_BUCKET_NAME = os.getenv('GS_BUCKET_NAME')
+GS_CREDENTIALS_PATH = os.getenv('GS_CREDENTIALS_PATH')
+
+if GS_BUCKET_NAME and GS_CREDENTIALS_PATH:
+    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(GS_CREDENTIALS_PATH)
+
+    DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+    STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+
+    GS_DEFAULT_ACL = os.getenv('GS_DEFAULT_ACL', 'publicRead')
+    GS_QUERYSTRING_AUTH = False  # Remove tokens temporários da URL
+
+    STATIC_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/static/'
+    MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/media/'
+else:
+    # fallback local (para ambiente de desenvolvimento)
+    STATIC_URL = '/static/'
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

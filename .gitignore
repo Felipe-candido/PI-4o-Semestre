@@ -13,3 +13,4 @@ token.pickle
 *.pickle
 tokens.env
 /frontend/staycation-v2/.env.local
+/backend/projeto/gcs-service-account.json
