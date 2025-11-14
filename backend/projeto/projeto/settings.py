@@ -10,25 +10,36 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
-from dotenv import load_dotenv
+# CÓDIGO CORRIGIDO
 import os
 from pathlib import Path
 from datetime import timedelta
 
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Build paths...
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-TROCAR-EM-PRODUCAO')
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-1#d5ck9p8c*e72cg7jp3%w_y((*8&of3w&c7sx&n0fpis6*k26'
-
-# SECURITY WARNING: don't run with debug turned on in production!
+# 1. Carrega o .env APENAS se estiver em DEBUG (local)
 DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
+
+if DEBUG:
+    from dotenv import load_dotenv
+    print("⚠️ Rodando em modo DEBUG, carregando .env local...")
+    load_dotenv(BASE_DIR / 'tokens.env')
+else:
+    print("✅ Rodando em modo PRODUÇÃO (Render/Cloud).")
+
+# 2. Define a SECRET_KEY UMA VEZ, a partir das variáveis de ambiente
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    print("ERRO FATAL: DJANGO_SECRET_KEY não definida.")
+    # Se estiver local e sem .env, usa uma chave insegura
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-LOCAL-DEV-ONLY'
+    else:
+        # Força o app a quebrar em produção se a chave não for definida no Render
+        raise ValueError("DJANGO_SECRET_KEY não pode ser nula em produção")
+
+# 3. Remove a definição de DEBUG duplicada (já fizemos acima)
 
 
 ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
@@ -231,8 +242,6 @@ AUTH_USER_MODEL = 'cadastro.usuario'
 
 BASE_URL = 'https://ba2bfe523cb1.ngrok-free.app'
 
-# Carrega o .env da raiz
-load_dotenv(BASE_DIR / 'tokens.env')
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")

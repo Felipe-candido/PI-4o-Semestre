@@ -14,3 +14,14 @@ token.pickle
 tokens.env
 /frontend/staycation-v2/.env.local
 /backend/projeto/gcs-service-account.json
+.env
+.env.local
+.env.production
+gcs-service-account.json
+credentials.json
+token.pickle
+*.pyc
+__pycache__/
+node_modules/
+.next/
+db.sqlite3
