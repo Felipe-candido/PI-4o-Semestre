@@ -22,7 +22,6 @@ DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 if DEBUG:
     from dotenv import load_dotenv
     print("⚠️ Rodando em modo DEBUG, carregando .env local…")
-    load_dotenv(BASE_DIR / "tokens.env")
 else:
     print("✅ Rodando em modo PRODUÇÃO.")
 
