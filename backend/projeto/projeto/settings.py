@@ -9,6 +9,7 @@ Feito para funcionar perfeitamente em:
 import os
 from pathlib import Path
 from datetime import timedelta
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -147,16 +148,25 @@ WSGI_APPLICATION = "projeto.wsgi.application"
 # 🔹 7. DATABASE (PostgreSQL)
 # ============================================================
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "app_chacaras",
-        "USER": "postgres",
-        "PASSWORD": "123",
-        "HOST": "localhost",
-        "PORT": "5432",
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL:
+    print("✅ Configurando banco de dados a partir da DATABASE_URL (Produção).")
+    DATABASES = {
+        'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
     }
-}
+else:
+    print("⚠️ DATABASE_URL não definida. Usando banco de dados local (Desenvolvimento).")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'app_chacaras',
+            'USER': 'postgres',
+            'PASSWORD': '123',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
 
 
 # ============================================================
