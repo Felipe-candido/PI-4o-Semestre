@@ -246,6 +246,27 @@ else:
 
 
 # ============================================================
+# 🔹 11. APIs DE SERVIÇOS (Mercado Pago, Google, etc.)
+# ============================================================
+
+# Google API (Login/Calendar)
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+GOOGLE_REDIRECT_URI = 'http://localhost:8000/api/reservas/google-calendar/callback/' # Ajustar para produção depois
+
+# Mercado Pago
+MERCADO_PAGO_PUBLIC_KEY = os.getenv("MERCADO_PAGO_PUBLIC_KEY")
+MERCADO_PAGO_ACCESS_TOKEN = os.getenv("MERCADO_PAGO_ACCESS_TOKEN")
+MP_CLIENT_ID = os.getenv("MP_CLIENT_ID")
+MP_CLIENT_SECRET = os.getenv("MP_CLIENT_SECRET")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000") # URL do seu frontend
+MP_SANDBOX = os.getenv("MP_SANDBOX", "True") == "True"
+
+# URL Base (usada pelo MP)
+BASE_URL = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:8000")
+
+
+# ============================================================
 # 🔹 11. OUTRAS CONFIGURAÇÕES
 # ============================================================
 
